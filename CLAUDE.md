@@ -39,11 +39,18 @@ php8.3 artisan admin:create                        # prompts for name / email / 
 php8.3 artisan admin:create --name=… --email=… --password=…
 php8.3 artisan storage:link                        # required once, or uploads 404
 
-# Tests (123 feature tests)
+# Queue — appointment emails are queued; without a worker they never send
+php8.3 artisan queue:work                          # dev; see deploy/hospital-queue.service for prod
+php8.3 artisan queue:work --stop-when-empty        # drain and exit
+php8.3 artisan queue:failed                        # anything that gave up after 3 tries
+php8.3 artisan queue:restart                       # after deploying code
+
+# Tests (137 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
 vendor/bin/phpunit tests/Feature/Admin           # the staff panel
+vendor/bin/phpunit --filter AppointmentNotificationTest # the emails
 vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
 
@@ -58,6 +65,8 @@ php8.3 artisan view:clear && php8.3 artisan config:clear
 ### Serving over Apache
 
 There is **no vhost installed yet**. `deploy/hospital.local.conf` is ready to install — see the header comment in that file for the three commands. DocumentRoot must be `public/`; pointing Apache at the project root produces a directory listing that exposes `.env`.
+
+`deploy/hospital-queue.service` is the matching systemd unit for the queue worker, and is **not installed either**. Its absence is silent: bookings still succeed and nothing errors, the emails just sit in the `jobs` table forever. That is the failure mode to check first if someone says confirmations stopped arriving.
 
 ## Architecture
 
@@ -103,6 +112,26 @@ Front-desk bookings are deliberately **laxer than the public form** — no 30-da
 
 Deletes that would take data with them are refused rather than cascaded: a department with doctors, a doctor with appointments, your own account, the last account.
 
+### Notifications
+
+Three emails, all queued, all routed through `App\Services\AppointmentNotifier` so the website, the front desk and the status buttons cannot drift apart on who gets told what:
+
+| When | To | Mailable |
+|---|---|---|
+| A booking is created (site or desk) | the patient, if they gave an address | `AppointmentBooked` |
+| A booking arrives from the website | `setting('appointment_email')`, falling back to `setting('email')` | `NewAppointmentAlert` |
+| The desk confirms or cancels | the patient | `AppointmentStatusChanged` |
+
+Deliberate omissions: the desk gets no alert for a booking it took itself, and `pending`/`completed` never email the patient — one is where a booking starts, the other is bookkeeping after a visit that already happened. Re-clicking a status the booking already has is a no-op, so nobody gets told twice.
+
+**Appointments carry a `locale`.** A confirmation is sent days later by whichever staff member happens to click the button, quite possibly one working in the other language — without the stored locale a patient who booked in Bangla would be confirmed in English. It is validated against `available_locales` on the way out, same rule as `SetLocale`. The front-desk form asks for it directly, since a phone booking has no request locale to infer from.
+
+**Carbon again.** `Mailable::withLocale()` moves the translator only, so `PresentsAppointment::alignCarbonLocale()` sets Carbon's locale inside `envelope()` and `content()`. Without it a Bangla email prints English month names mid-sentence. There is a test that renders under a deliberately mismatched Carbon locale.
+
+Nothing in the notifier is allowed to throw: the booking is what matters, and a mail server having a bad afternoon must not turn a successful booking into a 500. Failures are logged and swallowed — which is also why a silent worker is worth checking for.
+
+Email templates live in `resources/views/mail/`, with plain-text alternatives under `mail/text/`. They are table-based with inline styles on purpose — Outlook and most webmail strip `<style>` blocks and ignore flex and grid — so the design system does not apply there. Field labels come from `appointment.confirmed.*` rather than a mail-only set, so the email and the confirmation page cannot drift.
+
 ### Data model
 
 `Department` 1—n `Doctor` 1—n `DoctorSchedule`; `Appointment` belongs to both `Doctor` and `Department` (denormalised at write time from the doctor). `Service`, `HealthPackage`, `Testimonial`, `Post`, `ContactMessage` are standalone.
@@ -115,7 +144,7 @@ Content lives in seeders, not migrations, and every seeder uses `updateOrCreate`
 
 ## Localisation
 
-**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
 
 Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
 
@@ -123,7 +152,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 900 keys across 12 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 936 keys across 13 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -188,7 +217,9 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 ## Not built yet
 
-Patient portal, diagnostics test catalogue with pricing, and any notification of a booking (nothing emails or SMSes the patient or the consultant — an appointment exists only in the database and on the panel).
+Patient portal, diagnostics test catalogue with pricing, and **SMS** — email notifications exist, but a Bangladeshi patient is far more likely to read an SMS, and phone is the only contact field the booking form requires. `AppointmentNotifier` is where a second channel would hook in.
+
+There is also no reminder before the appointment: the emails fire on booking and on a status change, nothing is scheduled.
 
 Localisation is complete — UI, database content and the panel itself, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one; that now includes `lang/*/admin.php`.
 

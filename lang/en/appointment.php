@@ -79,6 +79,7 @@ return [
 
         'consultant' => 'Consultant',
         'department' => 'Department',
+        'location' => 'Chamber',
         'date' => 'Date',
         'time' => 'Time',
         'arrive_early' => 'Please arrive 15 minutes early',

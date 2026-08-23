@@ -77,6 +77,11 @@
                 <x-admin.input name="age" type="number" :label="__('admin.fields.age')" :value="old('age')" />
                 <x-admin.textarea name="notes" :rows="3" :label="__('admin.fields.notes')" :value="old('notes')"
                                   :help="__('admin.appointments.notes_help')" class="sm:col-span-2" />
+                <x-admin.select name="locale" :label="__('admin.fields.locale')" required
+                                :value="old('locale', app()->getLocale())"
+                                :help="__('admin.appointments.locale_help')"
+                                :options="collect(config('app.available_locales'))->map(fn ($meta) => $meta['native'])->all()" />
+
                 <x-admin.select name="status" :label="__('admin.fields.status')" required
                                 :value="old('status', 'confirmed')"
                                 :help="__('admin.appointments.status_help')"

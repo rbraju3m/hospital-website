@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Department;
 use App\Models\Doctor;
+use App\Services\AppointmentNotifier;
 use App\Services\AppointmentSlotService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
@@ -15,7 +16,10 @@ use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
-    public function __construct(private readonly AppointmentSlotService $slots) {}
+    public function __construct(
+        private readonly AppointmentSlotService $slots,
+        private readonly AppointmentNotifier $notifier,
+    ) {}
 
     /** Step 1–3 of the booking flow, pre-fillable via ?doctor= / ?department= / ?date=. */
     public function create(Request $request)
@@ -103,6 +107,10 @@ class AppointmentController extends Controller
                 'appointment_time' => $data['appointment_time'].':00',
                 'visit_type' => $data['visit_type'] ?? 'new',
                 'status' => 'pending',
+                // Remembered so a confirmation email sent days later, by a
+                // staff member working in the other language, still reaches
+                // the patient in theirs.
+                'locale' => app()->getLocale(),
             ]);
         } catch (QueryException $e) {
             // Unique index on (doctor, date, time) is the final guard against a
@@ -115,6 +123,8 @@ class AppointmentController extends Controller
 
             throw $e;
         }
+
+        $this->notifier->booked($appointment);
 
         return redirect()
             ->route('appointment.confirmed', $appointment)

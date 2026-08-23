@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Doctor;
+use App\Services\AppointmentNotifier;
 use App\Services\AppointmentSlotService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
@@ -17,7 +18,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AppointmentController extends Controller
 {
-    public function __construct(private readonly AppointmentSlotService $slots) {}
+    public function __construct(
+        private readonly AppointmentSlotService $slots,
+        private readonly AppointmentNotifier $notifier,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -63,6 +67,9 @@ class AppointmentController extends Controller
             throw $e;
         }
 
+        // No desk alert: whoever is reading this took the call themselves.
+        $this->notifier->booked($appointment, alertDesk: false);
+
         return redirect()->route('admin.appointments.show', $appointment)
             ->with('status', __('admin.appointments.created', ['reference' => $appointment->reference]));
     }
@@ -88,7 +95,15 @@ class AppointmentController extends Controller
             'status' => ['required', 'in:pending,confirmed,cancelled,completed'],
         ]);
 
+        // Re-clicking the status a booking already has must not send the
+        // patient a second "your appointment is confirmed" email.
+        if ($appointment->status === $validated['status']) {
+            return back();
+        }
+
         $appointment->update($validated);
+
+        $this->notifier->statusChanged($appointment);
 
         return back()->with('status', __('admin.appointments.status_changed', [
             'status' => __("admin.appointments.status.{$validated['status']}"),

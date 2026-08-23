@@ -1,0 +1,40 @@
+# RBR Hospital — queue worker.
+#
+# Appointment emails are queued to the `jobs` table. Without this running,
+# bookings still succeed and nothing errors — the emails simply sit in the
+# table forever. That silence is the failure mode to watch for.
+#
+# Install:
+#   sudo cp deploy/hospital-queue.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now hospital-queue
+#
+# Check it:
+#   systemctl status hospital-queue
+#   php8.3 artisan queue:failed        # anything that gave up after 3 tries
+#
+# After deploying code, restart the worker — a long-running process keeps the
+# old classes in memory:
+#   php8.3 artisan queue:restart
+
+[Unit]
+Description=RBR Hospital queue worker
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=5
+WorkingDirectory=/var/www/html/hospital-website
+
+# --tries=3 then the job lands in `failed_jobs` rather than retrying forever.
+# --max-time recycles the process hourly so a slow leak cannot accumulate.
+ExecStart=/usr/bin/php8.3 /var/www/html/hospital-website/artisan queue:work \
+    --queue=default --sleep=3 --tries=3 --backoff=60 --max-time=3600
+
+StandardOutput=append:/var/log/hospital-queue.log
+StandardError=append:/var/log/hospital-queue.log
+
+[Install]
+WantedBy=multi-user.target

@@ -81,6 +81,7 @@ return [
 
         'consultant' => 'কনসালট্যান্ট',
         'department' => 'বিভাগ',
+        'location' => 'চেম্বার',
         'date' => 'তারিখ',
         'time' => 'সময়',
         'arrive_early' => 'অনুগ্রহ করে ১৫ মিনিট আগে পৌঁছান',

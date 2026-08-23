@@ -40,6 +40,7 @@ class AdminAppointmentTest extends TestCase
             'appointment_time' => '17:20',
             'visit_type' => 'new',
             'status' => 'confirmed',
+            'locale' => 'en',
         ], $overrides);
     }
 

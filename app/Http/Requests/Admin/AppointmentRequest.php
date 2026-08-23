@@ -28,6 +28,9 @@ class AppointmentRequest extends AdminFormRequest
             'visit_type' => ['required', Rule::in(['new', 'follow_up'])],
             'status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled', 'completed'])],
             'notes' => ['nullable', 'string', 'max:2000'],
+            // Which language to email this patient in, now and whenever the
+            // desk confirms or cancels later.
+            'locale' => ['required', Rule::in(array_keys(config('app.available_locales', [])))],
         ];
     }
 
