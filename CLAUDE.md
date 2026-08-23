@@ -59,13 +59,15 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (137 feature tests)
+# Tests (244 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
 vendor/bin/phpunit tests/Feature/Admin           # the staff panel
 vendor/bin/phpunit --filter AppointmentNotificationTest # the emails
 vendor/bin/phpunit --filter 'Sms|Reminder'       # SMS and the day-before reminder
+vendor/bin/phpunit tests/Feature/Portal          # the patient portal
+vendor/bin/phpunit --filter Diagnostics          # the price list
 vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
 
@@ -77,11 +79,23 @@ php8.3 artisan route:list --except-vendor
 php8.3 artisan view:clear && php8.3 artisan config:clear
 ```
 
-### Serving over Apache
+## Deployment state — nothing is installed yet
 
-There is **no vhost installed yet**. `deploy/hospital.local.conf` is ready to install — see the header comment in that file for the three commands. DocumentRoot must be `public/`; pointing Apache at the project root produces a directory listing that exposes `.env`.
+The application is complete; the machine it runs on is not set up. Everything below is written and waiting, and **three of the five fail silently**, which is why they are listed together rather than discovered one at a time.
 
-`deploy/hospital-queue.service` is the matching systemd unit for the queue worker, and `deploy/hospital-scheduler.cron` is the one cron entry the scheduler needs. **Neither is installed.** Both fail silently: bookings still succeed and nothing errors, the messages just sit in the `jobs` table and the reminder never runs. Those are the two things to check first if someone says notifications stopped arriving.
+| What | Where | If it is missing |
+|---|---|---|
+| Apache vhost | `deploy/hospital.local.conf` | Site served by `artisan serve` only. DocumentRoot **must** be `public/` — pointing Apache at the project root produces a directory listing that exposes `.env`. |
+| Queue worker | `deploy/hospital-queue.service` | **Silent.** Every email and SMS queues into `jobs` and never sends. Bookings still succeed and nothing errors. |
+| Scheduler cron | `deploy/hospital-scheduler.cron` | **Silent.** The day-before reminder never runs at all. |
+| SMTP credentials | `.env` `MAIL_*` | **Silent-ish.** `MAIL_MAILER=log` writes mail to `storage/logs/laravel.log` instead of sending it. |
+| SMS gateway | `.env` `SMS_*` | **Silent-ish.** `SMS_DRIVER=log` does the same for text messages. |
+
+Each deploy file carries its install commands in a header comment. They need `sudo`, which this environment does not have without a password, so the user runs them.
+
+Also outstanding on the box, not in the repo: the seeded admin account still has the password it was created with, and the dev database holds a handful of fake bookings, patients and documents from testing.
+
+If someone reports that "notifications stopped arriving", check the worker and the cron before anything in the code.
 
 ## Architecture
 
@@ -288,13 +302,19 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 Nothing the site claims. What is missing is what it has never promised:
 
-- **No lab results system upstream.** Reports reach the portal because a staff member uploads a file, not because an analyser wrote one. That is the honest version of "download reports online", but it is a manual step someone has to remember.
+- **No lab results system upstream.** Reports reach the portal because a staff member uploads a file, not because an analyser wrote one. That is the honest version of "download reports online", but it is a manual step somebody has to remember.
 - **No online payment.** Bills can be read in the portal; they cannot be paid there.
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
-- No SMS delivery receipts, and no record of what was sent beyond `reminded_at` and `downloaded_at`.
+- **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
+- **One staff role.** Everyone who can sign in to the panel can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
 
-No delivery receipts — a queued SMS the gateway accepted is as far as the system knows. Nor is there any record on the appointment of what was sent, beyond `reminded_at`; a notification log would be the next thing if anyone ever needs to prove a patient was told.
+## The one thing to do before launch
 
-Localisation is complete — UI, database content and the panel itself, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one; that now includes `lang/*/admin.php`, `lang/*/mail.php` and `lang/*/sms.php`.
+**Native-speaker review of all the Bangla.** It was written without one and now spans every locale file — the UI, all seeded content, the staff panel, the emails, six SMS templates, 23 clinical test descriptions and the whole patient portal. The tests prove *coverage*, not *correctness*: they check that both locales define the same keys and keep the same placeholders, and cannot tell whether a sentence is right.
 
-The panel has **one role**: everyone who can sign in can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
+Two places carry a consequence beyond the editorial:
+
+- **Diagnostics preparation instructions** (`database/seeders/Translations/DiagnosticTestTranslationSeeder.php`) — a mistranslated fasting window sends somebody home unfasted and wastes their trip.
+- **The emergency symptom list** (`lang/bn/pages.php`) — advice about when not to wait.
+
+Everything else in Bangla is worth reviewing; those two are worth reviewing first.
