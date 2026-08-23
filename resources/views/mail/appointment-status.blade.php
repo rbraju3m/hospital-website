@@ -19,7 +19,7 @@
     <x-mail.details :rows="$rows" />
 
     @if ($appointment->status === 'confirmed')
-        <x-mail.button :url="route('appointment.confirmed', $appointment)" :label="__('mail.patient_booked.cta')" />
+        <x-mail.button :url="$confirmationUrl" :label="__('mail.patient_booked.cta')" />
 
         <p style="margin:0 0 16px 0; font-size:14px; line-height:1.65; color:#0b2c4d; opacity:0.7;">
             {{ __('mail.patient_booked.change_body', ['number' => setting('appointment_number', setting('hotline'))]) }}

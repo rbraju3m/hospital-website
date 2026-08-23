@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 so far is the **staff panel at `/admin`** — bilingual CRUD over every content type, the appointment book, the contact inbox, site settings and staff accounts — plus booking notifications by SMS and email, and the **diagnostics price list**. There is still **no patient portal**, and the patient-portal service page describes functionality that does not exist behind it.
+**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 is complete: the **staff panel at `/admin`**, booking notifications by SMS and email, the **diagnostics price list**, and the **patient portal at `/portal`**. Every feature the site describes now exists behind it.
 
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
@@ -89,7 +89,9 @@ There is **no vhost installed yet**. `deploy/hospital.local.conf` is ready to in
 
 Public controllers live under `app/Http/Controllers/Web/` (thin — query, pass to view). Views are organised as `resources/views/pages/<area>/<action>.blade.php`, all extending `layouts/site.blade.php`.
 
-The staff panel mirrors that: `app/Http/Controllers/Admin/`, views under `resources/views/admin/<area>/`, extending `admin/layouts/app.blade.php`. Its routes live in **`routes/admin.php`**, loaded by the `then:` callback in `bootstrap/app.php` inside the `web` group — so session, CSRF and `SetLocale` all apply and the panel is bilingual for the same reasons the site is.
+The staff panel mirrors that: `app/Http/Controllers/Admin/`, views under `resources/views/admin/<area>/`, extending `admin/layouts/app.blade.php`. The patient portal mirrors it again under `Portal/` and `portal/`. Both sets of routes live in their own file — **`routes/admin.php`** and **`routes/portal.php`** — loaded by the `then:` callback in `bootstrap/app.php` inside the `web` group, so session, CSRF and `SetLocale` all apply and both are bilingual for the same reasons the site is.
+
+`redirectGuestsTo()` branches on the path: a patient bounced to the staff login would be asking IT for an account that does not exist.
 
 `AppServiceProvider` registers a **view composer** that binds `$navDepartments` to `partials.header` and `partials.footer` only. Controllers must not pass the department list for navigation — it is already there.
 
@@ -126,6 +128,24 @@ Chamber hours are edited on the doctor's page as their own little forms (`Doctor
 Front-desk bookings are deliberately **laxer than the public form** — no 30-day window, no 60-minute lead time, any time accepted rather than only the published grid. Those constraints exist to protect an unattended web form; staff can see the consultant's actual day. The unique index still applies, so the desk cannot double-book a minute.
 
 Deletes that would take data with them are refused rather than cascaded: a department with doctors, a doctor with appointments, your own account, the last account.
+
+### The patient portal
+
+`/portal`, on its own guard (`patient`) against its own table. **Two guards rather than one table with a role column**: a mistake in one login path then cannot become a way into the other, and nothing a patient does can reach `/admin`. The admin routes say `auth:web` rather than bare `auth` so the guard is stated instead of inherited from config — a test signs in as a patient and confirms the panel still refuses them.
+
+**The mobile number is the identity**, as the service page always said. It is stored on `patients` in the national ten-digit form (`1712345678`) so lookups are exact, and `Patient::appointments()` is a query rather than a relation because appointments keep the number exactly as it was typed and `Rules::BD_MOBILE` allows three spellings of it. `PhoneNumber::variants()` enumerates them; widen the regex and widen that.
+
+Sign-in is a password, chosen over a one-time code. The gap that leaves is that email is optional here, so **recovery is a six-digit code by SMS** (`PasswordResetCodes`) — hashed at rest, single use, ten minutes, five wrong guesses and it burns. Asking for a code answers identically whether or not the number has an account.
+
+#### Patient documents
+
+Reports, prescriptions and bills, published by staff from the panel and keyed by **mobile number rather than patient id** — a lab report exists before the patient gets round to registering, and should be waiting rather than needing re-attaching.
+
+Files live on the **private disk** (`storage/app/private`), never the public one, and are streamed by a controller that checks who is asking. This is the part to be careful with: a guessable URL to somebody's biopsy result is not a mistake that can be walked back. Stored names are random, uploads are restricted to PDF/JPG/PNG, and replacing or deleting a document removes the old file — an orphan on that disk is still a medical record sitting on a server.
+
+#### Signed confirmation links
+
+`appointment.confirmed` carries a patient's name, phone, age and gender, and a booking reference is short enough to enumerate. The route now requires a **valid signature**; the link in the confirmation email is generated with `URL::signedRoute()` so it keeps working, and a guessed one gets a 403. Note that route-model binding runs before the signature check, so a made-up reference 404s rather than 403s.
 
 ### Notifications
 
@@ -192,7 +212,7 @@ Content lives in seeders, not migrations, and every seeder uses `updateOrCreate`
 
 ## Localisation
 
-**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (six one-line templates; see the segment note above before lengthening one), `diagnostics` (the price list), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (six one-line templates; see the segment note above before lengthening one), `diagnostics` (the price list), `portal` (the patient portal — patient-facing wording, so it has its own appointment status labels rather than reusing the panel's), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
 
 Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
 
@@ -200,7 +220,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 1,018 keys across 15 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 1,140 keys across 16 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -256,7 +276,7 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 ## Conventions worth keeping
 
-- Bangladeshi mobile validation lives once, in `App\Support\Rules::BD_MOBILE`, and is used by all four form requests that take a number. `App\Sms\PhoneNumber` normalises the same three accepted forms for the gateway.
+- Bangladeshi mobile validation lives once, in `App\Support\Rules::BD_MOBILE`, and is used by every form request that takes a number. `App\Sms\PhoneNumber` normalises the same three accepted forms for the gateway.
 - Money is stored as integer BDT (no minor units) and rendered `৳{{ number_format(...) }}`.
 - Public POST routes are rate-limited (`throttle:10,1`); the admin login is throttled twice over — `throttle:10,1` on the route and five attempts per email+IP inside `LoginRequest`.
 - `/admin` sends `noindex, nofollow` and is excluded from the sitemap-ish `hreflang` block, which only the public layout emits.
@@ -266,7 +286,12 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 ## Not built yet
 
-The patient portal — the last thing the site describes but does not have.
+Nothing the site claims. What is missing is what it has never promised:
+
+- **No lab results system upstream.** Reports reach the portal because a staff member uploads a file, not because an analyser wrote one. That is the honest version of "download reports online", but it is a manual step someone has to remember.
+- **No online payment.** Bills can be read in the portal; they cannot be paid there.
+- **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
+- No SMS delivery receipts, and no record of what was sent beyond `reminded_at` and `downloaded_at`.
 
 No delivery receipts — a queued SMS the gateway accepted is as far as the system knows. Nor is there any record on the appointment of what was sent, beyond `reminded_at`; a notification log would be the next thing if anyone ever needs to prove a patient was told.
 

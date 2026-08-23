@@ -19,6 +19,7 @@ return [
         'about_long' => 'আমাদের সম্পর্কে',
         'contact' => 'যোগাযোগ',
         'international' => 'আন্তর্জাতিক রোগী',
+        'portal' => 'রোগী পোর্টাল',
     ],
 
     'view_all_departments' => 'সব :count টি বিভাগ দেখুন',

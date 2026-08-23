@@ -16,6 +16,10 @@
             ['route' => 'admin.posts.index', 'match' => 'admin.posts.*', 'icon' => 'newspaper', 'label' => __('admin.nav.posts')],
             ['route' => 'admin.testimonials.index', 'match' => 'admin.testimonials.*', 'icon' => 'quote', 'label' => __('admin.nav.testimonials')],
         ],
+        'portal' => [
+            ['route' => 'admin.documents.index', 'match' => 'admin.documents.*', 'icon' => 'file-text', 'label' => __('admin.nav.documents')],
+            ['route' => 'admin.patients.index', 'match' => 'admin.patients.*', 'icon' => 'user-round', 'label' => __('admin.nav.patients')],
+        ],
         'system' => [
             ['route' => 'admin.settings.edit', 'match' => 'admin.settings.*', 'icon' => 'sliders', 'label' => __('admin.nav.settings')],
             ['route' => 'admin.users.index', 'match' => 'admin.users.*', 'icon' => 'users', 'label' => __('admin.nav.users')],

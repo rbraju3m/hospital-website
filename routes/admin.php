@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\DiagnosticTestController;
 use App\Http\Controllers\Admin\DoctorController;
 use App\Http\Controllers\Admin\DoctorScheduleController;
 use App\Http\Controllers\Admin\HealthPackageController;
+use App\Http\Controllers\Admin\PatientController;
+use App\Http\Controllers\Admin\PatientDocumentController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
@@ -22,14 +24,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::middleware('guest')->group(function () {
+    Route::middleware('guest:web')->group(function () {
         Route::get('login', [LoginController::class, 'create'])->name('login');
         Route::post('login', [LoginController::class, 'store'])
             ->middleware('throttle:10,1')
             ->name('login.store');
     });
 
-    Route::middleware('auth')->group(function () {
+    // `auth:web`, not bare `auth`: the guard is stated rather than inherited
+    // from config, so a patient session can never satisfy it.
+    Route::middleware('auth:web')->group(function () {
         Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
 
         Route::get('/', DashboardController::class)->name('dashboard');
@@ -65,6 +69,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('doctors.schedules.update');
         Route::delete('doctors/{doctor}/schedules/{schedule}', [DoctorScheduleController::class, 'destroy'])
             ->name('doctors.schedules.destroy');
+
+        /*
+        | Portal accounts and the records published to them. Files live on the
+        | private disk and are streamed by a controller, never linked directly.
+        */
+        Route::get('documents/{document}/download', [PatientDocumentController::class, 'download'])
+            ->name('documents.download');
+        Route::resource('documents', PatientDocumentController::class)->except(['show']);
+
+        Route::get('patients', [PatientController::class, 'index'])->name('patients.index');
+        Route::get('patients/{patient}/documents', [PatientController::class, 'documents'])->name('patients.documents');
+        Route::patch('patients/{patient}/toggle', [PatientController::class, 'toggle'])->name('patients.toggle');
 
         Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');

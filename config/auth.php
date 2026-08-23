@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Patient;
 use App\Models\User;
 
 return [
@@ -42,6 +43,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        /*
+        | Patients authenticate separately from staff, against their own table.
+        | Two guards rather than one table with a role column: a mistake in one
+        | login path then cannot become a way into the other, and nothing a
+        | patient does can reach /admin.
+        */
+        'patient' => [
+            'driver' => 'session',
+            'provider' => 'patients',
+        ],
     ],
 
     /*
@@ -65,6 +77,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'patients' => [
+            'driver' => 'eloquent',
+            'model' => Patient::class,
         ],
 
         // 'users' => [

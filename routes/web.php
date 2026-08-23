@@ -53,5 +53,10 @@ Route::prefix('appointment')->name('appointment.')->group(function () {
     Route::post('/', [AppointmentController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('store');
-    Route::get('/{appointment}/confirmed', [AppointmentController::class, 'confirmed'])->name('confirmed');
+    // Signed: the page carries a patient's name, phone, age and gender, and a
+    // reference is short enough to enumerate. The link in the confirmation
+    // email keeps working; a guessed one does not.
+    Route::get('/{appointment}/confirmed', [AppointmentController::class, 'confirmed'])
+        ->middleware('signed')
+        ->name('confirmed');
 });

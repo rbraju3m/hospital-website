@@ -58,6 +58,27 @@ class PhoneNumber
     }
 
     /**
+     * Every form the same number may already be stored in.
+     *
+     * Appointments and contact messages keep the number exactly as it was
+     * typed, and the validation regex allows three spellings — so matching a
+     * portal account to its appointments means comparing against all of them.
+     * Coupled to App\Support\Rules::BD_MOBILE: widen that and widen this.
+     *
+     * @return list<string>
+     */
+    public static function variants(?string $number): array
+    {
+        $national = self::national($number);
+
+        if (blank($national)) {
+            return [];
+        }
+
+        return ['0'.$national, '88'.'0'.$national, '+88'.'0'.$national];
+    }
+
+    /**
      * Whether this number can receive an SMS at all.
      *
      * Bangladeshi mobiles are 01[3-9] nationally. The hospital's published

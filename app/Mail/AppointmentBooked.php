@@ -46,6 +46,7 @@ class AppointmentBooked extends Mailable implements ShouldQueue
                 'confirmed' => $this->appointment->status === 'confirmed',
                 'rows' => $this->patientRows($this->appointment),
                 'date' => $this->longDate($this->appointment),
+                'confirmationUrl' => $this->confirmationUrl($this->appointment),
             ],
         );
     }

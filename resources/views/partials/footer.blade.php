@@ -98,6 +98,7 @@
                     ['doctors.index', __('nav.items.doctors')],
                     ['packages.index', __('nav.items.packages')],
                     ['diagnostics.index', __('nav.items.diagnostics')],
+                    ['portal.dashboard', __('nav.items.portal')],
                     ['services.index', __('nav.items.services')],
                     ['emergency', __('nav.footer.emergency_care')],
                     ['international', __('nav.items.international')],

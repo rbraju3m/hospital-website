@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class AppointmentController extends Controller
 {
@@ -127,7 +128,7 @@ class AppointmentController extends Controller
         $this->notifier->booked($appointment);
 
         return redirect()
-            ->route('appointment.confirmed', $appointment)
+            ->to(URL::signedRoute('appointment.confirmed', $appointment))
             ->with('status', 'appointment-booked');
     }
 

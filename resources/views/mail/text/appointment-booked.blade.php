@@ -7,7 +7,7 @@
 {{ $label }}: {{ $value }}
 @endforeach
 
-{{ __('mail.patient_booked.cta') }}: {{ route('appointment.confirmed', $appointment) }}
+{{ __('mail.patient_booked.cta') }}: {{ $confirmationUrl }}
 
 {{ __('mail.patient_booked.change_body', ['number' => setting('appointment_number', setting('hotline'))]) }}
 

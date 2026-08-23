@@ -18,6 +18,7 @@ return [
         'about_long' => 'About Us',
         'contact' => 'Contact',
         'international' => 'International Patients',
+        'portal' => 'Patient Portal',
     ],
 
     'view_all_departments' => 'View all :count departments',

@@ -5,6 +5,7 @@ namespace App\Mail\Concerns;
 use App\Models\Appointment;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Shared presentation for the appointment emails.
@@ -26,6 +27,18 @@ trait PresentsAppointment
 
         Carbon::setLocale($locale);
         CarbonImmutable::setLocale($locale);
+    }
+
+    /**
+     * The confirmation page link, signed.
+     *
+     * That page shows a patient's name and phone behind nothing but a booking
+     * reference, so it is no longer reachable without a signature. Built here
+     * rather than in the view because the views also exist as plain text.
+     */
+    protected function confirmationUrl(Appointment $appointment): string
+    {
+        return URL::signedRoute('appointment.confirmed', $appointment);
     }
 
     protected function longDate(Appointment $appointment): string

@@ -8,6 +8,7 @@ use App\Services\AppointmentSlotService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AppointmentBookingTest extends TestCase
@@ -55,16 +56,46 @@ class AppointmentBookingTest extends TestCase
 
         $appointment = Appointment::firstOrFail();
 
-        $response->assertRedirect(route('appointment.confirmed', $appointment));
+        $response->assertRedirect(URL::signedRoute('appointment.confirmed', $appointment));
 
         $this->assertSame($doctor->id, $appointment->doctor_id);
         $this->assertSame($doctor->department_id, $appointment->department_id);
         $this->assertSame('pending', $appointment->status);
         $this->assertMatchesRegularExpression('/^RBR\d{6}[A-Z0-9]{4}$/', $appointment->reference);
 
-        $this->get(route('appointment.confirmed', $appointment))
+        $this->get(URL::signedRoute('appointment.confirmed', $appointment))
             ->assertOk()
             ->assertSee($appointment->reference);
+    }
+
+    public function test_the_confirmation_page_is_not_reachable_by_guessing_a_reference(): void
+    {
+        // It carries a patient's name, phone, age and gender behind nothing but
+        // a reference short enough to enumerate. The link in the confirmation
+        // email is signed; a guessed one is not.
+        [$doctor, $date, $time] = $this->bookableSlot();
+
+        $this->post(route('appointment.store'), [
+            'doctor_id' => $doctor->id,
+            'appointment_date' => $date->toDateString(),
+            'appointment_time' => $time,
+            'patient_name' => 'Rafiqul Islam',
+            'phone' => '01712345678',
+        ]);
+
+        $appointment = Appointment::firstOrFail();
+
+        $this->get(route('appointment.confirmed', $appointment))
+            ->assertForbidden()
+            ->assertDontSee('Rafiqul Islam');
+
+        // A corrupted signature is no better than none. (Route binding runs
+        // before the signature check, so swapping in a reference that does not
+        // exist would 404 rather than prove anything.)
+        $signed = URL::signedRoute('appointment.confirmed', $appointment);
+        $tampered = preg_replace('/signature=\w/', 'signature=0', $signed, 1);
+
+        $this->get($tampered)->assertForbidden();
     }
 
     public function test_the_same_slot_cannot_be_booked_twice(): void

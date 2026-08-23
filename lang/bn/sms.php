@@ -19,5 +19,6 @@ return [
     // already does the work "a reminder that…" was doing.
     'reminder' => ':hospital: :reference — আগামীকাল :date :time, :doctor। ১৫ মিনিট আগে আসুন। পরিবর্তনে :phone।',
     'cancelled' => ':hospital: :date তারিখের বুকিং :reference বাতিল। নতুন সময়ের জন্য :phone।',
+    'password_reset' => ':hospital পোর্টাল কোড: :code। :minutes মিনিট পর মেয়াদ শেষ। আপনি না চাইলে বার্তাটি উপেক্ষা করুন।',
     'desk_alert' => 'নতুন বুকিং :reference। :patient, :contact। :doctor, :date :time।',
 ];

@@ -41,6 +41,7 @@ class AppointmentReminder extends Mailable implements ShouldQueue
                 'appointment' => $this->appointment,
                 'rows' => $this->patientRows($this->appointment),
                 'date' => $this->longDate($this->appointment),
+                'confirmationUrl' => $this->confirmationUrl($this->appointment),
             ],
         );
     }
