@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
+    use HasTranslations;
+
     protected $guarded = [];
+
+    /** @var list<string> */
+    protected array $translatable = ['title', 'excerpt', 'body', 'author'];
 
     protected function casts(): array
     {

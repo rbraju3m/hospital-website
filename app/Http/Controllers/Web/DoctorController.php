@@ -32,7 +32,7 @@ class DoctorController extends Controller
 
         return view('pages.doctors.index', [
             'doctors' => $doctors,
-            'departments' => Department::active()->ordered()->get(['name', 'slug']),
+            'departments' => Department::active()->ordered()->get(),
             'filters' => $filters,
         ]);
     }

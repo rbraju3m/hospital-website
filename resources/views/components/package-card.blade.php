@@ -8,7 +8,7 @@
     @endif
 
     <div class="flex flex-1 flex-col p-7">
-        <p class="eyebrow">{{ str($package->category)->headline() }}</p>
+        <p class="eyebrow">{{ category_label('packages', $package->category) }}</p>
 
         <h3 class="mt-3 font-display text-xl font-bold leading-snug text-navy-900">
             <a href="{{ route('packages.show', $package) }}" class="after:absolute after:inset-0 group-hover:text-teal-700">

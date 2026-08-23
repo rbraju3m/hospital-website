@@ -45,4 +45,16 @@ return [
     ],
 
     'more_tests' => '+ :count more tests included',
+
+    // Category slugs stored on the model. Unknown values fall back to a
+    // title-cased version of the slug itself.
+    'categories' => [
+        'executive' => 'Executive',
+        'cardiac' => 'Cardiac',
+        'diabetes' => 'Diabetes',
+        'women' => "Women's Health",
+        'men' => "Men's Health",
+        'senior' => 'Senior Citizen',
+        'basic' => 'Basic',
+    ],
 ];

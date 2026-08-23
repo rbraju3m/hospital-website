@@ -6,7 +6,7 @@
 @section('content')
 
 <x-page-hero
-    :eyebrow="__('packages.show.eyebrow', ['category' => str($package->category)->headline()])"
+    :eyebrow="__('packages.show.eyebrow', ['category' => category_label('packages', $package->category)])"
     :title="$package->name"
     :lede="$package->summary"
     :crumbs="[__('packages.index.crumb') => route('packages.index'), $package->name => null]" />

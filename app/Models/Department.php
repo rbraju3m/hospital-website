@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
+    use HasTranslations;
+
     protected $guarded = [];
+
+    /** @var list<string> */
+    protected array $translatable = [
+        'name', 'tagline', 'summary', 'description', 'highlights',
+        'treatments', 'location', 'meta_title', 'meta_description',
+    ];
 
     protected function casts(): array
     {

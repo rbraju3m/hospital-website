@@ -27,7 +27,7 @@ class AppointmentController extends Controller
 
         return view('pages.appointment.create', [
             'doctor' => $doctor,
-            'departments' => Department::active()->ordered()->get(['id', 'name', 'slug']),
+            'departments' => Department::active()->ordered()->get(),
             'selectedDepartment' => $request->query('department'),
             'availableDates' => $doctor ? $this->slots->availableDates($doctor, 21) : collect(),
         ]);
@@ -44,9 +44,20 @@ class AppointmentController extends Controller
             ->where('accepts_online_appointment', true)
             ->when($validated['department'] ?? null, fn ($q, $slug) => $q->whereHas('department', fn ($d) => $d->where('slug', $slug)))
             ->ordered()
-            ->get(['id', 'name', 'slug', 'designation', 'speciality', 'consultation_fee']);
+            ->get();
 
-        return response()->json(['doctors' => $doctors]);
+        // Built by hand rather than serialising the models: toArray() reads raw
+        // attributes and would skip the locale-aware accessors entirely.
+        return response()->json([
+            'doctors' => $doctors->map(fn (Doctor $doctor) => [
+                'id' => $doctor->id,
+                'slug' => $doctor->slug,
+                'name' => $doctor->name,
+                'designation' => $doctor->designation,
+                'speciality' => $doctor->speciality,
+                'consultation_fee' => $doctor->consultation_fee,
+            ])->values(),
+        ]);
     }
 
     public function slots(Request $request): JsonResponse

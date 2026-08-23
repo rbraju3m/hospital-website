@@ -17,7 +17,7 @@
             <a href="{{ route('posts.index') }}" @class(['btn-sm', $category ? 'btn-outline' : 'btn-primary'])>{{ __('posts.index.all') }}</a>
             @foreach ($categories as $cat)
                 <a href="{{ route('posts.index', ['category' => $cat]) }}"
-                   @class(['btn-sm', $category === $cat ? 'btn-primary' : 'btn-outline'])>{{ str($cat)->headline() }}</a>
+                   @class(['btn-sm', $category === $cat ? 'btn-primary' : 'btn-outline'])>{{ category_label('posts', $cat) }}</a>
             @endforeach
         </div>
 

@@ -21,7 +21,7 @@ class HomeController extends Controller
             'packages' => HealthPackage::active()->where('is_featured', true)->ordered()->take(3)->get(),
             'testimonials' => Testimonial::active()->ordered()->take(6)->get(),
             'posts' => Post::published()->latestFirst()->take(3)->get(),
-            'departmentOptions' => Department::active()->ordered()->get(['id', 'name', 'slug']),
+            'departmentOptions' => Department::active()->ordered()->get(),
             // Drives the "Health checks from ৳x" tile, so the figure tracks the data.
             'cheapestPackage' => (int) HealthPackage::active()
                 ->selectRaw('MIN(COALESCE(discount_price, price)) as low')

@@ -21,7 +21,7 @@
             @foreach ($categories as $cat)
                 <a href="{{ route('packages.index', ['category' => $cat]) }}"
                    @class(['btn-sm', $category === $cat ? 'btn-primary' : 'btn-outline'])>
-                    {{ str($cat)->headline() }}
+                    {{ category_label('packages', $cat) }}
                 </a>
             @endforeach
         </div>

@@ -31,4 +31,13 @@ return [
         'related_title' => 'সম্পর্কিত লেখা',
         'related_link' => 'সব লেখা',
     ],
+
+    // Category slugs stored on the model. Unknown values fall back to a
+    // title-cased version of the slug itself.
+    'categories' => [
+        'health-tips' => 'স্বাস্থ্য পরামর্শ',
+        'news' => 'সংবাদ',
+        'events' => 'আয়োজন',
+        'achievements' => 'অর্জন',
+    ],
 ];

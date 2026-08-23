@@ -2,12 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class HealthPackage extends Model
 {
+    use HasTranslations;
+
     protected $guarded = [];
+
+    /** @var list<string> */
+    protected array $translatable = [
+        'name', 'summary', 'description', 'tests', 'duration', 'suitable_for',
+    ];
 
     protected function casts(): array
     {

@@ -20,8 +20,11 @@ class AppServiceProvider extends ServiceProvider
 
         // The header mega-menu and footer both need the department list on
         // every page, so bind it once rather than in each controller.
+        //
+        // Whole rows, not a column list: a partial select omits `translations`
+        // and the locale-aware attributes would silently fall back to English.
         View::composer(['partials.header', 'partials.footer'], function ($view) {
-            $view->with('navDepartments', Department::active()->ordered()->get(['name', 'slug', 'icon', 'tagline']));
+            $view->with('navDepartments', Department::active()->ordered()->get());
         });
     }
 }

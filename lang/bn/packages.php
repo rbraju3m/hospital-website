@@ -47,4 +47,16 @@ return [
     ],
 
     'more_tests' => '+ আরও :count টি পরীক্ষা অন্তর্ভুক্ত',
+
+    // Category slugs stored on the model. Unknown values fall back to a
+    // title-cased version of the slug itself.
+    'categories' => [
+        'executive' => 'এক্সিকিউটিভ',
+        'cardiac' => 'কার্ডিয়াক',
+        'diabetes' => 'ডায়াবেটিস',
+        'women' => 'নারী স্বাস্থ্য',
+        'men' => 'পুরুষ স্বাস্থ্য',
+        'senior' => 'প্রবীণ নাগরিক',
+        'basic' => 'প্রাথমিক',
+    ],
 ];

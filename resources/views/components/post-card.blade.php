@@ -2,7 +2,7 @@
 
 <article {{ $attributes->merge(['class' => 'card-interactive group relative flex h-full flex-col p-7']) }}>
     <div class="flex items-center gap-3 text-xs">
-        <span class="chip-accent">{{ str($post->category)->headline() }}</span>
+        <span class="chip-accent">{{ category_label('posts', $post->category) }}</span>
         <span class="text-navy-900/45">{{ __('common.read_time', ['count' => $post->read_minutes]) }}</span>
     </div>
 

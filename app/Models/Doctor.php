@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Doctor extends Model
 {
+    use HasTranslations;
+
     protected $guarded = [];
+
+    /**
+     * `qualifications` is deliberately absent: degree titles (MBBS, FCPS, MRCP)
+     * are formal post-nominals and stay in Latin script in Bangla usage too.
+     *
+     * @var list<string>
+     */
+    protected array $translatable = [
+        'name', 'designation', 'speciality', 'expertise', 'about', 'languages', 'chamber',
+    ];
 
     protected function casts(): array
     {
@@ -75,11 +88,14 @@ class Doctor extends Model
 
         $like = '%'.str_replace('%', '\%', $term).'%';
 
+        // Both scripts stay searchable in either locale — see
+        // HasTranslations::scopeOrWhereTranslatableLike().
         return $query->where(function (Builder $q) use ($like) {
-            $q->where('name', 'like', $like)
-                ->orWhere('speciality', 'like', $like)
-                ->orWhere('designation', 'like', $like)
-                ->orWhere('qualifications', 'like', $like);
+            foreach (['name', 'speciality', 'designation'] as $column) {
+                $q->orWhereTranslatableLike($column, $like);
+            }
+
+            $q->orWhere('qualifications', 'like', $like);
         });
     }
 }

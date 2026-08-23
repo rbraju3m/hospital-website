@@ -29,4 +29,13 @@ return [
         'related_title' => 'Related articles',
         'related_link' => 'All articles',
     ],
+
+    // Category slugs stored on the model. Unknown values fall back to a
+    // title-cased version of the slug itself.
+    'categories' => [
+        'health-tips' => 'Health Tips',
+        'news' => 'News',
+        'events' => 'Events',
+        'achievements' => 'Achievements',
+    ],
 ];

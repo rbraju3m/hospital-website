@@ -34,11 +34,12 @@ php8.3 artisan migrate
 php8.3 artisan migrate:fresh --seed        # rebuild + reseed (seeders are idempotent)
 php8.3 artisan db:seed --class=DoctorSeeder
 
-# Tests (37 feature tests)
+# Tests (48 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
-vendor/bin/phpunit --filter LocalisationTest
+vendor/bin/phpunit --filter LocalisationTest      # UI strings
+vendor/bin/phpunit --filter ContentTranslationTest # database content
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -108,7 +109,27 @@ Three tests keep the locales honest and will fail the moment a key is added to o
 
 When adding a UI string, add it to *both* locales in the same change.
 
-Things that are correctly *not* translated: phone/email format examples in placeholders (`01712345678`), and all seeded **database** content — department and service names, doctor names and qualifications, package test lists, testimonials, article bodies, and the `settings` values (address, tagline, accreditation). On a Bangla page every piece of chrome is Bangla and everything still in English comes from the database. Localising that needs translated columns, which is Phase 2.
+### Database content
+
+Content is translated too, through a `translations` JSON column shaped as `{"<locale>": {"<column>": "<value>"}}` on departments, doctors, services, health_packages, testimonials, posts and settings. The fallback locale stays in the ordinary columns, so every pre-existing query still works untouched.
+
+Models opt in via `use HasTranslations` plus `protected array $translatable = [...]`. Reads are **transparent** — `$doctor->name` returns Bangla under a Bangla request — because the trait overrides `getAttributeValue()`. Relations resolve through `getAttribute()` and never reach it, so eager loading is unaffected. `untranslated('name')` gets the stored value back when you need it.
+
+Three traps this design has, all of which have bitten and now have regression tests:
+
+1. **Partial column selects silently drop `translations`** and everything falls back to English with no error. `Department::…->get(['name','slug'])` broke the entire nav this way. Select whole rows for translatable models.
+2. **`toArray()`/JSON serialisation bypasses the accessors** — it reads raw attributes. `AppointmentController@doctors` therefore maps its response by hand rather than serialising models.
+3. **Settings cache per locale** (`settings.all.{locale}`), and `Setting::flushCache()` clears every locale. A single shared key would serve whichever locale warmed it first to everybody.
+
+Deliberately **not** translated, and correct as-is: `slug` (route keys must stay stable so URLs don't fork per locale), doctor `qualifications` (MBBS, FCPS, MRCP are formal post-nominals that stay Latin in Bangla usage), phone/email/URL settings, and the numeric statistics. `stat_patients_yearly` *is* translated because Bangla groups by lakh (৪,০০,০০০) rather than by thousand.
+
+Category slugs (`executive`, `health-tips`) are enum-ish, not content — they resolve through `category_label('packages', $slug)` against `lang/*/{packages,posts}.categories`, falling back to a title-cased slug for a category with no label yet.
+
+`Doctor::search()` matches the base column **OR** the active locale's translation — deliberately not `COALESCE`, because a visitor browsing in Bangla still routinely types a consultant's name in English. `translatedColumn()` (COALESCE, for sorting) and `translationExpression()` (no fallback, for searching) are separate for that reason.
+
+Ordering still sorts on the base column. At this data volume that is invisible; a `JSON_EXTRACT` in `ORDER BY` would cost the index for no real gain.
+
+Bangla content lives in `database/seeders/Translations/`, keyed by slug and idempotent like the English seeders.
 
 **Dates need two things set, not one.** Carbon keeps its own locale independently of the app locale, so `SetLocale` sets `Carbon::setLocale()` and `CarbonImmutable::setLocale()` as well — without that, month and weekday names stay English on an otherwise Bangla page. Always use `translatedFormat()` (never `format()`) where a month or weekday **name** is rendered; `format()` stays correct for machine formats like `H:i` and `Y-m-d`. Weekday labels in the chamber schedule come from `DoctorSchedule::dayLabel()`, not the `DAYS` constant — that constant is English-only and exists for seeding and internal reference. Dates in the Alpine booking component format via `document.documentElement.lang`.
 
@@ -138,4 +159,4 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 Admin CRUD, patient portal, diagnostics test catalogue with pricing.
 
-On localisation specifically: the UI is fully translated in both locales, but **database content is not**. Outstanding are translated columns on the content models (departments, doctors, services, packages, posts, testimonials) plus the `settings` table, and native-speaker review of the existing Bangla.
+Localisation is complete — UI and database content in both locales, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one. An admin panel will also need translation-aware forms (one field per locale), since nothing today writes to `translations` except the seeders.

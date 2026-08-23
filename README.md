@@ -12,7 +12,7 @@ A modern hospital website built with **Laravel 13**, **Blade**, **Tailwind CSS 4
 - **Health Hub** — consultant-authored health articles
 - **Emergency page** — symptom guidance, ambulance information and direct-dial numbers
 - **International patients** — visa letters, transfers, accommodation and interpreter support
-- **Bilingual (English + বাংলা)** — the entire interface is translated in both locales, with a locale switcher, `Accept-Language` detection, session persistence, locale-aware date formatting and per-key fallback (database content remains English)
+- **Fully bilingual (English + বাংলা)** — interface *and* database content in both locales: departments, consultant profiles, services, packages, testimonials and articles. Locale switcher, `Accept-Language` detection, session persistence, locale-aware dates, per-key fallback, and consultant search that works in either script
 - Responsive, accessible (skip link, focus rings, `prefers-reduced-motion`), SEO meta and self-hosted fonts
 
 ## Requirements
@@ -44,7 +44,7 @@ For Apache, install `deploy/hospital.local.conf` — see the comments at the top
 vendor/bin/phpunit
 ```
 
-37 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), and localisation (locale persistence, fallback, allow-list enforcement, date localisation, and exact key + placeholder parity between locales).
+48 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), UI localisation (persistence, fallback, allow-list enforcement, date localisation, exact key + placeholder parity), and content localisation (full Bangla coverage on every record, per-locale setting cache, and both-script search).
 
 ## Project notes
 
@@ -52,4 +52,4 @@ See `CLAUDE.md` for architecture, the appointment slot engine, localisation and 
 
 ## Adding a language
 
-Add the locale to `available_locales` in `config/app.php`, create `lang/<code>/` with a file per domain, and translate keys as you go — untranslated keys fall back to English automatically. `vendor/bin/phpunit --filter LocalisationTest` will tell you which keys and placeholders are still missing.
+Add the locale to `available_locales` in `config/app.php`, create `lang/<code>/` with a file per domain, and translate keys as you go — untranslated keys fall back to English automatically. For database content, add a seeder under `database/seeders/Translations/` writing to the `translations` JSON column. `vendor/bin/phpunit --filter LocalisationTest` and `--filter ContentTranslationTest` will tell you what is still missing.

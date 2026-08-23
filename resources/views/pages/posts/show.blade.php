@@ -11,7 +11,7 @@
 
 <article>
     <x-page-hero
-        :eyebrow="str($post->category)->headline()"
+        :eyebrow="category_label('posts', $post->category)"
         :title="$post->title"
         :lede="$post->excerpt"
         :crumbs="[__('posts.show.crumb') => route('posts.index'), Str::limit($post->title, 40) => null]">
