@@ -1,0 +1,210 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Department;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
+
+class DepartmentSeeder extends Seeder
+{
+    public function run(): void
+    {
+        foreach ($this->departments() as $i => $data) {
+            Department::updateOrCreate(
+                ['slug' => Str::slug($data['name'])],
+                [...$data, 'sort_order' => $i + 1, 'is_active' => true]
+            );
+        }
+    }
+
+    private function departments(): array
+    {
+        return [
+            [
+                'name' => 'Cardiac Sciences',
+                'tagline' => 'Interventional cardiology, electrophysiology and cardiac surgery under one roof',
+                'icon' => 'heart-pulse',
+                'is_centre_of_excellence' => true,
+                'summary' => 'A dedicated heart institute running two cath labs and a hybrid cardiac theatre, with a door-to-balloon time consistently under 60 minutes.',
+                'description' => 'The Department of Cardiac Sciences at RBR Hospital brings interventional cardiology, electrophysiology, cardiac surgery and cardiac rehabilitation into a single integrated pathway. Our 24/7 primary angioplasty service means a patient arriving with a heart attack is assessed, catheterised and treated without the delay of an inter-hospital transfer. The unit is supported by a 16-bed cardiac ICU, non-invasive imaging including stress echocardiography and CT coronary angiography, and a structured post-discharge rehabilitation programme.',
+                'highlights' => ['24/7 primary angioplasty', 'Two dedicated cath labs', '16-bed cardiac ICU', 'Hybrid cardiac operating theatre'],
+                'treatments' => ['Coronary angiography & angioplasty', 'Coronary artery bypass grafting (CABG)', 'Valve repair and replacement', 'Pacemaker & ICD implantation', 'Electrophysiology study and ablation', 'Paediatric cardiac interventions', 'Heart failure clinic', 'Cardiac rehabilitation'],
+                'phone' => '+880 9612 345 601',
+                'location' => 'Level 3, Tower A',
+            ],
+            [
+                'name' => 'Neurosciences',
+                'tagline' => 'Neurology, neurosurgery and stroke care with round-the-clock thrombolysis',
+                'icon' => 'brain',
+                'is_centre_of_excellence' => true,
+                'summary' => 'A comprehensive stroke-ready unit combining neurology, neurosurgery and neuro-rehabilitation, with CT and MRI available within minutes of arrival.',
+                'description' => 'Time is brain. Our Neurosciences centre runs a 24/7 stroke pathway in which imaging, neurology review and thrombolysis decisions happen in parallel rather than in sequence. Beyond acute stroke, the department manages epilepsy, movement disorders, neuromuscular disease, spinal pathology and complex brain tumours, supported by neuro-navigation, intraoperative monitoring and a dedicated neuro ICU.',
+                'highlights' => ['24/7 stroke thrombolysis pathway', 'Neuro-navigation guided surgery', 'Dedicated 12-bed neuro ICU', 'Epilepsy monitoring unit'],
+                'treatments' => ['Acute stroke thrombolysis & thrombectomy', 'Brain tumour surgery', 'Spine and disc surgery', 'Epilepsy evaluation and management', 'Parkinson\'s and movement disorder clinic', 'Nerve conduction studies & EMG', 'Headache and migraine clinic', 'Neuro-rehabilitation'],
+                'phone' => '+880 9612 345 602',
+                'location' => 'Level 4, Tower A',
+            ],
+            [
+                'name' => 'Oncology',
+                'tagline' => 'Medical, surgical and radiation oncology guided by weekly tumour boards',
+                'icon' => 'shield-check',
+                'is_centre_of_excellence' => true,
+                'summary' => 'Every cancer diagnosis is reviewed by a multidisciplinary tumour board before treatment begins, so the plan reflects more than one specialist opinion.',
+                'description' => 'The Oncology centre offers the full continuum of cancer care: screening, diagnosis, medical oncology, surgical oncology, radiation therapy, and palliative and supportive care. Treatment protocols follow international guidelines and every case is discussed in a weekly multidisciplinary tumour board that brings together oncologists, surgeons, radiologists and pathologists. A dedicated chemotherapy day-care unit lets most patients receive treatment without an overnight stay.',
+                'highlights' => ['Weekly multidisciplinary tumour board', 'Chemotherapy day-care unit', 'Linear accelerator radiotherapy', 'Onco-pathology and immunohistochemistry'],
+                'treatments' => ['Medical oncology & chemotherapy', 'Radiation therapy (IMRT/IGRT)', 'Surgical oncology', 'Breast cancer clinic', 'Haemato-oncology', 'Cancer screening programmes', 'Palliative and pain management', 'Survivorship and nutrition support'],
+                'phone' => '+880 9612 345 603',
+                'location' => 'Level 2, Tower B',
+            ],
+            [
+                'name' => 'Orthopaedics & Joint Replacement',
+                'tagline' => 'Joint replacement, arthroscopy, spine and trauma surgery',
+                'icon' => 'bone',
+                'is_centre_of_excellence' => true,
+                'summary' => 'Laminar-flow theatres and a structured pre-habilitation programme give most joint replacement patients same-day mobilisation.',
+                'description' => 'Our orthopaedic team covers the full spectrum from sports injury to complex revision joint replacement. Surgery is performed in laminar-flow theatres to minimise infection risk, and every arthroplasty patient goes through a pre-habilitation and enhanced-recovery protocol designed to get them standing on the day of surgery. Dedicated physiotherapy and occupational therapy continue through the recovery period.',
+                'highlights' => ['Laminar-flow orthopaedic theatres', 'Same-day mobilisation protocol', 'Sports injury and arthroscopy unit', 'On-site physiotherapy gym'],
+                'treatments' => ['Total knee replacement', 'Total hip replacement', 'Arthroscopic ACL reconstruction', 'Shoulder and rotator cuff surgery', 'Spine surgery and disc replacement', 'Complex trauma and fracture fixation', 'Paediatric orthopaedics', 'Sports medicine and rehabilitation'],
+                'phone' => '+880 9612 345 604',
+                'location' => 'Level 5, Tower A',
+            ],
+            [
+                'name' => 'Gastroenterology & Hepatology',
+                'tagline' => 'Advanced endoscopy, liver clinic and GI surgery',
+                'icon' => 'activity',
+                'is_centre_of_excellence' => true,
+                'summary' => 'Therapeutic endoscopy including ERCP and EUS, alongside a hepatology clinic focused on viral hepatitis and fatty liver disease.',
+                'description' => 'The department combines diagnostic and therapeutic endoscopy with medical hepatology and gastrointestinal surgery. Our endoscopy suite performs ERCP, endoscopic ultrasound, variceal banding and polypectomy. The hepatology clinic runs structured programmes for hepatitis B and C, non-alcoholic fatty liver disease and cirrhosis surveillance — conditions with a high and rising burden in Bangladesh.',
+                'highlights' => ['ERCP and endoscopic ultrasound', 'Dedicated liver clinic', 'Colorectal cancer screening', 'Laparoscopic GI surgery'],
+                'treatments' => ['Upper GI endoscopy & colonoscopy', 'ERCP for bile duct disease', 'Endoscopic ultrasound (EUS)', 'Hepatitis B & C management', 'Fatty liver and cirrhosis care', 'Inflammatory bowel disease clinic', 'Laparoscopic gallbladder surgery', 'GI bleeding emergency service'],
+                'phone' => '+880 9612 345 605',
+                'location' => 'Level 3, Tower B',
+            ],
+            [
+                'name' => 'Nephrology & Urology',
+                'tagline' => 'Dialysis, kidney transplant work-up and endourology',
+                'icon' => 'droplet',
+                'is_centre_of_excellence' => true,
+                'summary' => 'A 24-station dialysis unit with dedicated isolation bays, paired with a urology service covering laser stone surgery and uro-oncology.',
+                'description' => 'Nephrology and Urology work as a combined kidney service. The dialysis unit runs three shifts a day across 24 stations, including separate isolation bays for hepatitis-positive patients. Urology offers minimally invasive stone management with holmium laser, prostate surgery, and uro-oncology procedures. Transplant work-up and post-transplant follow-up are coordinated in-house.',
+                'highlights' => ['24-station dialysis unit', 'Isolation dialysis bays', 'Holmium laser stone surgery', 'Transplant work-up clinic'],
+                'treatments' => ['Haemodialysis & peritoneal dialysis', 'Chronic kidney disease clinic', 'Kidney transplant evaluation', 'RIRS and PCNL for kidney stones', 'TURP and prostate surgery', 'Uro-oncology surgery', 'Paediatric urology', 'Renal biopsy'],
+                'phone' => '+880 9612 345 606',
+                'location' => 'Level 6, Tower B',
+            ],
+            [
+                'name' => "Women's Health & Obstetrics",
+                'tagline' => 'Maternity, gynaecology, fertility and breast health',
+                'icon' => 'user-round',
+                'is_centre_of_excellence' => true,
+                'summary' => 'Birthing suites with continuous foetal monitoring, an adjoining neonatal ICU, and a female-led clinic option for every consultation.',
+                'description' => 'Our women\'s health service spans routine gynaecology, high-risk obstetrics, fertility care and breast health. Birthing suites are designed for privacy and are situated adjacent to the neonatal intensive care unit so that a newborn needing support never has to leave the floor. Antenatal classes, lactation counselling and postnatal physiotherapy are part of the standard maternity package.',
+                'highlights' => ['Private birthing suites', 'NICU on the same floor', 'High-risk pregnancy clinic', 'Female consultants available on request'],
+                'treatments' => ['Antenatal and postnatal care', 'Normal and caesarean delivery', 'High-risk pregnancy management', 'Laparoscopic gynaecological surgery', 'Infertility evaluation and IUI', 'Menopause clinic', 'Cervical and breast cancer screening', 'Adolescent gynaecology'],
+                'phone' => '+880 9612 345 607',
+                'location' => 'Level 7, Tower A',
+            ],
+            [
+                'name' => 'Paediatrics & Neonatology',
+                'tagline' => 'Child-friendly care from the first breath onwards',
+                'icon' => 'baby',
+                'is_centre_of_excellence' => true,
+                'summary' => 'A Level III neonatal ICU, paediatric emergency service and immunisation clinic staffed by consultants around the clock.',
+                'description' => 'Paediatrics at RBR Hospital is built around the idea that children are not small adults. Wards are designed for a parent to stay overnight, procedures use child-appropriate pain management, and the neonatal ICU is equipped for ventilation, surfactant therapy and therapeutic hypothermia. Paediatric sub-specialty clinics cover cardiology, neurology, nephrology and endocrinology.',
+                'highlights' => ['Level III neonatal ICU', '24/7 paediatric emergency', 'Parent-stay ward design', 'Full immunisation programme'],
+                'treatments' => ['Newborn and premature baby care', 'Paediatric emergency and critical care', 'Childhood immunisation', 'Paediatric cardiology clinic', 'Paediatric neurology clinic', 'Growth and nutrition assessment', 'Childhood asthma and allergy', 'Developmental paediatrics'],
+                'phone' => '+880 9612 345 608',
+                'location' => 'Level 7, Tower B',
+            ],
+            [
+                'name' => 'Pulmonology & Respiratory Medicine',
+                'tagline' => 'Asthma, COPD, sleep studies and interventional bronchoscopy',
+                'icon' => 'wind',
+                'summary' => 'Pulmonary function testing, sleep laboratory and bronchoscopy suite for the full range of respiratory disease.',
+                'description' => 'The respiratory service manages asthma, COPD, interstitial lung disease, tuberculosis and sleep-disordered breathing. A dedicated pulmonary function laboratory and overnight sleep study facility support accurate diagnosis, while the bronchoscopy suite handles diagnostic sampling and therapeutic airway procedures. Air quality in Dhaka makes structured respiratory follow-up especially important, and the department runs a nurse-led inhaler technique clinic.',
+                'highlights' => ['Pulmonary function laboratory', 'Overnight sleep study unit', 'Interventional bronchoscopy', 'Inhaler technique clinic'],
+                'treatments' => ['Asthma and COPD management', 'Sleep apnoea diagnosis & CPAP titration', 'Bronchoscopy and EBUS', 'Tuberculosis treatment', 'Interstitial lung disease clinic', 'Pleural procedures', 'Smoking cessation support', 'Pulmonary rehabilitation'],
+                'phone' => '+880 9612 345 609',
+                'location' => 'Level 4, Tower B',
+            ],
+            [
+                'name' => 'Endocrinology & Diabetes',
+                'tagline' => 'Structured diabetes care, thyroid and hormonal disorders',
+                'icon' => 'syringe',
+                'summary' => 'A diabetes programme built around education and foot care, not just prescriptions — including continuous glucose monitoring.',
+                'description' => 'Diabetes affects a large share of adults in Bangladesh, and outcomes depend as much on education as on medication. Our endocrinology service pairs consultant review with diabetes educators, dietitians and a dedicated foot-care clinic that has measurably reduced amputation referrals. The department also manages thyroid disease, osteoporosis, pituitary and adrenal disorders.',
+                'highlights' => ['Diabetes educator-led clinics', 'Diabetic foot care unit', 'Continuous glucose monitoring', 'Thyroid nodule assessment'],
+                'treatments' => ['Type 1 & type 2 diabetes management', 'Insulin initiation and titration', 'Diabetic foot ulcer care', 'Thyroid disorder management', 'Osteoporosis and bone health', 'Obesity and metabolic clinic', 'PCOS management', 'Gestational diabetes care'],
+                'phone' => '+880 9612 345 610',
+                'location' => 'Level 2, Tower A',
+            ],
+            [
+                'name' => 'ENT & Head-Neck Surgery',
+                'tagline' => 'Ear, nose, throat, audiology and head-neck oncology',
+                'icon' => 'activity',
+                'summary' => 'Endoscopic sinus surgery, cochlear implantation and head-neck cancer surgery with an on-site audiology suite.',
+                'description' => 'The ENT department covers medical and surgical management of ear, nose and throat conditions across all ages. A sound-treated audiology suite supports hearing assessment from newborn screening through to cochlear implant candidacy. Surgical services include functional endoscopic sinus surgery, micro-ear surgery, voice and airway procedures, and head-neck oncological resection with reconstruction.',
+                'highlights' => ['Sound-treated audiology suite', 'Newborn hearing screening', 'Endoscopic sinus surgery', 'Cochlear implant programme'],
+                'treatments' => ['Functional endoscopic sinus surgery', 'Tonsillectomy and adenoidectomy', 'Micro-ear surgery & tympanoplasty', 'Cochlear implantation', 'Hearing assessment and aids', 'Voice and swallowing clinic', 'Head-neck cancer surgery', 'Vertigo and balance clinic'],
+                'phone' => '+880 9612 345 611',
+                'location' => 'Level 5, Tower B',
+            ],
+            [
+                'name' => 'Ophthalmology',
+                'tagline' => 'Cataract, retina, glaucoma and paediatric eye care',
+                'icon' => 'eye',
+                'summary' => 'Phacoemulsification cataract surgery, retinal laser and a diabetic retinopathy screening programme.',
+                'description' => 'Our eye service runs day-case cataract surgery using phacoemulsification with premium intraocular lens options, alongside sub-specialty clinics in retina, glaucoma, cornea and paediatric ophthalmology. Given the local prevalence of diabetes, the department operates a systematic diabetic retinopathy screening pathway integrated with the endocrinology clinic.',
+                'highlights' => ['Day-case cataract surgery', 'Diabetic retinopathy screening', 'Retinal laser and injections', 'Paediatric squint clinic'],
+                'treatments' => ['Phacoemulsification cataract surgery', 'Diabetic retinopathy treatment', 'Glaucoma management and surgery', 'Corneal disease and transplant', 'Squint and paediatric eye care', 'Oculoplasty', 'Refraction and vision correction', 'Retinal detachment surgery'],
+                'phone' => '+880 9612 345 612',
+                'location' => 'Level 2, Tower B',
+            ],
+            [
+                'name' => 'Dermatology & Aesthetics',
+                'tagline' => 'Medical dermatology, dermato-surgery and laser treatments',
+                'icon' => 'activity',
+                'summary' => 'Treatment for acne, psoriasis, vitiligo and skin allergy, plus laser and aesthetic procedures in a dedicated suite.',
+                'description' => 'The dermatology department treats the full range of skin, hair and nail conditions, from acne and eczema through to autoimmune and immunobullous disease. Patch testing supports accurate allergy diagnosis, and phototherapy is available for psoriasis and vitiligo. A separate aesthetics suite offers laser hair reduction, pigmentation treatment and scar revision.',
+                'highlights' => ['Phototherapy for psoriasis & vitiligo', 'Patch testing for skin allergy', 'Dermato-surgery unit', 'Laser and aesthetics suite'],
+                'treatments' => ['Acne and scar treatment', 'Psoriasis and eczema management', 'Vitiligo phototherapy', 'Hair loss and alopecia clinic', 'Skin allergy and patch testing', 'Skin biopsy and minor surgery', 'Laser hair reduction', 'Pigmentation and anti-ageing care'],
+                'phone' => '+880 9612 345 613',
+                'location' => 'Level 1, Tower B',
+            ],
+            [
+                'name' => 'Internal Medicine',
+                'tagline' => 'General medicine, infectious disease and rheumatology',
+                'icon' => 'stethoscope',
+                'summary' => 'The first point of contact for undifferentiated symptoms, and the department that coordinates care across specialties.',
+                'description' => 'Internal Medicine is where many patient journeys begin. Our physicians assess undifferentiated presentations, manage multi-system disease, and coordinate referrals so that a patient with several coexisting conditions is treated as one person rather than a set of separate problems. Sub-specialty clinics include infectious disease, rheumatology and geriatric medicine.',
+                'highlights' => ['Same-day general medicine clinic', 'Rheumatology sub-specialty clinic', 'Infectious disease service', 'Geriatric assessment clinic'],
+                'treatments' => ['General medical consultation', 'Hypertension management', 'Fever and infection work-up', 'Rheumatoid arthritis and lupus care', 'Dengue and tropical disease management', 'Geriatric medicine', 'Preventive health assessment', 'Chronic disease coordination'],
+                'phone' => '+880 9612 345 614',
+                'location' => 'Level 1, Tower A',
+            ],
+            [
+                'name' => 'Critical Care Medicine',
+                'tagline' => 'Intensivist-led ICU, HDU and CCU beds',
+                'icon' => 'activity',
+                'summary' => 'Sixty-four critical care beds staffed by resident intensivists at a one-to-one nursing ratio for ventilated patients.',
+                'description' => 'Critical Care Medicine operates the hospital\'s general ICU, high-dependency unit, cardiac ICU and neuro ICU as a single intensivist-led service. Resident intensivists are present around the clock rather than on call from home, and ventilated patients are nursed one-to-one. The department also runs the in-hospital rapid response team that reviews deteriorating patients on the wards before they need escalation.',
+                'highlights' => ['64 critical care beds', 'Resident intensivists 24/7', '1:1 nursing for ventilated patients', 'In-hospital rapid response team'],
+                'treatments' => ['Mechanical ventilation', 'Sepsis management', 'Continuous renal replacement therapy', 'Post-operative critical care', 'Multi-organ support', 'Rapid response and code blue', 'Critical care transport', 'Family communication programme'],
+                'phone' => '+880 9612 345 615',
+                'location' => 'Level 8, Tower A',
+            ],
+            [
+                'name' => 'Emergency Medicine',
+                'tagline' => 'Open 24 hours, every day of the year',
+                'icon' => 'ambulance',
+                'summary' => 'Consultant-led triage from the moment of arrival, with resuscitation bays, a minor-injury stream and direct cath-lab access.',
+                'description' => 'The Emergency Department is staffed by emergency physicians 24 hours a day and triages every arrival within minutes. Resuscitation bays sit adjacent to CT, and there is a direct route to the cardiac catheterisation laboratory for heart attack patients. A separate minor-injury stream keeps less urgent cases moving so that waiting time does not depend on how busy the resuscitation area is.',
+                'highlights' => ['Triage within 5 minutes of arrival', 'Resuscitation bays adjacent to CT', 'Direct cath-lab activation', 'Separate minor-injury stream'],
+                'treatments' => ['Trauma and accident care', 'Chest pain assessment', 'Stroke pathway activation', 'Poisoning and overdose management', 'Paediatric emergency', 'Burns first-line management', 'Ambulance and pre-hospital care', 'Emergency observation unit'],
+                'phone' => '10666',
+                'location' => 'Ground Floor, Tower A',
+            ],
+        ];
+    }
+}

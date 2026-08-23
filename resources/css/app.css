@@ -1,0 +1,219 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* ---------------------------------------------------------------------------
+   RBR Hospital design tokens.
+   Palette: deep navy (trust) + teal (care) on near-white surfaces, with a
+   single high-urgency red reserved exclusively for emergency affordances.
+   --------------------------------------------------------------------------- */
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Primary — deep navy */
+    --color-navy-50: #eef4fb;
+    --color-navy-100: #d8e6f5;
+    --color-navy-200: #b3cbe9;
+    --color-navy-300: #7fa7d6;
+    --color-navy-400: #4a7ebd;
+    --color-navy-500: #2b5f9e;
+    --color-navy-600: #1d4a80;
+    --color-navy-700: #163a66;
+    --color-navy-800: #0f2d50;
+    --color-navy-900: #0b2c4d;
+    --color-navy-950: #061a2e;
+
+    /* Accent — teal */
+    --color-teal-50: #eefbf8;
+    --color-teal-100: #d1f5ee;
+    --color-teal-200: #a5ebdf;
+    --color-teal-300: #6edbcb;
+    --color-teal-400: #38c2b1;
+    --color-teal-500: #17a698;
+    --color-teal-600: #0d867c;
+    --color-teal-700: #0f6b64;
+    --color-teal-800: #115552;
+    --color-teal-900: #114744;
+
+    /* Emergency — used only for emergency/ambulance affordances */
+    --color-urgent-50: #fef2f2;
+    --color-urgent-100: #fee2e2;
+    --color-urgent-500: #ef4444;
+    --color-urgent-600: #dc2626;
+    --color-urgent-700: #b91c1c;
+
+    /* Neutral surfaces */
+    --color-mist-50: #f8fafc;
+    --color-mist-100: #f1f5f9;
+    --color-mist-200: #e6ecf3;
+
+    --radius-card: 1.25rem;
+
+    --shadow-soft: 0 1px 2px rgb(11 44 77 / 0.04), 0 8px 24px -8px rgb(11 44 77 / 0.10);
+    --shadow-lift: 0 2px 4px rgb(11 44 77 / 0.05), 0 20px 40px -12px rgb(11 44 77 / 0.18);
+    --shadow-ring: 0 0 0 1px rgb(11 44 77 / 0.06);
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-white text-navy-900/85 antialiased;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+
+    h1, h2, h3, h4 {
+        font-family: var(--font-display);
+        @apply text-navy-900 tracking-tight;
+        text-wrap: balance;
+    }
+
+    /* Visible, on-brand focus ring for keyboard users everywhere. */
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-teal-500;
+    }
+
+    ::selection {
+        @apply bg-teal-200 text-navy-900;
+    }
+}
+
+/* Component classes are declared with @utility (not @layer components) so that
+   they register as real utilities — which is what lets `.btn-primary` @apply
+   `.btn`, and lets variants like `hover:` work on them. */
+
+@utility shell {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10;
+}
+
+@utility section {
+    @apply py-16 sm:py-20 lg:py-28;
+}
+
+@utility eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-teal-700;
+}
+
+@utility h-display {
+    @apply text-4xl leading-[1.08] font-bold sm:text-5xl lg:text-6xl;
+}
+
+@utility h-section {
+    @apply text-3xl leading-[1.15] font-bold sm:text-4xl lg:text-[2.75rem];
+}
+
+@utility lede {
+    @apply text-lg leading-relaxed text-navy-900/65 sm:text-xl;
+}
+
+/* Buttons ---------------------------------------------------------------- */
+@utility btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold
+           transition duration-200 ease-out select-none
+           disabled:cursor-not-allowed disabled:opacity-55;
+}
+
+@utility btn-primary {
+    @apply btn bg-navy-900 text-white shadow-soft hover:bg-navy-800 hover:shadow-lift active:scale-[0.98];
+}
+
+@utility btn-accent {
+    @apply btn bg-teal-600 text-white shadow-soft hover:bg-teal-700 hover:shadow-lift active:scale-[0.98];
+}
+
+@utility btn-outline {
+    @apply btn border border-navy-200 bg-white text-navy-900 hover:border-navy-300 hover:bg-navy-50;
+}
+
+@utility btn-ghost {
+    @apply btn text-navy-900 hover:bg-navy-50;
+}
+
+@utility btn-urgent {
+    @apply btn bg-urgent-600 text-white shadow-soft hover:bg-urgent-700 active:scale-[0.98];
+}
+
+@utility btn-lg {
+    @apply px-8 py-4 text-base;
+}
+
+@utility btn-sm {
+    @apply px-4 py-2 text-xs;
+}
+
+/* Surfaces --------------------------------------------------------------- */
+@utility card {
+    @apply rounded-[1.25rem] border border-mist-200 bg-white shadow-soft;
+}
+
+@utility card-interactive {
+    @apply card transition duration-300 ease-out hover:-translate-y-1 hover:border-teal-200 hover:shadow-lift;
+}
+
+@utility chip {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-mist-100 px-3 py-1 text-xs font-medium text-navy-900/70;
+}
+
+@utility chip-accent {
+    @apply chip bg-teal-50 text-teal-800;
+}
+
+/* Forms ------------------------------------------------------------------ */
+@utility label {
+    @apply mb-1.5 block text-sm font-medium text-navy-900;
+}
+
+@utility input {
+    @apply block w-full rounded-xl border border-mist-200 bg-white px-4 py-3 text-sm text-navy-900
+           placeholder:text-navy-900/35
+           focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none;
+}
+
+@utility input-error {
+    @apply border-urgent-500 focus:border-urgent-500 focus:ring-urgent-500/20;
+}
+
+@utility field-error {
+    @apply mt-1.5 text-xs font-medium text-urgent-600;
+}
+
+/* Scroll-reveal ---------------------------------------------------------- */
+@utility reveal {
+    @apply translate-y-4 opacity-0;
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+@utility reveal-in {
+    @apply translate-y-0 opacity-100;
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        scrollbar-width: none;
+    }
+
+    .grid-fade {
+        mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
