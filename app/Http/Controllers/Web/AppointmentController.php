@@ -12,7 +12,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
@@ -99,7 +98,7 @@ class AppointmentController extends Controller
         try {
             $appointment = Appointment::create([
                 ...$data,
-                'reference' => $this->generateReference(),
+                'reference' => $this->slots->generateReference(),
                 'department_id' => $doctor->department_id,
                 'appointment_time' => $data['appointment_time'].':00',
                 'visit_type' => $data['visit_type'] ?? 'new',
@@ -108,7 +107,7 @@ class AppointmentController extends Controller
         } catch (QueryException $e) {
             // Unique index on (doctor, date, time) is the final guard against a
             // double booking that slipped through the availability re-check.
-            if ($this->isDuplicateSlot($e)) {
+            if ($this->slots->isDuplicateSlotError($e)) {
                 return back()->withInput()->withErrors([
                     'appointment_time' => __('forms.slot_taken'),
                 ]);
@@ -127,20 +126,5 @@ class AppointmentController extends Controller
         $appointment->load(['doctor.department']);
 
         return view('pages.appointment.confirmed', compact('appointment'));
-    }
-
-    private function generateReference(): string
-    {
-        do {
-            $reference = 'RBR'.now()->format('ymd').strtoupper(Str::random(4));
-        } while (Appointment::where('reference', $reference)->exists());
-
-        return $reference;
-    }
-
-    private function isDuplicateSlot(QueryException $e): bool
-    {
-        return (int) ($e->errorInfo[1] ?? 0) === 1062
-            && str_contains($e->getMessage(), 'appt_doctor_slot_unique');
     }
 }

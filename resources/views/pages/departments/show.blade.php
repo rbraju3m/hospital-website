@@ -1,7 +1,9 @@
 @extends('layouts.site')
 
 @section('title', $department->name)
-@section('meta_description', $department->summary)
+{{-- Never pass null to @section: Blade reads a null second argument as
+     "capture until @endsection" and swallows the rest of the page. --}}
+@section('meta_description', $department->summary ?: (string) setting('site_tagline'))
 
 @section('content')
 
@@ -29,6 +31,8 @@
         @endif
     </div>
 </x-page-hero>
+
+<x-cover-image :path="$department->untranslated('image')" :alt="$department->name" />
 
 {{-- Highlights strip --}}
 @if ($department->highlights)

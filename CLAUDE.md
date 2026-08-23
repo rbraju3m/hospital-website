@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. There is **no admin panel and no patient portal yet** — those are Phase 2, and the patient-portal service page describes functionality that does not exist behind it.
+**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 so far is the **staff panel at `/admin`** — bilingual CRUD over every content type, the appointment book, the contact inbox, site settings and staff accounts. There is still **no patient portal**, and the patient-portal service page describes functionality that does not exist behind it.
 
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
@@ -34,10 +34,16 @@ php8.3 artisan migrate
 php8.3 artisan migrate:fresh --seed        # rebuild + reseed (seeders are idempotent)
 php8.3 artisan db:seed --class=DoctorSeeder
 
-# Tests (48 feature tests)
+# Staff panel
+php8.3 artisan admin:create                        # prompts for name / email / password
+php8.3 artisan admin:create --name=… --email=… --password=…
+php8.3 artisan storage:link                        # required once, or uploads 404
+
+# Tests (123 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
+vendor/bin/phpunit tests/Feature/Admin           # the staff panel
 vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
 
@@ -57,7 +63,9 @@ There is **no vhost installed yet**. `deploy/hospital.local.conf` is ready to in
 
 ### Request flow
 
-Controllers live under `app/Http/Controllers/Web/` (thin — query, pass to view). Views are organised as `resources/views/pages/<area>/<action>.blade.php`, all extending `layouts/site.blade.php`.
+Public controllers live under `app/Http/Controllers/Web/` (thin — query, pass to view). Views are organised as `resources/views/pages/<area>/<action>.blade.php`, all extending `layouts/site.blade.php`.
+
+The staff panel mirrors that: `app/Http/Controllers/Admin/`, views under `resources/views/admin/<area>/`, extending `admin/layouts/app.blade.php`. Its routes live in **`routes/admin.php`**, loaded by the `then:` callback in `bootstrap/app.php` inside the `web` group — so session, CSRF and `SetLocale` all apply and the panel is bilingual for the same reasons the site is.
 
 `AppServiceProvider` registers a **view composer** that binds `$navDepartments` to `partials.header` and `partials.footer` only. Controllers must not pass the department list for navigation — it is already there.
 
@@ -77,6 +85,24 @@ Booking constraints: `BOOKING_WINDOW_DAYS = 30` ahead, `MIN_LEAD_MINUTES = 60` f
 
 The booking page drives itself through two JSON endpoints (`appointment.doctors`, `appointment.slots`) consumed by an Alpine component defined inline in `pages/appointment/create.blade.php`.
 
+### The staff panel
+
+Auth is hand-rolled and minimal: login, logout, no registration and no password-reset mail. Accounts come from `php8.3 artisan admin:create`. `bootstrap/app.php` points `redirectGuestsTo()` at `admin.login` — there is no public account area, so `auth` only ever guards `/admin`. Login is rate-limited per email+IP by `LoginRequest`.
+
+**Every content form writes two locales at once.** The fallback locale posts in ordinary fields; every other locale posts under `translations[<locale>][<column>]`, which is exactly the shape `HasTranslations` reads back. `HandlesTranslatableContent::fillTranslatable()` splits the payload and is the only thing besides the seeders that writes the `translations` column. Three details in there are load-bearing:
+
+- A translated field **submitted empty is removed**, not stored as `''`. Both fall back at read time, but only removal leaves `missingTranslations()` telling the truth about what still needs translating.
+- **List columns are derived from the model's casts**, not declared per controller — anything cast to `array` is edited as a one-item-per-line textarea and split on save. Adding a JSON column to a model therefore cannot leave a form silently storing a string.
+- The **`?untranslated=<locale>` filter runs in PHP**, not SQL. `missingTranslations()` skips fields that are blank in the source too, and a `JSON_EXTRACT` query cannot tell those apart from a real gap. `paginateContent()` keeps ordinary listings paginating in the database.
+
+Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder per content type, with the disk-relative path in the existing `image`/`photo` column. **Render them with `media_url()`, never `asset()`** — the disk is only reachable through the `storage:link` symlink. Replacing or removing an image deletes the old file; so does deleting the row.
+
+Chamber hours are edited on the doctor's page as their own little forms (`DoctorScheduleController`), because HTML forbids nesting a form inside another. Overlapping windows on the same weekday are rejected: two windows over the same minutes would generate a slot twice, and the unique index would then bounce the second booking with nothing a patient could act on.
+
+Front-desk bookings are deliberately **laxer than the public form** — no 30-day window, no 60-minute lead time, any time accepted rather than only the published grid. Those constraints exist to protect an unattended web form; staff can see the consultant's actual day. The unique index still applies, so the desk cannot double-book a minute.
+
+Deletes that would take data with them are refused rather than cascaded: a department with doctors, a doctor with appointments, your own account, the last account.
+
 ### Data model
 
 `Department` 1—n `Doctor` 1—n `DoctorSchedule`; `Appointment` belongs to both `Doctor` and `Department` (denormalised at write time from the doctor). `Service`, `HealthPackage`, `Testimonial`, `Post`, `ContactMessage` are standalone.
@@ -89,7 +115,7 @@ Content lives in seeders, not migrations, and every seeder uses `updateOrCreate`
 
 ## Localisation
 
-**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`).
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
 
 Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
 
@@ -97,7 +123,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 506 keys across 11 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 900 keys across 12 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -137,7 +163,11 @@ Bangla content lives in `database/seeders/Translations/`, keyed by slug and idem
 
 The look is the product. Deep navy (`navy-*`) + teal accent (`teal-*`) on near-white surfaces, generous whitespace, `rounded-[1.25rem]` cards, soft shadows.
 
-**`urgent-*` (red) is reserved exclusively for emergency and ambulance affordances.** Do not use it for generic errors elsewhere in the UI or the emergency signal loses its meaning.
+**`urgent-*` (red) is reserved exclusively for emergency and ambulance affordances.** Do not use it for generic errors elsewhere in the UI or the emergency signal loses its meaning. The one documented exception is **destructive actions inside `/admin`** (`btn-danger`, the danger zone): the panel carries no emergency affordance for red to compete with, and a delete button is the one place staff genuinely need a stop colour.
+
+Panel utilities (`admin-card`, `admin-nav-item`, `admin-th`, `badge-*`, `locale-tab`, `input-sm`) live at the bottom of `app.css` and follow the same `@utility` rule. Its Blade components are under `resources/views/components/admin/` — `translatable` (one field per locale, all following a single `tab` at form level), `image-field`, `toggle`, `select`, `section`, `list-header`, `translation-state`, `danger-zone`.
+
+**Never pass null as the second argument to `@section`.** Blade reads a null there as "capture until `@endsection`" and swallows the rest of the page. `@section('meta_description', $model->summary)` did exactly that the moment the panel made it possible to save a row with no summary; the four public show pages now coalesce.
 
 Tokens and component classes are defined in `resources/css/app.css`. Component classes (`btn`, `btn-primary`, `card`, `input`, `shell`, `section`, `eyebrow`, …) are declared with Tailwind 4's **`@utility`, not `@layer components`** — this is required, because `@layer components` classes cannot be `@apply`-ed by other classes in v4 and the build fails with "Cannot apply unknown utility class". Follow that pattern when adding new component classes, and define a class before anything that applies it.
 
@@ -151,12 +181,15 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 - Bangladeshi mobile validation is a shared regex in both form requests: `/^(?:\+?88)?01[3-9]\d{8}$/`.
 - Money is stored as integer BDT (no minor units) and rendered `৳{{ number_format(...) }}`.
-- Public POST routes are rate-limited (`throttle:10,1`).
+- Public POST routes are rate-limited (`throttle:10,1`); the admin login is throttled twice over — `throttle:10,1` on the route and five attempts per email+IP inside `LoginRequest`.
+- `/admin` sends `noindex, nofollow` and is excluded from the sitemap-ish `hreflang` block, which only the public layout emits.
 - Copy is written plainly and avoids marketing superlatives — claims in seeded content are specific and checkable (response times, staffing ratios) by design. Keep that voice.
 - `.idea/` is untracked and stays that way.
 
-## Not built yet (Phase 2)
+## Not built yet
 
-Admin CRUD, patient portal, diagnostics test catalogue with pricing.
+Patient portal, diagnostics test catalogue with pricing, and any notification of a booking (nothing emails or SMSes the patient or the consultant — an appointment exists only in the database and on the panel).
 
-Localisation is complete — UI and database content in both locales, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one. An admin panel will also need translation-aware forms (one field per locale), since nothing today writes to `translations` except the seeders.
+Localisation is complete — UI, database content and the panel itself, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one; that now includes `lang/*/admin.php`.
+
+The panel has **one role**: everyone who can sign in can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.

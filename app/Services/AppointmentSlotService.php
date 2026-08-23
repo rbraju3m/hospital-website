@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Turns a doctor's weekly chamber schedule into concrete, bookable time slots
@@ -124,5 +126,31 @@ class AppointmentSlotService
         [$h, $m] = array_pad(explode(':', $time), 2, '0');
 
         return $date->setTime((int) $h, (int) $m);
+    }
+
+    /**
+     * A booking reference unique across the table.
+     *
+     * Lives here rather than in a controller because both the public booking
+     * form and the front desk create appointments.
+     */
+    public function generateReference(): string
+    {
+        do {
+            $reference = 'RBR'.now()->format('ymd').strtoupper(Str::random(4));
+        } while (Appointment::where('reference', $reference)->exists());
+
+        return $reference;
+    }
+
+    /**
+     * Whether a write failed on the (doctor, date, time) unique index — the
+     * last of the three guards against a double booking, and the only one that
+     * can fire when two requests race.
+     */
+    public function isDuplicateSlotError(QueryException $e): bool
+    {
+        return (int) ($e->errorInfo[1] ?? 0) === 1062
+            && str_contains($e->getMessage(), 'appt_doctor_slot_unique');
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Appointment;
+use App\Models\ContactMessage;
 use App\Models\Department;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,17 @@ class AppServiceProvider extends ServiceProvider
         // and the locale-aware attributes would silently fall back to English.
         View::composer(['partials.header', 'partials.footer'], function ($view) {
             $view->with('navDepartments', Department::active()->ordered()->get());
+        });
+
+        // The staff sidebar carries counts for the two things that go stale if
+        // nobody looks at them: unanswered bookings and an unread inbox.
+        View::composer('admin.partials.sidebar', function ($view) {
+            $view->with([
+                'pendingAppointments' => Appointment::where('status', 'pending')
+                    ->whereDate('appointment_date', '>=', today())
+                    ->count(),
+                'unreadMessages' => ContactMessage::where('is_read', false)->count(),
+            ]);
         });
     }
 }

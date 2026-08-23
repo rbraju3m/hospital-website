@@ -1,7 +1,9 @@
 @extends('layouts.site')
 
 @section('title', $package->name)
-@section('meta_description', $package->summary)
+{{-- Never pass null to @section: Blade reads a null second argument as
+     "capture until @endsection" and swallows the rest of the page. --}}
+@section('meta_description', $package->summary ?: (string) setting('site_tagline'))
 
 @section('content')
 
@@ -10,6 +12,8 @@
     :title="$package->name"
     :lede="$package->summary"
     :crumbs="[__('packages.index.crumb') => route('packages.index'), $package->name => null]" />
+
+<x-cover-image :path="$package->untranslated('image')" :alt="$package->name" />
 
 <section class="section">
     <div class="shell grid gap-12 lg:grid-cols-12">

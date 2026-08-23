@@ -10,7 +10,7 @@
 @endphp
 
 @if ($doctor->photo)
-    <img src="{{ asset($doctor->photo) }}" alt="{{ $doctor->name }}" loading="lazy"
+    <img src="{{ media_url($doctor->untranslated('photo')) }}" alt="{{ $doctor->name }}" loading="lazy"
          {{ $attributes->merge(['class' => "$dimensions rounded-2xl object-cover"]) }}>
 @else
     {{-- No photo on file: an initials tile reads better than a generic silhouette. --}}

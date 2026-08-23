@@ -1,7 +1,9 @@
 @extends('layouts.site')
 
 @section('title', $service->name)
-@section('meta_description', $service->summary)
+{{-- Never pass null to @section: Blade reads a null second argument as
+     "capture until @endsection" and swallows the rest of the page. --}}
+@section('meta_description', $service->summary ?: (string) setting('site_tagline'))
 
 @section('content')
 
@@ -20,6 +22,8 @@
         </a>
     </div>
 </x-page-hero>
+
+<x-cover-image :path="$service->untranslated('image')" :alt="$service->name" />
 
 <section class="section">
     <div class="shell grid gap-12 lg:grid-cols-12">

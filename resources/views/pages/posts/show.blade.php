@@ -1,7 +1,9 @@
 @extends('layouts.site')
 
 @section('title', $post->title)
-@section('meta_description', $post->excerpt)
+{{-- Never pass null to @section: Blade reads a null second argument as
+     "capture until @endsection" and swallows the rest of the page. --}}
+@section('meta_description', $post->excerpt ?: (string) setting('site_tagline'))
 
 @push('head')
     <meta property="article:published_time" content="{{ $post->published_at->toIso8601String() }}">
@@ -31,6 +33,8 @@
             </span>
         </div>
     </x-page-hero>
+
+    <x-cover-image :path="$post->untranslated('image')" :alt="$post->title" aspect="aspect-[16/9]" />
 
     <section class="section">
         <div class="shell grid gap-12 lg:grid-cols-12">

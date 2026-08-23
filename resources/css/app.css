@@ -81,6 +81,12 @@
     ::selection {
         @apply bg-teal-200 text-navy-900;
     }
+
+    /* Alpine hides these until it boots, so off-canvas panels and dropdowns
+       never flash open on first paint. */
+    [x-cloak] {
+        display: none !important;
+    }
 }
 
 /* Component classes are declared with @utility (not @layer components) so that
@@ -216,4 +222,88 @@
         transform: none;
         transition: none;
     }
+}
+
+/* ---------------------------------------------------------------------------
+   Staff panel.
+   The public site is the product; the panel is a tool. Same palette, denser
+   spacing, flatter surfaces — it should feel like the same hospital without
+   competing with the site for polish.
+   --------------------------------------------------------------------------- */
+
+@utility admin-nav-item {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60
+           transition hover:bg-white/10 hover:text-white;
+}
+
+@utility admin-nav-item-active {
+    @apply admin-nav-item bg-white/12 text-white;
+}
+
+@utility admin-nav-heading {
+    @apply px-3 pt-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35;
+}
+
+@utility admin-card {
+    @apply rounded-2xl border border-mist-200 bg-white shadow-soft;
+}
+
+@utility admin-th {
+    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-navy-900/45;
+}
+
+@utility admin-td {
+    @apply px-4 py-3.5 align-middle text-sm text-navy-900/75;
+}
+
+@utility admin-row {
+    @apply border-t border-mist-200 transition hover:bg-mist-50;
+}
+
+@utility input-sm {
+    @apply rounded-lg px-3 py-2 text-sm;
+}
+
+@utility label-sm {
+    @apply mb-1 block text-xs font-semibold text-navy-900/70;
+}
+
+/* Destructive actions.
+   `urgent-*` is otherwise reserved for emergency affordances on the public
+   site; inside the panel there is no emergency signal to dilute, and a delete
+   button is the one place staff genuinely need a stop colour. */
+@utility btn-danger {
+    @apply btn border border-urgent-100 bg-urgent-50 text-urgent-700 hover:bg-urgent-100;
+}
+
+@utility badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+}
+
+@utility badge-teal {
+    @apply badge bg-teal-50 text-teal-800;
+}
+
+@utility badge-navy {
+    @apply badge bg-navy-50 text-navy-700;
+}
+
+@utility badge-amber {
+    @apply badge bg-amber-50 text-amber-700;
+}
+
+@utility badge-slate {
+    @apply badge bg-mist-100 text-navy-900/55;
+}
+
+@utility badge-urgent {
+    @apply badge bg-urgent-50 text-urgent-700;
+}
+
+@utility locale-tab {
+    @apply rounded-lg px-3 py-1.5 text-xs font-semibold text-navy-900/55 transition hover:text-navy-900;
+}
+
+@utility locale-tab-active {
+    @apply locale-tab bg-white text-navy-900 shadow-soft;
 }
