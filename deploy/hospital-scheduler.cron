@@ -1,0 +1,27 @@
+# RBR Hospital — task scheduler.
+#
+# Laravel's scheduler needs one cron entry; everything else is decided in
+# routes/console.php. Today that is the day-before appointment reminder, which
+# runs at 18:00 Asia/Dhaka.
+#
+# Without this, reminders never go out. Nothing errors — the same silent
+# failure mode as a missing queue worker, so check both together.
+#
+# Install:
+#   sudo cp deploy/hospital-scheduler.cron /etc/cron.d/hospital-scheduler
+#   sudo chmod 644 /etc/cron.d/hospital-scheduler
+#   sudo systemctl restart cron
+#
+# Check it:
+#   php8.3 artisan schedule:list
+#   php8.3 artisan appointments:remind --dry-run     # who would be reminded
+#   grep hospital-scheduler /var/log/syslog
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# The scheduler is woken every minute and decides for itself what is due.
+# An absolute path to artisan, not a bare `artisan`: cron runs with no
+# working directory of its own. Laravel takes the project root from where
+# this file sits, so no `cd` is needed.
+* * * * * www-data /usr/bin/php8.3 /var/www/html/hospital-website/artisan schedule:run >> /var/log/hospital-scheduler.log 2>&1

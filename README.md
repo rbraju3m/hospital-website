@@ -14,6 +14,7 @@ A modern hospital website built with **Laravel 13**, **Blade**, **Tailwind CSS 4
 - **International patients** — visa letters, transfers, accommodation and interpreter support
 - **Fully bilingual (English + বাংলা)** — interface *and* database content in both locales: departments, consultant profiles, services, packages, testimonials and articles. Locale switcher, `Accept-Language` detection, session persistence, locale-aware dates, per-key fallback, and consultant search that works in either script
 - **Booking notifications, by SMS and email** — the patient is texted the moment they book and again when the desk confirms or cancels, in the language they booked in; the desk is alerted to every website booking. SMS is the channel that matters: email is optional on the booking form, phone is not. Both are queued, so a slow gateway never holds up the booking page
+- **Day-before reminder** — confirmed appointments get an SMS and an email at 6pm the evening before, once and only once. Unconfirmed bookings are reported to the desk instead of being reminded
 - **Pluggable SMS gateway** — `log` and `discard` drivers plus a generic HTTP driver that adapts to most Bangladeshi providers (Alpha SMS, BulkSMSBD, MIMSMS, Elitbuzz, Reve) through `.env` alone
 - **Staff panel** (`/admin`) — the appointment book (filter, search, front-desk booking, status, CSV export), the contact inbox, and bilingual CRUD over departments, consultants and their chamber hours, services, health packages, articles, testimonials, site settings and staff accounts. Every content form edits both languages side by side and flags what is still untranslated; image uploads are handled here too
 - Responsive, accessible (skip link, focus rings, `prefers-reduced-motion`), SEO meta and self-hosted fonts
@@ -38,8 +39,10 @@ php8.3 artisan storage:link          # uploaded images 404 without this
 npm run build
 
 php8.3 artisan serve --host=127.0.0.1 --port=8321
-php8.3 artisan queue:work            # in a second terminal — sends the booking emails
+php8.3 artisan queue:work            # in a second terminal — sends the notifications
 ```
+
+The app runs on **Asia/Dhaka**, not UTC: chamber hours, the booking window and the reminder are all local to the hospital's wall clock. Timestamps are stored in that zone.
 
 Set `MAIL_*` and `SMS_*` in `.env` before anything leaves the building. Both default to `log`, writing to `storage/logs/laravel.log` — handy for checking wording and, for SMS, the segment count you will be billed for.
 
@@ -53,9 +56,14 @@ php8.3 artisan admin:create
 
 There is no public sign-up — accounts exist only because someone with shell access made one.
 
-For Apache, install `deploy/hospital.local.conf` — see the comments at the top of that file. DocumentRoot must point at `public/`. In production the queue worker needs to run as a service too: `deploy/hospital-queue.service` is ready to install.
+For Apache, install `deploy/hospital.local.conf` — see the comments at the top of that file. DocumentRoot must point at `public/`. Production also needs two background pieces, both ready to install:
 
-Without a worker running, bookings still succeed and nothing errors — the emails simply queue up in the `jobs` table and never send. Worth knowing before debugging "confirmations stopped arriving".
+- `deploy/hospital-queue.service` — the queue worker, which delivers every email and SMS
+- `deploy/hospital-scheduler.cron` — the single cron entry that runs the day-before reminder
+
+Both fail silently when missing. Without the worker, bookings still succeed and nothing errors — the messages simply queue up in the `jobs` table. Without the cron entry, the reminder never runs at all. Worth knowing before debugging "notifications stopped arriving".
+
+`php8.3 artisan appointments:remind --dry-run` shows who would be reminded tonight without sending anything.
 
 ## Tests
 
@@ -63,7 +71,7 @@ Without a worker running, bookings still succeed and nothing errors — the emai
 vendor/bin/phpunit
 ```
 
-166 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), UI localisation (persistence, fallback, allow-list enforcement, date localisation, exact key + placeholder parity), content localisation (full Bangla coverage on every record, per-locale setting cache, and both-script search), the staff panel (every route guarded, login throttling, translation writes and clears, slug generation, image upload/replace/remove, chamber-hour overlap rejection, front-desk booking, and the delete guards that protect existing records), and the notifications (who gets an email or an SMS and who does not, queued rather than sent inline, the patient's language surviving a staff member working in the other one, number normalisation, gateway responses that say 200 OK while failing, SMS template segment budgets, and neither a dead mail server nor a dead gateway breaking a booking).
+177 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), UI localisation (persistence, fallback, allow-list enforcement, date localisation, exact key + placeholder parity), content localisation (full Bangla coverage on every record, per-locale setting cache, and both-script search), the staff panel (every route guarded, login throttling, translation writes and clears, slug generation, image upload/replace/remove, chamber-hour overlap rejection, front-desk booking, and the delete guards that protect existing records), and the notifications (who gets an email or an SMS and who does not, queued rather than sent inline, the patient's language surviving a staff member working in the other one, number normalisation, gateway responses that say 200 OK while failing, SMS template segment budgets, and neither a dead mail server nor a dead gateway breaking a booking), and the day-before reminder (confirmed bookings only, never twice, dry runs, and the idempotence that lets a failed run be repeated by hand).
 
 ## Project notes
 

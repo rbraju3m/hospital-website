@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendSms;
 use App\Mail\AppointmentBooked;
+use App\Mail\AppointmentReminder;
 use App\Mail\AppointmentStatusChanged;
 use App\Mail\NewAppointmentAlert;
 use App\Models\Appointment;
@@ -65,6 +66,20 @@ class AppointmentNotifier
 
         $this->dispatch($appointment->email, new AppointmentStatusChanged($appointment), $locale);
         $this->text($appointment->phone, $appointment, $locale, $appointment->status);
+    }
+
+    /**
+     * Tomorrow's nudge, from the scheduled command.
+     *
+     * Both channels: the SMS is what most patients will actually see, the
+     * email carries the "what to bring" list that will not fit in one.
+     */
+    public function reminder(Appointment $appointment): void
+    {
+        $locale = $this->localeFor($appointment);
+
+        $this->dispatch($appointment->email, new AppointmentReminder($appointment), $locale);
+        $this->text($appointment->phone, $appointment, $locale, 'reminder');
     }
 
     /**

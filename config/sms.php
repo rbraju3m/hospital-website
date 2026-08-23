@@ -37,8 +37,12 @@ return [
     | Latin, and every segment is billed. Messages over this are still sent —
     | this only decides when to leave a warning in the log, and it is what the
     | template length test asserts against.
+    |
+    | Two, because that is what every template costs today: English fits in
+    | one, Bangla takes two. Going past it should be a decision somebody makes
+    | on purpose, not something a template drifts into.
     */
-    'segment_warning' => (int) env('SMS_SEGMENT_WARNING', 3),
+    'segment_warning' => (int) env('SMS_SEGMENT_WARNING', 2),
 
     'drivers' => [
 

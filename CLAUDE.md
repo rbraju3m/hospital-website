@@ -8,6 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
+## Timezone
+
+`config('app.timezone')` is **`Asia/Dhaka`**, not Laravel's default UTC, and timestamps are stored in that zone.
+
+This is load-bearing. Chamber hours, the 30-day booking window, the 60-minute same-day lead time, "today's appointments" on the dashboard and the day-before reminder are all reasoned about in local time. On UTC the application ran six hours behind the wall clock, so between 6pm and midnight Dhaka it offered a date that had already passed and showed the wrong day's list.
+
+The trade is that datetimes are stored as Dhaka local rather than UTC — the simpler choice for a single-country site, and only safe to make because there was no production data. Changing it later would reinterpret every existing timestamp.
+
 ## Runtime versions — this matters
 
 | Context | PHP | Why |
@@ -39,7 +47,13 @@ php8.3 artisan admin:create                        # prompts for name / email / 
 php8.3 artisan admin:create --name=… --email=… --password=…
 php8.3 artisan storage:link                        # required once, or uploads 404
 
-# Queue — appointment emails are queued; without a worker they never send
+# Reminders
+php8.3 artisan appointments:remind --dry-run        # who would be reminded, sends nothing
+php8.3 artisan appointments:remind                  # what the scheduler runs at 18:00
+php8.3 artisan appointments:remind --date=2026-09-01 --force
+php8.3 artisan schedule:list
+
+# Queue — notifications are queued; without a worker they never send
 php8.3 artisan queue:work                          # dev; see deploy/hospital-queue.service for prod
 php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
@@ -51,6 +65,7 @@ vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
 vendor/bin/phpunit tests/Feature/Admin           # the staff panel
 vendor/bin/phpunit --filter AppointmentNotificationTest # the emails
+vendor/bin/phpunit --filter 'Sms|Reminder'       # SMS and the day-before reminder
 vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
 
@@ -66,7 +81,7 @@ php8.3 artisan view:clear && php8.3 artisan config:clear
 
 There is **no vhost installed yet**. `deploy/hospital.local.conf` is ready to install — see the header comment in that file for the three commands. DocumentRoot must be `public/`; pointing Apache at the project root produces a directory listing that exposes `.env`.
 
-`deploy/hospital-queue.service` is the matching systemd unit for the queue worker, and is **not installed either**. Its absence is silent: bookings still succeed and nothing errors, the emails just sit in the `jobs` table forever. That is the failure mode to check first if someone says confirmations stopped arriving.
+`deploy/hospital-queue.service` is the matching systemd unit for the queue worker, and `deploy/hospital-scheduler.cron` is the one cron entry the scheduler needs. **Neither is installed.** Both fail silently: bookings still succeed and nothing errors, the messages just sit in the `jobs` table and the reminder never runs. Those are the two things to check first if someone says notifications stopped arriving.
 
 ## Architecture
 
@@ -121,6 +136,7 @@ Two channels, both queued, both routed through `App\Services\AppointmentNotifier
 | A booking is created (site or desk) | the patient, if they gave an address | the patient — always |
 | A booking arrives from the website | `setting('appointment_email')` → `setting('email')` | `setting('desk_sms_number')`, if it is a mobile |
 | The desk confirms or cancels | the patient | the patient |
+| 6pm the day before | the patient | the patient |
 
 **The two channels are not equivalent.** Email is optional on the booking form; phone is required. SMS is therefore the only channel that reaches every patient, and the one that matters if only one works.
 
@@ -144,7 +160,19 @@ The driver is named **`discard`, not `null`** — dotenv reads the literal strin
 
 **Message text is rendered when the job is queued, not when it is sent.** The payload therefore carries a finished string, so a message cannot come out in the wrong language because the worker was in a different locale, and it survives a template being edited in between.
 
-Keep `lang/*/sms.php` short. Operators bill per segment: 160 characters in Latin, but **70 in Bangla**, because a single Bangla character forces the whole message into UCS-2. Today every English template is one segment and every Bangla one is two. `SmsGatewayTest::test_every_template_stays_within_its_segment_budget` renders all of them with realistic values and fails if one grows past `config('sms.segment_warning')`.
+#### The day-before reminder
+
+`appointments:remind`, scheduled daily at 18:00 (Dhaka). Evening rather than the small hours on purpose: an overnight SMS is read in the morning at best, and a patient who cannot make it still has the evening to call the desk.
+
+**Confirmed appointments only.** A booking still at `pending` is one the desk has not agreed to, and telling a patient to come tomorrow for a slot nobody secured is worse than saying nothing — the command counts those and reports them instead, where the desk can act.
+
+`reminded_at` on the appointment makes a second run a no-op, because cron double-fires and failed runs get repeated by hand. `--force` overrides it for the morning after a gateway outage; `--dry-run` lists who would be reminded and marks nothing; `--date=` targets a specific day.
+
+A booking made after 6pm for the next day gets no reminder. They just booked; they know.
+
+Keep `lang/*/sms.php` short. Operators bill per segment: 160 characters in Latin, but **70 in Bangla**, because a single Bangla character forces the whole message into UCS-2. Today every English template is one segment and every Bangla one is two, and `config('sms.segment_warning')` is set to 2 so drifting past that has to be a decision.
+
+**Watch the punctuation, not just the length.** The GSM alphabet is small: one character outside it — an em dash, a curly quote, an ellipsis — switches the whole message to UCS-2 and costs three segments where it cost one. An em dash in the English reminder did exactly that, which is why the test asserts the fallback-locale templates stay GSM-7 as well as short.
 
 Email templates live in `resources/views/mail/`, with plain-text alternatives under `mail/text/`. They are table-based with inline styles on purpose — Outlook and most webmail strip `<style>` blocks and ignore flex and grid — so the design system does not apply there. Field labels come from `appointment.confirmed.*` rather than a mail-only set, so the email and the confirmation page cannot drift.
 
@@ -168,7 +196,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 942 keys across 14 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 948 keys across 14 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -236,10 +264,8 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 Patient portal and the diagnostics test catalogue with pricing.
 
-**No reminder before the appointment.** Notifications fire on booking and on a status change; nothing is scheduled, so nothing chases a patient the day before. That needs `schedule:run` in cron on top of the queue worker, and it is the obvious next thing for reducing no-shows.
+No delivery receipts — a queued SMS the gateway accepted is as far as the system knows. Nor is there any record on the appointment of what was sent, beyond `reminded_at`; a notification log would be the next thing if anyone ever needs to prove a patient was told.
 
-No delivery receipts either — a queued SMS that the gateway accepted is as far as the system knows.
-
-Localisation is complete — UI, database content and the panel itself, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one; that now includes `lang/*/admin.php`.
+Localisation is complete — UI, database content and the panel itself, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one; that now includes `lang/*/admin.php`, `lang/*/mail.php` and `lang/*/sms.php`.
 
 The panel has **one role**: everyone who can sign in can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.

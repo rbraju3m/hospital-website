@@ -59,13 +59,20 @@ return [
     | Application Timezone
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | The hospital is in Dhaka and everything here is local to it: chamber
+    | hours, the booking window, the same-day lead time, "today's
+    | appointments", and when the day-before reminder decides tomorrow has
+    | begun. Running on UTC put the application six hours behind the wall
+    | clock, so for six hours every night it offered a date that had already
+    | passed and showed the wrong day's list.
+    |
+    | Timestamps are stored in this zone rather than UTC. That is the simpler
+    | trade for a single-country site, and it is only safe to choose because
+    | there is no production data yet.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Dhaka'),
 
     /*
     |--------------------------------------------------------------------------

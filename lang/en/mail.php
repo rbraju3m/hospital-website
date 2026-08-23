@@ -39,6 +39,14 @@ return [
         'rebook_body' => 'To book another time, call :number or use the website.',
     ],
 
+    'reminder' => [
+        'subject' => 'Tomorrow — appointment :reference',
+        'preheader' => ':doctor, :time tomorrow.',
+        'heading' => 'Your appointment is tomorrow',
+        'intro' => 'A reminder that you are seeing :doctor tomorrow. Please arrive 15 minutes early so registration is finished before your consultation time.',
+        'bring_title' => 'What to bring',
+    ],
+
     'staff_alert' => [
         'subject' => 'New booking :reference — :doctor',
         'preheader' => ':patient, :date at :time.',

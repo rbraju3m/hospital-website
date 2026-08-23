@@ -39,6 +39,14 @@ return [
         'rebook_body' => 'অন্য সময়ে বুক করতে :number নম্বরে কল করুন অথবা ওয়েবসাইট ব্যবহার করুন।',
     ],
 
+    'reminder' => [
+        'subject' => 'আগামীকাল — অ্যাপয়েন্টমেন্ট :reference',
+        'preheader' => ':doctor, আগামীকাল :time।',
+        'heading' => 'আপনার অ্যাপয়েন্টমেন্ট আগামীকাল',
+        'intro' => 'মনে করিয়ে দিচ্ছি, আগামীকাল আপনি :doctor এর কাছে যাচ্ছেন। রেজিস্ট্রেশন আগেই শেষ করতে অনুগ্রহ করে ১৫ মিনিট আগে আসুন।',
+        'bring_title' => 'সঙ্গে যা আনবেন',
+    ],
+
     'staff_alert' => [
         'subject' => 'নতুন বুকিং :reference — :doctor',
         'preheader' => ':patient, :date, :time।',

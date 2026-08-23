@@ -205,6 +205,18 @@ class SmsGatewayTest extends TestCase
                 foreach (array_keys($values) as $placeholder) {
                     $this->assertStringNotContainsString(":{$placeholder}", $text);
                 }
+
+                // Length is only half of it. One character outside the GSM
+                // alphabet — an em dash, a curly quote, an ellipsis — switches
+                // the whole message to UCS-2 and triples what it costs. An em
+                // dash in the English reminder did exactly that.
+                if ($locale === config('app.fallback_locale')) {
+                    $this->assertFalse(
+                        SmsText::isUnicode($text),
+                        "sms.{$template} in [{$locale}] contains a character outside the GSM alphabet, "
+                        ."which forces the whole message to UCS-2: {$text}"
+                    );
+                }
             }
         }
 
