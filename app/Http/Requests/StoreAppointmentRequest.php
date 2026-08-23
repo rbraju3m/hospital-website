@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\AppointmentSlotService;
+use App\Support\Rules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +24,7 @@ class StoreAppointmentRequest extends FormRequest
             'appointment_time' => ['required', 'date_format:H:i'],
             'patient_name' => ['required', 'string', 'min:3', 'max:120'],
             // Bangladeshi mobile format: 01XXXXXXXXX, optionally +88 prefixed.
-            'phone' => ['required', 'string', 'regex:/^(?:\+?88)?01[3-9]\d{8}$/'],
+            'phone' => ['required', 'string', Rules::BD_MOBILE],
             'email' => ['nullable', 'email:rfc', 'max:190'],
             'gender' => ['nullable', 'in:male,female,other'],
             'age' => ['nullable', 'integer', 'min:0', 'max:120'],

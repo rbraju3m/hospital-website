@@ -123,7 +123,7 @@
                 ['doctors.index', 'user-round', __('home.quick.doctors'), __('home.quick.doctors_sub', ['count' => setting('stat_doctors')]), 'teal'],
                 ['appointment.create', 'calendar-check', __('home.quick.appointment'), __('home.quick.appointment_sub'), 'teal'],
                 ['departments.index', 'building', __('home.quick.departments'), __('home.quick.departments_sub', ['count' => setting('stat_departments')]), 'navy'],
-                ['services.index', 'microscope', __('home.quick.diagnostics'), __('home.quick.diagnostics_sub'), 'navy'],
+                ['diagnostics.index', 'microscope', __('home.quick.diagnostics'), __('home.quick.diagnostics_sub'), 'navy'],
                 ['packages.index', 'check-circle', __('home.quick.checks'), __('home.quick.checks_sub', ['price' => number_format($cheapestPackage)]), 'navy'],
             ] as [$route, $icon, $label, $sub, $tone])
                 <a href="{{ route($route) }}"

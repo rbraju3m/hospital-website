@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\Rules;
 use Illuminate\Validation\Rule;
 
 /**
@@ -19,7 +20,7 @@ class AppointmentRequest extends AdminFormRequest
         return [
             'doctor_id' => ['required', 'exists:doctors,id'],
             'patient_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:32', 'regex:/^(?:\+?88)?01[3-9]\d{8}$/'],
+            'phone' => ['required', 'string', 'max:32', Rules::BD_MOBILE],
             'email' => ['nullable', 'email', 'max:255'],
             'gender' => ['nullable', Rule::in(['male', 'female', 'other'])],
             'age' => ['nullable', 'integer', 'min:0', 'max:120'],

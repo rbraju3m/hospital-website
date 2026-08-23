@@ -12,6 +12,7 @@ return [
         'doctors' => 'Find a Doctor',
         'services' => 'Services',
         'packages' => 'Health Packages',
+        'diagnostics' => 'Diagnostics',
         'posts' => 'Health Hub',
         'about' => 'About',
         'about_long' => 'About Us',

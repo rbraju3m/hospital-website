@@ -97,6 +97,7 @@
                     ['appointment.create', __('common.book_appointment_short')],
                     ['doctors.index', __('nav.items.doctors')],
                     ['packages.index', __('nav.items.packages')],
+                    ['diagnostics.index', __('nav.items.diagnostics')],
                     ['services.index', __('nav.items.services')],
                     ['emergency', __('nav.footer.emergency_care')],
                     ['international', __('nav.items.international')],

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Rules;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreContactMessageRequest extends FormRequest
@@ -15,7 +16,7 @@ class StoreContactMessageRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:3', 'max:120'],
-            'phone' => ['required', 'string', 'regex:/^(?:\+?88)?01[3-9]\d{8}$/'],
+            'phone' => ['required', 'string', Rules::BD_MOBILE],
             'email' => ['nullable', 'email:rfc', 'max:190'],
             'subject' => ['nullable', 'string', 'max:150'],
             'message' => ['required', 'string', 'min:10', 'max:2000'],

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 so far is the **staff panel at `/admin`** — bilingual CRUD over every content type, the appointment book, the contact inbox, site settings and staff accounts. There is still **no patient portal**, and the patient-portal service page describes functionality that does not exist behind it.
+**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 so far is the **staff panel at `/admin`** — bilingual CRUD over every content type, the appointment book, the contact inbox, site settings and staff accounts — plus booking notifications by SMS and email, and the **diagnostics price list**. There is still **no patient portal**, and the patient-portal service page describes functionality that does not exist behind it.
 
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
@@ -178,7 +178,11 @@ Email templates live in `resources/views/mail/`, with plain-text alternatives un
 
 ### Data model
 
-`Department` 1—n `Doctor` 1—n `DoctorSchedule`; `Appointment` belongs to both `Doctor` and `Department` (denormalised at write time from the doctor). `Service`, `HealthPackage`, `Testimonial`, `Post`, `ContactMessage` are standalone.
+`Department` 1—n `Doctor` 1—n `DoctorSchedule`; `Appointment` belongs to both `Doctor` and `Department` (denormalised at write time from the doctor). `Service`, `HealthPackage`, `Testimonial`, `Post`, `DiagnosticTest`, `ContactMessage` are standalone.
+
+**`DiagnosticTest` is deliberately unrelated to `HealthPackage`**, whose `tests` column stays a free-text JSON list. The package copy reads as prose ("Complete blood count & ESR") and mapping it onto catalogue rows is a judgement call per package rather than a migration. Joining them later is a pivot table plus a content pass, not a schema problem.
+
+A "request this test" form writes a `ContactMessage` rather than anything of its own: it is an enquiry, not a booking. Nothing is scheduled and nothing is charged, so the desk needs to read it, not query it — and it lands in the inbox they already watch. Like the appointment desk alert, it is written in the fallback locale because it is staff-facing, and it carries the base test name because that is what the counter and the report call it.
 
 Models use `$guarded = []` with a `casts()` method. Slug is the route key on every public-facing model. Scopes are consistent: `active()`, `ordered()`, plus `published()`/`latestFirst()` on `Post` and `search()` on `Doctor`.
 
@@ -188,7 +192,7 @@ Content lives in seeders, not migrations, and every seeder uses `updateOrCreate`
 
 ## Localisation
 
-**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (five one-line templates; see the segment note above before lengthening one), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (six one-line templates; see the segment note above before lengthening one), `diagnostics` (the price list), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
 
 Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
 
@@ -196,7 +200,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 948 keys across 14 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 1,018 keys across 15 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -252,7 +256,7 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 ## Conventions worth keeping
 
-- Bangladeshi mobile validation is a shared regex in both form requests: `/^(?:\+?88)?01[3-9]\d{8}$/`.
+- Bangladeshi mobile validation lives once, in `App\Support\Rules::BD_MOBILE`, and is used by all four form requests that take a number. `App\Sms\PhoneNumber` normalises the same three accepted forms for the gateway.
 - Money is stored as integer BDT (no minor units) and rendered `৳{{ number_format(...) }}`.
 - Public POST routes are rate-limited (`throttle:10,1`); the admin login is throttled twice over — `throttle:10,1` on the route and five attempts per email+IP inside `LoginRequest`.
 - `/admin` sends `noindex, nofollow` and is excluded from the sitemap-ish `hreflang` block, which only the public layout emits.
@@ -262,7 +266,7 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 ## Not built yet
 
-Patient portal and the diagnostics test catalogue with pricing.
+The patient portal — the last thing the site describes but does not have.
 
 No delivery receipts — a queued SMS the gateway accepted is as far as the system knows. Nor is there any record on the appointment of what was sent, beyond `reminded_at`; a notification log would be the next thing if anyone ever needs to prove a patient was told.
 

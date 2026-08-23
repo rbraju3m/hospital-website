@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DiagnosticTestController;
 use App\Http\Controllers\Admin\DoctorController;
 use App\Http\Controllers\Admin\DoctorScheduleController;
 use App\Http\Controllers\Admin\HealthPackageController;
@@ -53,6 +54,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('doctors', DoctorController::class);
         Route::resource('services', ServiceController::class);
         Route::resource('packages', HealthPackageController::class)->parameters(['packages' => 'healthPackage']);
+        Route::resource('diagnostics', DiagnosticTestController::class)->parameters(['diagnostics' => 'diagnostic']);
         Route::resource('posts', PostController::class);
         Route::resource('testimonials', TestimonialController::class);
 

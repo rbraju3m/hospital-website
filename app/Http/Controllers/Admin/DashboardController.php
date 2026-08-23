@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\ContactMessage;
 use App\Models\Department;
+use App\Models\DiagnosticTest;
 use App\Models\Doctor;
 use App\Models\HealthPackage;
 use App\Models\Post;
@@ -26,6 +27,7 @@ class DashboardController extends Controller
         'doctors' => Doctor::class,
         'services' => Service::class,
         'packages' => HealthPackage::class,
+        'diagnostics' => DiagnosticTest::class,
         'posts' => Post::class,
         'testimonials' => Testimonial::class,
     ];
@@ -55,6 +57,7 @@ class DashboardController extends Controller
                 'doctors' => Doctor::where('is_active', true)->count(),
                 'services' => Service::count(),
                 'packages' => HealthPackage::count(),
+                'diagnostics' => DiagnosticTest::active()->count(),
                 'posts' => Post::published()->count(),
             ],
             'translationGaps' => $this->translationGaps(),

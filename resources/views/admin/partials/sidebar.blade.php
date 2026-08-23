@@ -12,6 +12,7 @@
             ['route' => 'admin.doctors.index', 'match' => 'admin.doctors.*', 'icon' => 'stethoscope', 'label' => __('admin.nav.doctors')],
             ['route' => 'admin.services.index', 'match' => 'admin.services.*', 'icon' => 'activity', 'label' => __('admin.nav.services')],
             ['route' => 'admin.packages.index', 'match' => 'admin.packages.*', 'icon' => 'package', 'label' => __('admin.nav.packages')],
+            ['route' => 'admin.diagnostics.index', 'match' => 'admin.diagnostics.*', 'icon' => 'microscope', 'label' => __('admin.nav.diagnostics')],
             ['route' => 'admin.posts.index', 'match' => 'admin.posts.*', 'icon' => 'newspaper', 'label' => __('admin.nav.posts')],
             ['route' => 'admin.testimonials.index', 'match' => 'admin.testimonials.*', 'icon' => 'quote', 'label' => __('admin.nav.testimonials')],
         ],
