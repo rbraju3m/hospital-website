@@ -114,13 +114,15 @@ Deletes that would take data with them are refused rather than cascaded: a depar
 
 ### Notifications
 
-Three emails, all queued, all routed through `App\Services\AppointmentNotifier` so the website, the front desk and the status buttons cannot drift apart on who gets told what:
+Two channels, both queued, both routed through `App\Services\AppointmentNotifier` so the website, the front desk and the status buttons cannot drift apart on who gets told what:
 
-| When | To | Mailable |
+| When | Email | SMS |
 |---|---|---|
-| A booking is created (site or desk) | the patient, if they gave an address | `AppointmentBooked` |
-| A booking arrives from the website | `setting('appointment_email')`, falling back to `setting('email')` | `NewAppointmentAlert` |
-| The desk confirms or cancels | the patient | `AppointmentStatusChanged` |
+| A booking is created (site or desk) | the patient, if they gave an address | the patient — always |
+| A booking arrives from the website | `setting('appointment_email')` → `setting('email')` | `setting('desk_sms_number')`, if it is a mobile |
+| The desk confirms or cancels | the patient | the patient |
+
+**The two channels are not equivalent.** Email is optional on the booking form; phone is required. SMS is therefore the only channel that reaches every patient, and the one that matters if only one works.
 
 Deliberate omissions: the desk gets no alert for a booking it took itself, and `pending`/`completed` never email the patient — one is where a booking starts, the other is bookkeeping after a visit that already happened. Re-clicking a status the booking already has is a no-op, so nobody gets told twice.
 
@@ -128,7 +130,21 @@ Deliberate omissions: the desk gets no alert for a booking it took itself, and `
 
 **Carbon again.** `Mailable::withLocale()` moves the translator only, so `PresentsAppointment::alignCarbonLocale()` sets Carbon's locale inside `envelope()` and `content()`. Without it a Bangla email prints English month names mid-sentence. There is a test that renders under a deliberately mismatched Carbon locale.
 
-Nothing in the notifier is allowed to throw: the booking is what matters, and a mail server having a bad afternoon must not turn a successful booking into a 500. Failures are logged and swallowed — which is also why a silent worker is worth checking for.
+Nothing in the notifier is allowed to throw: the booking is what matters, and a mail server or a gateway having a bad afternoon must not turn a successful booking into a 500. Failures are logged and swallowed — which is also why a silent worker is worth checking for.
+
+#### SMS
+
+`config/sms.php` picks a driver: `log` (the default — writes to the log, so a checkout with no credentials still exercises the whole path), `discard`, or `http`.
+
+The `http` driver is deliberately generic. Most Bangladeshi gateways (Alpha SMS, BulkSMSBD, MIMSMS, Elitbuzz, Reve) are one GET or POST carrying an API key, a number and the text, so `SMS_PARAMS="api_key=:key,to=:to,msg=:text"` names whatever this provider calls its parameters and switching provider is an `.env` change. `SMS_SUCCESS` matters more than it looks: local gateways routinely answer **200 OK with the failure in the body**, so a status code alone proves nothing.
+
+The driver is named **`discard`, not `null`** — dotenv reads the literal string `"null"` as PHP `null`, so `SMS_DRIVER=null` would resolve to no driver at all.
+
+`PhoneNumber` normalises to `8801712345678`. Note the two ways of writing the same number: the country code is 880 with a ten-digit subscriber number, while the form's validation regex reads it as `88` plus the national `01712345678`. Both give the same digits. `isMobile()` rejects the hospital's own published lines — they are 96xx corporate numbers that look valid and cannot receive an SMS, and trying would fail once per booking forever.
+
+**Message text is rendered when the job is queued, not when it is sent.** The payload therefore carries a finished string, so a message cannot come out in the wrong language because the worker was in a different locale, and it survives a template being edited in between.
+
+Keep `lang/*/sms.php` short. Operators bill per segment: 160 characters in Latin, but **70 in Bangla**, because a single Bangla character forces the whole message into UCS-2. Today every English template is one segment and every Bangla one is two. `SmsGatewayTest::test_every_template_stays_within_its_segment_budget` renders all of them with realistic values and fails if one grows past `config('sms.segment_warning')`.
 
 Email templates live in `resources/views/mail/`, with plain-text alternatives under `mail/text/`. They are table-based with inline styles on purpose — Outlook and most webmail strip `<style>` blocks and ignore flex and grid — so the design system does not apply there. Field labels come from `appointment.confirmed.*` rather than a mail-only set, so the email and the confirmation page cannot drift.
 
@@ -144,7 +160,7 @@ Content lives in seeders, not migrations, and every seeder uses `updateOrCreate`
 
 ## Localisation
 
-**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (five one-line templates; see the segment note above before lengthening one), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
 
 Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
 
@@ -152,7 +168,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 936 keys across 13 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 942 keys across 14 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -213,13 +229,16 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 - Public POST routes are rate-limited (`throttle:10,1`); the admin login is throttled twice over — `throttle:10,1` on the route and five attempts per email+IP inside `LoginRequest`.
 - `/admin` sends `noindex, nofollow` and is excluded from the sitemap-ish `hreflang` block, which only the public layout emits.
 - Copy is written plainly and avoids marketing superlatives — claims in seeded content are specific and checkable (response times, staffing ratios) by design. Keep that voice.
+- Notification text is rendered at dispatch, never inside the job, so a queued payload is a finished string rather than a template plus a locale.
 - `.idea/` is untracked and stays that way.
 
 ## Not built yet
 
-Patient portal, diagnostics test catalogue with pricing, and **SMS** — email notifications exist, but a Bangladeshi patient is far more likely to read an SMS, and phone is the only contact field the booking form requires. `AppointmentNotifier` is where a second channel would hook in.
+Patient portal and the diagnostics test catalogue with pricing.
 
-There is also no reminder before the appointment: the emails fire on booking and on a status change, nothing is scheduled.
+**No reminder before the appointment.** Notifications fire on booking and on a status change; nothing is scheduled, so nothing chases a patient the day before. That needs `schedule:run` in cron on top of the queue worker, and it is the obvious next thing for reducing no-shows.
+
+No delivery receipts either — a queued SMS that the gateway accepted is as far as the system knows.
 
 Localisation is complete — UI, database content and the panel itself, with tests asserting full coverage. What remains is **native-speaker review of all the Bangla**, which was written without one; that now includes `lang/*/admin.php`.
 

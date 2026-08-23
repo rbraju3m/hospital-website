@@ -13,7 +13,8 @@ A modern hospital website built with **Laravel 13**, **Blade**, **Tailwind CSS 4
 - **Emergency page** — symptom guidance, ambulance information and direct-dial numbers
 - **International patients** — visa letters, transfers, accommodation and interpreter support
 - **Fully bilingual (English + বাংলা)** — interface *and* database content in both locales: departments, consultant profiles, services, packages, testimonials and articles. Locale switcher, `Accept-Language` detection, session persistence, locale-aware dates, per-key fallback, and consultant search that works in either script
-- **Booking emails** — the patient gets a confirmation the moment they book and again when the desk confirms or cancels, in the language they booked in; the appointment desk is alerted to every website booking. Queued, so a slow mail server never holds up the booking page
+- **Booking notifications, by SMS and email** — the patient is texted the moment they book and again when the desk confirms or cancels, in the language they booked in; the desk is alerted to every website booking. SMS is the channel that matters: email is optional on the booking form, phone is not. Both are queued, so a slow gateway never holds up the booking page
+- **Pluggable SMS gateway** — `log` and `discard` drivers plus a generic HTTP driver that adapts to most Bangladeshi providers (Alpha SMS, BulkSMSBD, MIMSMS, Elitbuzz, Reve) through `.env` alone
 - **Staff panel** (`/admin`) — the appointment book (filter, search, front-desk booking, status, CSV export), the contact inbox, and bilingual CRUD over departments, consultants and their chamber hours, services, health packages, articles, testimonials, site settings and staff accounts. Every content form edits both languages side by side and flags what is still untranslated; image uploads are handled here too
 - Responsive, accessible (skip link, focus rings, `prefers-reduced-motion`), SEO meta and self-hosted fonts
 
@@ -40,7 +41,9 @@ php8.3 artisan serve --host=127.0.0.1 --port=8321
 php8.3 artisan queue:work            # in a second terminal — sends the booking emails
 ```
 
-Set `MAIL_*` in `.env` before emails leave the building; the default `MAIL_MAILER=log` writes them to `storage/logs/laravel.log`, which is handy for checking the wording.
+Set `MAIL_*` and `SMS_*` in `.env` before anything leaves the building. Both default to `log`, writing to `storage/logs/laravel.log` — handy for checking wording and, for SMS, the segment count you will be billed for.
+
+A word on SMS cost: operators bill per segment, and a segment is 160 Latin characters but only **70 Bangla** ones, because one Bangla character switches the whole message to UCS-2. Today every English template fits one segment and every Bangla one takes two. `lang/*/sms.php` is where to shorten them, and a test fails if one grows past three.
 
 Create the first staff account for `/admin`:
 
@@ -60,7 +63,7 @@ Without a worker running, bookings still succeed and nothing errors — the emai
 vendor/bin/phpunit
 ```
 
-137 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), UI localisation (persistence, fallback, allow-list enforcement, date localisation, exact key + placeholder parity), content localisation (full Bangla coverage on every record, per-locale setting cache, and both-script search), the staff panel (every route guarded, login throttling, translation writes and clears, slug generation, image upload/replace/remove, chamber-hour overlap rejection, front-desk booking, and the delete guards that protect existing records), and the notification emails (who gets one and who does not, queued rather than sent inline, the patient's language surviving a staff member working in the other one, and a dead mail server not breaking a booking).
+166 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), UI localisation (persistence, fallback, allow-list enforcement, date localisation, exact key + placeholder parity), content localisation (full Bangla coverage on every record, per-locale setting cache, and both-script search), the staff panel (every route guarded, login throttling, translation writes and clears, slug generation, image upload/replace/remove, chamber-hour overlap rejection, front-desk booking, and the delete guards that protect existing records), and the notifications (who gets an email or an SMS and who does not, queued rather than sent inline, the patient's language surviving a staff member working in the other one, number normalisation, gateway responses that say 200 OK while failing, SMS template segment budgets, and neither a dead mail server nor a dead gateway breaking a booking).
 
 ## Project notes
 

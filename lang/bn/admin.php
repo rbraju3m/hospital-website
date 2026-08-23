@@ -378,6 +378,7 @@ return [
             'emergency_number' => 'জরুরি নম্বর',
             'ambulance_number' => 'অ্যাম্বুলেন্স নম্বর',
             'appointment_number' => 'অ্যাপয়েন্টমেন্ট নম্বর',
+            'desk_sms_number' => 'ডেস্কের মোবাইল (এসএমএস অ্যালার্টের জন্য)',
             'international_desk' => 'আন্তর্জাতিক ডেস্ক',
             'email' => 'সাধারণ ইমেইল',
             'appointment_email' => 'অ্যাপয়েন্টমেন্ট ইমেইল',

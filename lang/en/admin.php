@@ -377,6 +377,7 @@ return [
             'emergency_number' => 'Emergency number',
             'ambulance_number' => 'Ambulance number',
             'appointment_number' => 'Appointment number',
+            'desk_sms_number' => 'Desk mobile (for SMS alerts)',
             'international_desk' => 'International desk',
             'email' => 'General email',
             'appointment_email' => 'Appointment email',

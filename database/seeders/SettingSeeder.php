@@ -22,6 +22,10 @@ class SettingSeeder extends Seeder
                 'emergency_number' => '+880 9612 345 600',
                 'ambulance_number' => '+880 9612 345 999',
                 'appointment_number' => '+880 9612 345 610',
+                // Left blank on purpose: the desk SMS alert stays off until
+                // somebody puts a real mobile in from the settings screen.
+                // The numbers above are corporate lines and cannot receive SMS.
+                'desk_sms_number' => '',
                 'international_desk' => '+880 9612 345 700',
                 'email' => 'info@rbrhospital.com.bd',
                 'appointment_email' => 'appointment@rbrhospital.com.bd',
