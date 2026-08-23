@@ -15,10 +15,10 @@
     <p class="mt-2.5 text-sm leading-relaxed text-navy-900/60">{{ $department->tagline }}</p>
 
     @if ($department->doctors_count ?? false)
-        <p class="mt-4 text-xs font-medium text-navy-900/45">{{ $department->doctors_count }} consultants</p>
+        <p class="mt-4 text-xs font-medium text-navy-900/45">{{ __('common.consultants_count', ['count' => $department->doctors_count]) }}</p>
     @endif
 
     <span class="mt-auto pt-5 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
-        Explore department →
+        {{ __('common.explore_department') }} →
     </span>
 </article>

@@ -22,22 +22,22 @@
         </span>
         <span class="chip">
             <x-icon name="award" size="13" />
-            {{ $doctor->experience_years }} yrs
+            {{ __('common.years_short', ['count' => $doctor->experience_years]) }}
         </span>
     </div>
 
     <div class="mt-auto flex items-center justify-between gap-3 border-t border-mist-200 pt-4">
         <div class="text-sm">
             <span class="font-display font-bold text-navy-900">৳{{ number_format($doctor->consultation_fee) }}</span>
-            <span class="text-xs text-navy-900/50">consultation</span>
+            <span class="text-xs text-navy-900/50">{{ __('common.consultation') }}</span>
         </div>
 
         @if ($doctor->accepts_online_appointment)
             <span class="relative z-10 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
-                Book →
+                {{ __('common.book_now') }} →
             </span>
         @else
-            <span class="chip">Call to book</span>
+            <span class="chip">{{ __('common.call_to_book') }}</span>
         @endif
     </div>
 </article>

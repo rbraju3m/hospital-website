@@ -22,6 +22,10 @@ class HomeController extends Controller
             'testimonials' => Testimonial::active()->ordered()->take(6)->get(),
             'posts' => Post::published()->latestFirst()->take(3)->get(),
             'departmentOptions' => Department::active()->ordered()->get(['id', 'name', 'slug']),
+            // Drives the "Health checks from ৳x" tile, so the figure tracks the data.
+            'cheapestPackage' => (int) HealthPackage::active()
+                ->selectRaw('MIN(COALESCE(discount_price, price)) as low')
+                ->value('low'),
         ]);
     }
 }

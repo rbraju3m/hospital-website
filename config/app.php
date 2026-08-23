@@ -86,6 +86,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Available Locales
+    |--------------------------------------------------------------------------
+    |
+    | Locales offered by the public locale switcher, in display order. Keys are
+    | the locale code used in URLs and lang/ directory names; 'native' is the
+    | label shown in the switcher, written in that language.
+    |
+    | Any key missing from a non-default locale falls back to 'fallback_locale'
+    | above, so a partially translated locale renders English rather than the
+    | raw key.
+    |
+    */
+
+    'available_locales' => [
+        'en' => ['native' => 'English', 'short' => 'EN'],
+        'bn' => ['native' => 'বাংলা', 'short' => 'বাং'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

@@ -8,9 +8,9 @@
 
     <div class="shell relative py-14 sm:py-20">
         @if ($crumbs)
-            <nav aria-label="Breadcrumb" class="mb-6">
+            <nav aria-label="{{ __('common.breadcrumb') }}" class="mb-6">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-white/55">
-                    <li><a href="{{ route('home') }}" class="transition hover:text-white">Home</a></li>
+                    <li><a href="{{ route('home') }}" class="transition hover:text-white">{{ __('common.home') }}</a></li>
                     @foreach ($crumbs as $label => $url)
                         <li aria-hidden="true"><x-icon name="chevron-right" size="14" /></li>
                         <li>

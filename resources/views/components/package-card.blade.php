@@ -3,7 +3,7 @@
 <article {{ $attributes->merge(['class' => 'card-interactive group relative flex h-full flex-col overflow-hidden']) }}>
     @if ($package->savingsPercent())
         <span class="absolute right-5 top-5 rounded-full bg-teal-600 px-2.5 py-1 text-[11px] font-bold text-white">
-            Save {{ $package->savingsPercent() }}%
+            {{ __('packages.show.save', ['percent' => $package->savingsPercent()]) }}
         </span>
     @endif
 
@@ -27,7 +27,7 @@
             @endforeach
             @if (count($package->tests ?? []) > 4)
                 <li class="pl-6 text-sm font-medium text-navy-900/45">
-                    + {{ count($package->tests) - 4 }} more tests included
+                    {{ __('packages.more_tests', ['count' => count($package->tests) - 4]) }}
                 </li>
             @endif
         </ul>
@@ -46,7 +46,7 @@
             </div>
 
             <span class="relative z-10 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
-                Details →
+                {{ __('common.details') }} →
             </span>
         </div>
     </div>

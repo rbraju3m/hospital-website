@@ -25,7 +25,7 @@ class StoreContactMessageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.regex' => 'Enter a valid Bangladeshi mobile number, e.g. 01712345678.',
+            'phone.regex' => __('forms.phone_invalid'),
         ];
     }
 }

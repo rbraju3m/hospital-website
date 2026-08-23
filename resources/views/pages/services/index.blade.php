@@ -1,30 +1,27 @@
 @extends('layouts.site')
 
-@section('title', 'Medical Services & Facilities')
-@section('meta_description', 'Emergency care, intensive care, diagnostic imaging, laboratory, pharmacy, physiotherapy and more — the full range of services at RBR Hospital.')
+@section('title', __('services.index.meta_title'))
+@section('meta_description', __('services.index.meta_description', ['name' => setting('site_name')]))
 
 @section('content')
 
 <x-page-hero
-    eyebrow="Services & Facilities"
-    title="Everything a patient needs, on one campus"
-    lede="Clinical services, diagnostics and patient support built so that a single visit rarely turns into three separate trips."
-    :crumbs="['Services' => null]" />
+    :eyebrow="__('services.index.eyebrow')"
+    :title="__('services.index.title')"
+    :lede="__('services.index.lede')"
+    :crumbs="[__('services.index.crumb') => null]" />
 
 @php
-    $groupLabels = [
-        'clinical' => ['Clinical Services', 'Direct patient treatment, from resuscitation to rehabilitation.'],
-        'diagnostic' => ['Diagnostics', 'Imaging and laboratory services, with reports available online.'],
-        'support' => ['Support Services', 'The infrastructure that keeps treatment moving.'],
-        'patient-care' => ['Patient Services', 'Practical help around the medicine itself.'],
-    ];
+    // Key order also sets the display order of the sections below.
+    $groupKeys = ['clinical', 'diagnostic', 'support', 'patient-care'];
 @endphp
 
-@foreach ($groupLabels as $key => [$label, $blurb])
+@foreach ($groupKeys as $key)
     @continue(! isset($grouped[$key]))
     <section @class(['section', 'bg-mist-50' => $loop->odd])>
         <div class="shell">
-            <x-section-heading :eyebrow="$label" :title="$blurb" class="reveal" />
+            <x-section-heading :eyebrow="__('services.groups.'.$key)"
+                               :title="__('services.groups.'.$key.'_blurb')" class="reveal" />
 
             <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($grouped[$key] as $service)
@@ -37,7 +34,7 @@
                                 <x-icon :name="$service->icon" size="24" />
                             </span>
                             @if ($service->is_247)
-                                <span class="chip-accent">24/7</span>
+                                <span class="chip-accent">{{ __('services.badge_247') }}</span>
                             @endif
                         </div>
 
@@ -46,7 +43,7 @@
                         </h3>
                         <p class="mt-2.5 text-sm leading-relaxed text-navy-900/60">{{ $service->summary }}</p>
                         <span class="mt-auto pt-5 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
-                            Learn more →
+                            {{ __('common.learn_more') }} →
                         </span>
                     </a>
                 @endforeach

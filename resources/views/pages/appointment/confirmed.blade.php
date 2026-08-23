@@ -1,6 +1,6 @@
 @extends('layouts.site')
 
-@section('title', 'Appointment Confirmed — ' . $appointment->reference)
+@section('title', __('appointment.confirmed.meta_title', ['reference' => $appointment->reference]))
 
 @push('head')
     <meta name="robots" content="noindex, nofollow">
@@ -16,29 +16,33 @@
                 <span class="grid h-16 w-16 place-items-center rounded-full bg-white/15">
                     <x-icon name="check" size="34" stroke="2.5" />
                 </span>
-                <h1 class="font-display text-3xl font-bold text-white">Appointment requested</h1>
+                <h1 class="font-display text-3xl font-bold text-white">{{ __('appointment.confirmed.title') }}</h1>
                 <p class="max-w-md text-white/85">
-                    We have your booking. Our appointment desk will confirm by SMS to
-                    <span class="font-semibold text-white">{{ $appointment->phone }}</span> shortly.
+                    {!! __('appointment.confirmed.lede', [
+                        'phone' => '<span class="font-semibold text-white">'.e($appointment->phone).'</span>',
+                    ]) !!}
                 </p>
             </div>
 
             <div class="border-b border-mist-200 bg-mist-50 px-8 py-6 text-center">
-                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-navy-900/50">Reference number</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-navy-900/50">{{ __('appointment.confirmed.reference_label') }}</p>
                 <p class="mt-1.5 font-display text-3xl font-extrabold tracking-tight text-navy-900">
                     {{ $appointment->reference }}
                 </p>
-                <p class="mt-2 text-sm text-navy-900/55">Quote this at the reception desk.</p>
+                <p class="mt-2 text-sm text-navy-900/55">{{ __('appointment.confirmed.reference_hint') }}</p>
             </div>
 
             <dl class="divide-y divide-mist-200 px-8">
                 @foreach ([
-                    ['Consultant', $appointment->doctor->name, $appointment->doctor->designation],
-                    ['Department', $appointment->doctor->department->name, $appointment->doctor->chamber],
-                    ['Date', $appointment->appointment_date->format('l, j F Y'), null],
-                    ['Time', $appointment->formattedTime(), 'Please arrive 15 minutes early'],
-                    ['Patient', $appointment->patient_name, trim(collect([$appointment->age ? $appointment->age . ' yrs' : null, $appointment->gender ? ucfirst($appointment->gender) : null])->filter()->implode(' · ')) ?: null],
-                    ['Consultation fee', '৳' . number_format($appointment->visit_type === 'follow_up' && $appointment->doctor->follow_up_fee ? $appointment->doctor->follow_up_fee : $appointment->doctor->consultation_fee), 'Payable at reception'],
+                    [__('appointment.confirmed.consultant'), $appointment->doctor->name, $appointment->doctor->designation],
+                    [__('appointment.confirmed.department'), $appointment->doctor->department->name, $appointment->doctor->chamber],
+                    [__('appointment.confirmed.date'), $appointment->appointment_date->translatedFormat('l, j F Y'), null],
+                    [__('appointment.confirmed.time'), $appointment->formattedTime(), __('appointment.confirmed.arrive_early')],
+                    [__('appointment.confirmed.patient'), $appointment->patient_name, trim(collect([
+                        $appointment->age ? __('appointment.confirmed.age_years', ['count' => $appointment->age]) : null,
+                        $appointment->gender ? __('appointment.step_3.gender_'.$appointment->gender) : null,
+                    ])->filter()->implode(' · ')) ?: null],
+                    [__('appointment.confirmed.fee'), '৳' . number_format($appointment->visit_type === 'follow_up' && $appointment->doctor->follow_up_fee ? $appointment->doctor->follow_up_fee : $appointment->doctor->consultation_fee), __('appointment.confirmed.fee_hint')],
                 ] as [$label, $value, $hint])
                     <div class="flex flex-col gap-1 py-5 sm:flex-row sm:items-baseline sm:gap-6">
                         <dt class="w-44 shrink-0 text-sm text-navy-900/50">{{ $label }}</dt>
@@ -54,24 +58,25 @@
 
             <div class="flex flex-wrap gap-3 border-t border-mist-200 px-8 py-7">
                 <button type="button" onclick="window.print()" class="btn-outline">
-                    <x-icon name="file-text" size="16" /> Print this page
+                    <x-icon name="file-text" size="16" /> {{ __('appointment.confirmed.print') }}
                 </button>
-                <a href="{{ route('doctors.show', $appointment->doctor) }}" class="btn-outline">View consultant</a>
+                <a href="{{ route('doctors.show', $appointment->doctor) }}" class="btn-outline">{{ __('appointment.confirmed.view_consultant') }}</a>
                 <a href="tel:{{ setting('appointment_number') }}" class="btn-ghost ml-auto">
-                    <x-icon name="phone" size="16" /> Need to change it? {{ setting('appointment_number') }}
+                    <x-icon name="phone" size="16" />
+                    {{ __('appointment.confirmed.change_it') }} {{ setting('appointment_number') }}
                 </a>
             </div>
         </div>
 
         <div class="mt-8 grid gap-4 sm:grid-cols-2">
             <div class="card p-7">
-                <h2 class="font-display text-base font-bold text-navy-900">What to bring</h2>
+                <h2 class="font-display text-base font-bold text-navy-900">{{ __('appointment.confirmed.bring_title') }}</h2>
                 <ul class="mt-4 space-y-2.5 text-sm text-navy-900/65">
                     @foreach ([
-                        'This reference number',
-                        'Previous prescriptions, reports and scans',
-                        'A list of your current medicines and doses',
-                        'National ID or passport for registration',
+                        __('appointment.confirmed.bring_1'),
+                        __('appointment.confirmed.bring_2'),
+                        __('appointment.confirmed.bring_3'),
+                        __('appointment.confirmed.bring_4'),
                     ] as $item)
                         <li class="flex items-start gap-2.5">
                             <x-icon name="check" size="15" stroke="2.5" class="mt-0.5 shrink-0 text-teal-600" />
@@ -84,12 +89,9 @@
             <div class="card bg-urgent-50 p-7">
                 <div class="flex items-center gap-3">
                     <x-icon name="ambulance" size="22" class="text-urgent-600" />
-                    <h2 class="font-display text-base font-bold text-navy-900">If things get worse</h2>
+                    <h2 class="font-display text-base font-bold text-navy-900">{{ __('appointment.confirmed.worse_title') }}</h2>
                 </div>
-                <p class="mt-3 text-sm text-navy-900/65">
-                    Do not wait for your appointment date if symptoms become severe. Come to the Emergency
-                    Department at any hour, or call for an ambulance.
-                </p>
+                <p class="mt-3 text-sm text-navy-900/65">{{ __('appointment.confirmed.worse_body') }}</p>
                 <a href="tel:{{ setting('hotline') }}" class="btn-urgent mt-5 w-full">
                     <x-icon name="phone" size="16" /> {{ setting('hotline') }}
                 </a>
@@ -97,7 +99,7 @@
         </div>
 
         <p class="mt-8 text-center">
-            <a href="{{ route('home') }}" class="text-sm font-semibold text-teal-700 hover:underline">← Back to homepage</a>
+            <a href="{{ route('home') }}" class="text-sm font-semibold text-teal-700 hover:underline">{{ __('appointment.confirmed.back_home') }}</a>
         </p>
     </div>
 </section>

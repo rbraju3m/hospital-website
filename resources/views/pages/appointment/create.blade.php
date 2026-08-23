@@ -1,15 +1,15 @@
 @extends('layouts.site')
 
-@section('title', 'Book an Appointment')
-@section('meta_description', 'Book an appointment online with a specialist consultant at RBR Hospital. Choose your department, doctor, date and time slot in a few steps.')
+@section('title', __('appointment.meta_title'))
+@section('meta_description', __('appointment.meta_description', ['name' => setting('site_name')]))
 
 @section('content')
 
 <x-page-hero
-    eyebrow="Online Booking"
-    title="Book an appointment"
-    lede="Choose a department, pick your consultant, and confirm a time. You will get a reference number immediately — no payment is taken online."
-    :crumbs="['Book Appointment' => null]" />
+    :eyebrow="__('appointment.eyebrow')"
+    :title="__('appointment.title')"
+    :lede="__('appointment.lede')"
+    :crumbs="[__('appointment.crumb') => null]" />
 
 <section class="section">
     <div class="shell grid gap-10 lg:grid-cols-12">
@@ -19,7 +19,7 @@
             @if ($errors->any())
                 <div role="alert" class="mb-8 rounded-2xl border border-urgent-500/30 bg-urgent-50 p-5">
                     <p class="flex items-center gap-2 font-semibold text-urgent-700">
-                        <x-icon name="x" size="18" /> Please check the following
+                        <x-icon name="x" size="18" /> {{ __('appointment.errors_title') }}
                     </p>
                     <ul class="mt-3 list-inside list-disc space-y-1 text-sm text-urgent-700/90">
                         @foreach ($errors->all() as $error)
@@ -50,16 +50,16 @@
                     <header class="flex items-center gap-4">
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-navy-900 font-display text-sm font-bold text-white">1</span>
                         <div>
-                            <h2 class="font-display text-lg font-bold text-navy-900">Choose your consultant</h2>
-                            <p class="text-sm text-navy-900/55">Filter by department, then select a doctor.</p>
+                            <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_1.title') }}</h2>
+                            <p class="text-sm text-navy-900/55">{{ __('appointment.step_1.lede') }}</p>
                         </div>
                     </header>
 
                     <div class="mt-7 grid gap-5 sm:grid-cols-2">
                         <div>
-                            <label for="department" class="label">Department</label>
+                            <label for="department" class="label">{{ __('appointment.step_1.department') }}</label>
                             <select id="department" x-model="department" @change="loadDoctors()" class="input">
-                                <option value="">All departments</option>
+                                <option value="">{{ __('common.all_departments') }}</option>
                                 @foreach ($departments as $dept)
                                     <option value="{{ $dept->slug }}">{{ $dept->name }}</option>
                                 @endforeach
@@ -68,12 +68,12 @@
 
                         <div>
                             <label for="doctor" class="label">
-                                Consultant
-                                <span x-show="loadingDoctors" x-cloak class="ml-1 text-xs font-normal text-navy-900/45">loading…</span>
+                                {{ __('appointment.step_1.consultant') }}
+                                <span x-show="loadingDoctors" x-cloak class="ml-1 text-xs font-normal text-navy-900/45">{{ __('appointment.step_1.loading') }}</span>
                             </label>
                             <select id="doctor" x-model.number="doctorId" @change="onDoctorChange()"
                                     class="input" :disabled="loadingDoctors">
-                                <option :value="null">Select a consultant</option>
+                                <option :value="null">{{ __('appointment.step_1.select_consultant') }}</option>
                                 <template x-for="doc in doctors" :key="doc.id">
                                     <option :value="doc.id" x-text="`${doc.name} — ${doc.speciality}`"></option>
                                 </template>
@@ -97,23 +97,23 @@
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold transition"
                               :class="doctorId ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40'">2</span>
                         <div>
-                            <h2 class="font-display text-lg font-bold text-navy-900">Pick a date and time</h2>
-                            <p class="text-sm text-navy-900/55">Only dates with open slots are shown.</p>
+                            <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_2.title') }}</h2>
+                            <p class="text-sm text-navy-900/55">{{ __('appointment.step_2.lede') }}</p>
                         </div>
                     </header>
 
-                    <p x-show="!doctorId" class="mt-6 text-sm text-navy-900/45">Select a consultant first.</p>
+                    <p x-show="!doctorId" class="mt-6 text-sm text-navy-900/45">{{ __('appointment.step_2.select_first') }}</p>
 
                     <div x-show="doctorId" x-cloak class="mt-7 space-y-7">
                         {{-- Date chips --}}
                         <div>
-                            <p class="label">Available dates</p>
+                            <p class="label">{{ __('appointment.step_2.dates_label') }}</p>
 
-                            <p x-show="loadingSlots" class="text-sm text-navy-900/45">Checking availability…</p>
+                            <p x-show="loadingSlots" class="text-sm text-navy-900/45">{{ __('appointment.step_2.checking') }}</p>
 
                             <p x-show="!loadingSlots && dates.length === 0" x-cloak
                                class="rounded-xl bg-mist-50 px-5 py-4 text-sm text-navy-900/60">
-                                No open slots in the next three weeks. Please call
+                                {{ __('appointment.step_2.none_in_window') }}
                                 <a href="tel:{{ setting('appointment_number') }}" class="font-semibold text-teal-700 hover:underline">
                                     {{ setting('appointment_number') }}</a>.
                             </p>
@@ -127,7 +127,7 @@
                                                 : 'border-mist-200 bg-white text-navy-900 hover:border-teal-300 hover:bg-teal-50'">
                                         <span class="block text-[11px] font-medium opacity-70" x-text="day.weekday"></span>
                                         <span class="block font-display text-sm font-bold" x-text="day.label"></span>
-                                        <span class="block text-[10px] opacity-70" x-text="`${day.slots} open`"></span>
+                                        <span class="block text-[10px] opacity-70" x-text="slotsOpenLabel(day.slots)"></span>
                                     </button>
                                 </template>
                             </div>
@@ -135,10 +135,10 @@
 
                         {{-- Slot grid --}}
                         <div x-show="date" x-cloak>
-                            <p class="label">Available times</p>
+                            <p class="label">{{ __('appointment.step_2.times_label') }}</p>
 
                             <p x-show="!loadingSlots && slots.length === 0" class="text-sm text-navy-900/50">
-                                No slots left on this date — please choose another.
+                                {{ __('appointment.step_2.no_times') }}
                             </p>
 
                             <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
@@ -161,34 +161,34 @@
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold transition"
                               :class="time ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40'">3</span>
                         <div>
-                            <h2 class="font-display text-lg font-bold text-navy-900">Patient details</h2>
-                            <p class="text-sm text-navy-900/55">We only ask for what the clinic needs.</p>
+                            <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_3.title') }}</h2>
+                            <p class="text-sm text-navy-900/55">{{ __('appointment.step_3.lede') }}</p>
                         </div>
                     </header>
 
                     <div class="mt-7 grid gap-5 sm:grid-cols-2">
                         <div class="sm:col-span-2">
-                            <label for="patient_name" class="label">Patient's full name <span class="text-urgent-600">*</span></label>
+                            <label for="patient_name" class="label">{{ __('appointment.step_3.patient_name') }} <span class="text-urgent-600">*</span></label>
                             <input id="patient_name" type="text" name="patient_name" value="{{ old('patient_name') }}"
-                                   required autocomplete="name" placeholder="As it should appear on the prescription"
+                                   required autocomplete="name" placeholder="{{ __('appointment.step_3.patient_name_placeholder') }}"
                                    @class(['input', 'input-error' => $errors->has('patient_name')])>
                             @error('patient_name') <p class="field-error">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label for="phone" class="label">Mobile number <span class="text-urgent-600">*</span></label>
+                            <label for="phone" class="label">{{ __('appointment.step_3.phone') }} <span class="text-urgent-600">*</span></label>
                             <input id="phone" type="tel" name="phone" value="{{ old('phone') }}"
                                    required inputmode="tel" autocomplete="tel" placeholder="01712345678"
                                    @class(['input', 'input-error' => $errors->has('phone')])>
                             @error('phone')
                                 <p class="field-error">{{ $message }}</p>
                             @else
-                                <p class="mt-1.5 text-xs text-navy-900/45">We send the confirmation SMS to this number.</p>
+                                <p class="mt-1.5 text-xs text-navy-900/45">{{ __('appointment.step_3.phone_hint') }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="email" class="label">Email <span class="text-navy-900/40">(optional)</span></label>
+                            <label for="email" class="label">{{ __('appointment.step_3.email') }} <span class="text-navy-900/40">{{ __('common.optional') }}</span></label>
                             <input id="email" type="email" name="email" value="{{ old('email') }}"
                                    autocomplete="email" placeholder="you@example.com"
                                    @class(['input', 'input-error' => $errors->has('email')])>
@@ -196,26 +196,26 @@
                         </div>
 
                         <div>
-                            <label for="gender" class="label">Gender</label>
+                            <label for="gender" class="label">{{ __('appointment.step_3.gender') }}</label>
                             <select id="gender" name="gender" class="input">
-                                <option value="">Prefer not to say</option>
-                                @foreach (['female' => 'Female', 'male' => 'Male', 'other' => 'Other'] as $value => $label)
+                                <option value="">{{ __('appointment.step_3.gender_unspecified') }}</option>
+                                @foreach (['female' => __('appointment.step_3.gender_female'), 'male' => __('appointment.step_3.gender_male'), 'other' => __('appointment.step_3.gender_other')] as $value => $label)
                                     <option value="{{ $value }}" @selected(old('gender') === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div>
-                            <label for="age" class="label">Age</label>
+                            <label for="age" class="label">{{ __('appointment.step_3.age') }}</label>
                             <input id="age" type="number" name="age" value="{{ old('age') }}" min="0" max="120"
-                                   placeholder="Years" class="input">
+                                   placeholder="{{ __('appointment.step_3.age_placeholder') }}" class="input">
                         </div>
 
                         <div class="sm:col-span-2">
                             <fieldset>
-                                <legend class="label">Visit type</legend>
+                                <legend class="label">{{ __('appointment.step_3.visit_type') }}</legend>
                                 <div class="flex flex-wrap gap-3">
-                                    @foreach (['new' => 'First visit', 'follow_up' => 'Follow-up'] as $value => $label)
+                                    @foreach (['new' => __('appointment.step_3.visit_new'), 'follow_up' => __('appointment.step_3.visit_follow_up')] as $value => $label)
                                         <label class="flex cursor-pointer items-center gap-2.5 rounded-xl border border-mist-200 px-4 py-2.5 text-sm
                                                       transition hover:border-teal-300 has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
                                             <input type="radio" name="visit_type" value="{{ $value }}"
@@ -229,9 +229,9 @@
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label for="notes" class="label">Reason for visit <span class="text-navy-900/40">(optional)</span></label>
+                            <label for="notes" class="label">{{ __('appointment.step_3.notes') }} <span class="text-navy-900/40">{{ __('common.optional') }}</span></label>
                             <textarea id="notes" name="notes" rows="3" maxlength="1000"
-                                      placeholder="Main symptoms, how long they have lasted, and any current medication."
+                                      placeholder="{{ __('appointment.step_3.notes_placeholder') }}"
                                       class="input">{{ old('notes') }}</textarea>
                         </div>
                     </div>
@@ -244,18 +244,19 @@
                             <p>
                                 <span class="font-semibold text-navy-900" x-text="selectedDoctor.name"></span>
                                 · <span x-text="prettyDate"></span>
-                                at <span class="font-semibold text-navy-900" x-text="prettyTime"></span>
+                                {{ __('appointment.summary_at') }}
+                                <span class="font-semibold text-navy-900" x-text="prettyTime"></span>
                             </p>
                         </template>
                         <template x-if="!(selectedDoctor && date && time)">
-                            <p>Complete the steps above to confirm.</p>
+                            <p>{{ __('appointment.summary_incomplete') }}</p>
                         </template>
-                        <p class="mt-1 text-xs text-navy-900/45">No payment is taken online. Pay at the reception desk.</p>
+                        <p class="mt-1 text-xs text-navy-900/45">{{ __('appointment.no_online_payment') }}</p>
                     </div>
 
                     <button type="submit" class="btn-accent btn-lg shrink-0" :disabled="!(doctorId && date && time)">
                         <x-icon name="calendar-check" size="18" />
-                        Confirm appointment
+                        {{ __('appointment.confirm') }}
                     </button>
                 </div>
             </form>
@@ -266,7 +267,7 @@
             <div class="sticky top-24 space-y-4">
                 @if ($doctor)
                     <div class="card p-7">
-                        <p class="eyebrow">Selected consultant</p>
+                        <p class="eyebrow">{{ __('appointment.aside.selected') }}</p>
                         <div class="mt-4 flex items-start gap-4">
                             <x-doctor-avatar :doctor="$doctor" size="sm" />
                             <div class="min-w-0">
@@ -276,18 +277,18 @@
                             </div>
                         </div>
                         <a href="{{ route('doctors.show', $doctor) }}"
-                           class="mt-5 block text-sm font-semibold text-teal-700 hover:underline">View full profile →</a>
+                           class="mt-5 block text-sm font-semibold text-teal-700 hover:underline">{{ __('appointment.aside.view_profile') }}</a>
                     </div>
                 @endif
 
                 <div class="card p-7">
-                    <h2 class="font-display text-base font-bold text-navy-900">Before you come</h2>
+                    <h2 class="font-display text-base font-bold text-navy-900">{{ __('appointment.aside.before_title') }}</h2>
                     <ul class="mt-5 space-y-3 text-sm text-navy-900/65">
                         @foreach ([
-                            'Arrive 15 minutes early to complete registration.',
-                            'Bring any previous prescriptions, reports and scans.',
-                            'Bring a list of medicines you currently take, including doses.',
-                            'Fasting is only needed if your doctor has told you so.',
+                            __('appointment.aside.before_1'),
+                            __('appointment.aside.before_2'),
+                            __('appointment.aside.before_3'),
+                            __('appointment.aside.before_4'),
                         ] as $tip)
                             <li class="flex items-start gap-2.5">
                                 <x-icon name="check" size="15" stroke="2.5" class="mt-0.5 shrink-0 text-teal-600" />
@@ -300,12 +301,9 @@
                 <div class="card bg-urgent-50 p-7">
                     <div class="flex items-center gap-3">
                         <x-icon name="ambulance" size="22" class="text-urgent-600" />
-                        <h2 class="font-display text-base font-bold text-navy-900">This is not for emergencies</h2>
+                        <h2 class="font-display text-base font-bold text-navy-900">{{ __('appointment.aside.not_emergency_title') }}</h2>
                     </div>
-                    <p class="mt-3 text-sm text-navy-900/65">
-                        If symptoms are severe or sudden, do not book — come straight to the Emergency Department
-                        or call an ambulance.
-                    </p>
+                    <p class="mt-3 text-sm text-navy-900/65">{{ __('appointment.aside.not_emergency_body') }}</p>
                     <a href="tel:{{ setting('hotline') }}" class="btn-urgent mt-5 w-full">
                         <x-icon name="phone" size="16" /> {{ setting('hotline') }}
                     </a>
@@ -335,9 +333,15 @@
 
             get prettyDate() {
                 if (!this.date) return '';
-                return new Date(`${this.date}T00:00:00`).toLocaleDateString('en-GB', {
+                return new Date(`${this.date}T00:00:00`).toLocaleDateString(document.documentElement.lang || 'en', {
                     weekday: 'long', day: 'numeric', month: 'long',
                 });
+            },
+
+            /* ':count' placeholder is substituted client-side so the string
+               stays in the lang file rather than being built in JS. */
+            slotsOpenLabel(count) {
+                return @js(__('appointment.step_2.slots_open_short')).replace(':count', count);
             },
 
             get prettyTime() {

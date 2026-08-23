@@ -13,15 +13,19 @@
         </div>
 
         <div class="flex items-center gap-5">
-            <a href="{{ route('international') }}" class="text-white/70 transition hover:text-white">International Patients</a>
+            <x-locale-switcher />
+
+            <a href="{{ route('international') }}" class="text-white/70 transition hover:text-white">
+                {{ __('nav.items.international') }}
+            </a>
             <a href="tel:{{ setting('hotline') }}" class="flex items-center gap-2 font-semibold transition hover:text-teal-300">
                 <x-icon name="phone" size="15" />
-                Hotline {{ setting('hotline') }}
+                {{ __('common.hotline') }} {{ setting('hotline') }}
             </a>
             <a href="tel:{{ setting('ambulance_number') }}"
                class="flex items-center gap-2 rounded-full bg-urgent-600 px-3.5 py-1.5 font-semibold transition hover:bg-urgent-700">
                 <x-icon name="ambulance" size="15" />
-                Emergency
+                {{ __('common.emergency') }}
             </a>
         </div>
     </div>
@@ -36,18 +40,19 @@
     <div class="shell flex h-[72px] items-center justify-between gap-6">
 
         {{-- Logo --}}
-        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3" aria-label="{{ setting('site_name') }} home">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3"
+           aria-label="{{ __('common.home_aria', ['name' => setting('site_name')]) }}">
             <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy-900 text-white shadow-soft">
                 <x-icon name="heart-pulse" size="24" stroke="2" />
             </span>
             <span class="leading-tight">
-                <span class="block font-display text-lg font-extrabold tracking-tight text-navy-900">RBR Hospital</span>
+                <span class="block font-display text-lg font-extrabold tracking-tight text-navy-900">{{ setting('site_name') }}</span>
                 <span class="block text-[11px] font-medium tracking-wide text-navy-900/50">{{ setting('site_tagline') }}</span>
             </span>
         </a>
 
         {{-- Desktop navigation --}}
-        <nav class="hidden items-center gap-1 xl:flex" aria-label="Primary">
+        <nav class="hidden items-center gap-1 xl:flex" aria-label="{{ __('nav.primary') }}">
             {{-- Departments mega menu --}}
             <div class="relative" @mouseenter="mega = 'departments'" @mouseleave="mega = null">
                 <button type="button"
@@ -56,7 +61,7 @@
                         class="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-navy-900/75
                                transition hover:bg-navy-50 hover:text-navy-900
                                {{ request()->routeIs('departments.*') ? 'bg-navy-50 text-navy-900' : '' }}">
-                    Departments
+                    {{ __('nav.items.departments') }}
                     <x-icon name="chevron-down" size="15" ::class="mega === 'departments' && 'rotate-180'" class="transition-transform" />
                 </button>
 
@@ -81,7 +86,7 @@
                         <a href="{{ route('departments.index') }}"
                            class="mt-1 flex items-center justify-center gap-2 rounded-xl bg-navy-50 px-4 py-3
                                   text-sm font-semibold text-navy-900 transition hover:bg-navy-100">
-                            View all {{ $navDepartments->count() }} departments
+                            {{ __('nav.view_all_departments', ['count' => $navDepartments->count()]) }}
                             <x-icon name="arrow-right" size="16" />
                         </a>
                     </div>
@@ -89,12 +94,12 @@
             </div>
 
             @foreach ([
-                ['doctors.index', 'Find a Doctor'],
-                ['services.index', 'Services'],
-                ['packages.index', 'Health Packages'],
-                ['posts.index', 'Health Hub'],
-                ['about', 'About'],
-                ['contact', 'Contact'],
+                ['doctors.index', __('nav.items.doctors')],
+                ['services.index', __('nav.items.services')],
+                ['packages.index', __('nav.items.packages')],
+                ['posts.index', __('nav.items.posts')],
+                ['about', __('nav.items.about')],
+                ['contact', __('nav.items.contact')],
             ] as [$route, $label])
                 <a href="{{ route($route) }}"
                    class="rounded-full px-4 py-2.5 text-sm font-medium transition
@@ -109,16 +114,16 @@
         <div class="flex items-center gap-2">
             <a href="{{ route('doctors.index') }}" class="btn-outline btn-sm hidden md:inline-flex">
                 <x-icon name="search" size="16" />
-                Find a Doctor
+                {{ __('common.find_a_doctor') }}
             </a>
             <a href="{{ route('appointment.create') }}" class="btn-accent btn-sm hidden sm:inline-flex">
                 <x-icon name="calendar-check" size="16" />
-                Book Appointment
+                {{ __('common.book_appointment_short') }}
             </a>
 
             <button type="button" @click="open = !open"
                     class="grid h-10 w-10 place-items-center rounded-xl border border-mist-200 text-navy-900 xl:hidden"
-                    :aria-expanded="open ? 'true' : 'false'" aria-label="Toggle navigation menu">
+                    :aria-expanded="open ? 'true' : 'false'" aria-label="{{ __('common.toggle_menu') }}">
                 <x-icon name="menu" size="20" x-show="!open" />
                 <x-icon name="x" size="20" x-show="open" x-cloak />
             </button>
@@ -129,13 +134,13 @@
     <div x-show="open" x-cloak x-collapse class="border-t border-mist-200 bg-white xl:hidden">
         <div class="shell max-h-[70vh] space-y-1 overflow-y-auto py-5">
             <a href="{{ route('appointment.create') }}" class="btn-accent w-full sm:hidden">
-                <x-icon name="calendar-check" size="16" /> Book Appointment
+                <x-icon name="calendar-check" size="16" /> {{ __('common.book_appointment_short') }}
             </a>
 
             <div x-data="{ expanded: false }" class="pt-1">
                 <button type="button" @click="expanded = !expanded"
                         class="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-navy-900 hover:bg-mist-50">
-                    Departments
+                    {{ __('nav.items.departments') }}
                     <x-icon name="chevron-down" size="16" ::class="expanded && 'rotate-180'" class="transition-transform" />
                 </button>
                 <div x-show="expanded" x-collapse class="space-y-0.5 pb-2 pl-3">
@@ -150,13 +155,13 @@
             </div>
 
             @foreach ([
-                ['doctors.index', 'Find a Doctor'],
-                ['services.index', 'Services'],
-                ['packages.index', 'Health Packages'],
-                ['posts.index', 'Health Hub'],
-                ['international', 'International Patients'],
-                ['about', 'About Us'],
-                ['contact', 'Contact'],
+                ['doctors.index', __('nav.items.doctors')],
+                ['services.index', __('nav.items.services')],
+                ['packages.index', __('nav.items.packages')],
+                ['posts.index', __('nav.items.posts')],
+                ['international', __('nav.items.international')],
+                ['about', __('nav.items.about_long')],
+                ['contact', __('nav.items.contact')],
             ] as [$route, $label])
                 <a href="{{ route($route) }}"
                    class="block rounded-xl px-4 py-3 text-sm font-semibold text-navy-900 hover:bg-mist-50">{{ $label }}</a>
@@ -164,11 +169,13 @@
 
             <div class="mt-3 grid gap-2 border-t border-mist-200 pt-4">
                 <a href="tel:{{ setting('hotline') }}" class="btn-outline w-full">
-                    <x-icon name="phone" size="16" /> Hotline {{ setting('hotline') }}
+                    <x-icon name="phone" size="16" /> {{ __('common.hotline') }} {{ setting('hotline') }}
                 </a>
                 <a href="tel:{{ setting('ambulance_number') }}" class="btn-urgent w-full">
-                    <x-icon name="ambulance" size="16" /> Emergency & Ambulance
+                    <x-icon name="ambulance" size="16" /> {{ __('nav.emergency_ambulance') }}
                 </a>
+
+                <x-locale-switcher variant="drawer" class="mt-1" />
             </div>
         </div>
     </div>

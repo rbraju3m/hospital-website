@@ -74,14 +74,14 @@ class AppointmentController extends Controller
 
         if (! $doctor->accepts_online_appointment) {
             return back()->withInput()->withErrors([
-                'doctor_id' => 'This consultant does not take online appointments. Please call our hotline.',
+                'doctor_id' => __('forms.no_online_booking'),
             ]);
         }
 
         // Re-check at submit time: the slot may have been taken since the page loaded.
         if (! $this->slots->isSlotAvailable($doctor, $date, $data['appointment_time'])) {
             return back()->withInput()->withErrors([
-                'appointment_time' => 'That slot has just been taken. Please pick another time.',
+                'appointment_time' => __('forms.slot_taken'),
             ]);
         }
 
@@ -99,7 +99,7 @@ class AppointmentController extends Controller
             // double booking that slipped through the availability re-check.
             if ($this->isDuplicateSlot($e)) {
                 return back()->withInput()->withErrors([
-                    'appointment_time' => 'That slot has just been taken. Please pick another time.',
+                    'appointment_time' => __('forms.slot_taken'),
                 ]);
             }
 

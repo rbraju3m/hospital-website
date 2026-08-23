@@ -35,18 +35,15 @@ class StoreAppointmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.regex' => 'Enter a valid Bangladeshi mobile number, e.g. 01712345678.',
-            'appointment_date.before_or_equal' => 'Appointments can be booked up to '.AppointmentSlotService::BOOKING_WINDOW_DAYS.' days ahead.',
+            'phone.regex' => __('forms.phone_invalid'),
+            'appointment_date.before_or_equal' => __('forms.booking_window', [
+                'days' => AppointmentSlotService::BOOKING_WINDOW_DAYS,
+            ]),
         ];
     }
 
     public function attributes(): array
     {
-        return [
-            'doctor_id' => 'doctor',
-            'appointment_date' => 'date',
-            'appointment_time' => 'time slot',
-            'patient_name' => 'patient name',
-        ];
+        return __('forms.attributes');
     }
 }

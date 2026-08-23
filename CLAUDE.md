@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site plus a working online appointment engine. There is **no admin panel and no patient portal yet** — those are Phase 2, and the patient-portal service page describes functionality that does not exist behind it.
+**RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. There is **no admin panel and no patient portal yet** — those are Phase 2, and the patient-portal service page describes functionality that does not exist behind it.
 
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
@@ -34,10 +34,11 @@ php8.3 artisan migrate
 php8.3 artisan migrate:fresh --seed        # rebuild + reseed (seeders are idempotent)
 php8.3 artisan db:seed --class=DoctorSeeder
 
-# Tests (26 feature tests)
+# Tests (35 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
+vendor/bin/phpunit --filter LocalisationTest
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -85,6 +86,24 @@ Models use `$guarded = []` with a `casts()` method. Slug is the route key on eve
 
 Content lives in seeders, not migrations, and every seeder uses `updateOrCreate` keyed on slug, so re-running is safe and non-destructive.
 
+## Localisation
+
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`).
+
+Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
+
+`config('app.available_locales')` is the single source of truth for which locales exist — it drives the switcher, the `hreflang` tags, the route guard and the tests. Adding a locale means adding a key there and a directory under `lang/`.
+
+`SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
+
+`lang/bn/` currently translates `common` and `nav` only; the other files are present but return `[]`. That is deliberate, not unfinished-by-accident: Laravel falls back **per key**, so an untranslated key renders English rather than a raw key. To translate more, copy a key across from the matching `lang/en` file and translate the value — no template changes needed. All Bangla needs native-speaker review before launch; clinical copy has not been translated at all.
+
+Two tests keep the locales honest: one asserts every locale has a file per domain, another asserts no `bn` key exists that has no `en` counterpart (such a key would silently never render).
+
+Things that are correctly *not* translated: phone/email format examples in placeholders (`01712345678`), and all seeded database content (department names, doctor names, article bodies) — content localisation would need translated columns, which is Phase 2.
+
+Dates in the Alpine booking component format via `document.documentElement.lang`; server-side dates use `translatedFormat()` rather than `format()` where the month or weekday name is shown.
+
 ## Design system
 
 The look is the product. Deep navy (`navy-*`) + teal accent (`teal-*`) on near-white surfaces, generous whitespace, `rounded-[1.25rem]` cards, soft shadows.
@@ -109,4 +128,6 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 ## Not built yet (Phase 2)
 
-Admin CRUD, patient portal, diagnostics test catalogue with pricing, Bangla content. The i18n layer is **not** in place either — the plan was English-first with strings ready to extract, but templates currently hold literal English. Extracting to lang files is still outstanding.
+Admin CRUD, patient portal, diagnostics test catalogue with pricing.
+
+On localisation specifically: the i18n **layer** is done and tested, but the Bangla **content** is not. Outstanding are the eight empty `lang/bn` domain files, native-speaker review of the two that are translated, and translated columns on the content models so department names, doctor profiles and articles can be localised too.

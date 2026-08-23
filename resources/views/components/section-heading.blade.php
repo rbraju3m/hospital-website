@@ -4,7 +4,7 @@
     'lede' => null,
     'align' => 'left',
     'link' => null,
-    'linkLabel' => 'View all',
+    'linkLabel' => null,
 ])
 
 <div {{ $attributes->merge(['class' => 'flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between']) }}>
@@ -25,7 +25,7 @@
 
     @if ($link)
         <a href="{{ $link }}" class="btn-outline shrink-0 self-start sm:self-auto">
-            {{ $linkLabel }}
+            {{ $linkLabel ?? __('common.view_all') }}
             <x-icon name="arrow-right" size="16" />
         </a>
     @endif

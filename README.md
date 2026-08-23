@@ -12,6 +12,7 @@ A modern hospital website built with **Laravel 13**, **Blade**, **Tailwind CSS 4
 - **Health Hub** — consultant-authored health articles
 - **Emergency page** — symptom guidance, ambulance information and direct-dial numbers
 - **International patients** — visa letters, transfers, accommodation and interpreter support
+- **Bilingual-ready** — every UI string lives in `lang/`, with a locale switcher, `Accept-Language` detection, session persistence and per-key fallback to English (Bangla navigation translated; page copy pending)
 - Responsive, accessible (skip link, focus rings, `prefers-reduced-motion`), SEO meta and self-hosted fonts
 
 ## Requirements
@@ -43,8 +44,12 @@ For Apache, install `deploy/hospital.local.conf` — see the comments at the top
 vendor/bin/phpunit
 ```
 
-26 feature tests covering page rendering, doctor search, the contact form, and the appointment booking flow including double-booking, out-of-schedule and out-of-window rejection.
+35 feature tests covering page rendering, doctor search, the contact form, the appointment booking flow (including double-booking, out-of-schedule and out-of-window rejection), and localisation (locale persistence, fallback, allow-list enforcement and lang-file parity).
 
 ## Project notes
 
-See `CLAUDE.md` for architecture, the appointment slot engine, and design-system conventions.
+See `CLAUDE.md` for architecture, the appointment slot engine, localisation and design-system conventions.
+
+## Adding a language
+
+Add the locale to `available_locales` in `config/app.php`, create `lang/<code>/` with a file per domain, and translate keys as you go — untranslated keys fall back to English automatically.

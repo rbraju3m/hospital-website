@@ -1,7 +1,11 @@
 @extends('layouts.site')
 
-@section('title', 'Advanced Medicine, Delivered with Care')
-@section('meta_description', 'RBR Hospital is a ' . setting('bed_count') . '-bed multidisciplinary hospital in Dhaka offering 24/7 emergency care, ' . setting('stat_doctors') . '+ specialist consultants and online appointment booking.')
+@section('title', __('home.meta_title'))
+@section('meta_description', __('home.meta_description', [
+    'name' => setting('site_name'),
+    'beds' => setting('bed_count'),
+    'doctors' => setting('stat_doctors'),
+]))
 
 @section('content')
 
@@ -21,33 +25,37 @@
             </p>
 
             <h1 class="h-display mt-5 text-white">
-                World-class healthcare,<br class="hidden sm:block">
-                delivered with <span class="text-teal-300">compassion</span>
+                {{ __('home.hero.heading_line_1') }}<br class="hidden sm:block">
+                {{ __('home.hero.heading_line_2_before') }}
+                <span class="text-teal-300">{{ __('home.hero.heading_line_2_accent') }}</span>
             </h1>
 
             <p class="lede mt-6 max-w-xl text-white/70">
-                {{ setting('stat_doctors') }} specialist consultants across {{ setting('stat_departments') }} departments,
-                {{ setting('stat_icu_beds') }} critical care beds, and an emergency department that never closes —
-                in the heart of {{ str(setting('address_city'))->before(',') }}.
+                {{ __('home.hero.lede', [
+                    'doctors' => setting('stat_doctors'),
+                    'departments' => setting('stat_departments'),
+                    'icu' => setting('stat_icu_beds'),
+                    'city' => str(setting('address_city'))->before(','),
+                ]) }}
             </p>
 
             <div class="mt-9 flex flex-wrap items-center gap-3">
                 <a href="{{ route('appointment.create') }}" class="btn-accent btn-lg">
                     <x-icon name="calendar-check" size="18" />
-                    Book an Appointment
+                    {{ __('common.book_appointment') }}
                 </a>
                 <a href="{{ route('doctors.index') }}" class="btn btn-lg border border-white/25 text-white hover:bg-white/10">
                     <x-icon name="search" size="18" />
-                    Find a Doctor
+                    {{ __('common.find_a_doctor') }}
                 </a>
             </div>
 
             <dl class="mt-12 grid max-w-lg grid-cols-2 gap-x-8 gap-y-6 border-t border-white/10 pt-8 sm:grid-cols-4">
                 @foreach ([
-                    ['stat_doctors', 'Consultants', '+'],
-                    ['stat_beds', 'Beds', ''],
-                    ['stat_departments', 'Departments', ''],
-                    ['stat_years', 'Years of care', ''],
+                    ['stat_doctors', __('home.hero.stat_consultants'), '+'],
+                    ['stat_beds', __('home.hero.stat_beds'), ''],
+                    ['stat_departments', __('home.hero.stat_departments'), ''],
+                    ['stat_years', __('home.hero.stat_years'), ''],
                 ] as [$key, $label, $suffix])
                     <div>
                         <dt class="sr-only">{{ $label }}</dt>
@@ -64,15 +72,15 @@
         <div class="lg:col-span-5">
             <div class="card overflow-hidden p-0 shadow-lift">
                 <div class="border-b border-mist-200 bg-mist-50 px-7 py-5">
-                    <h2 class="font-display text-lg font-bold text-navy-900">Book in three steps</h2>
-                    <p class="mt-1 text-sm text-navy-900/55">Pick a department, choose your consultant, confirm a time.</p>
+                    <h2 class="font-display text-lg font-bold text-navy-900">{{ __('home.booker.heading') }}</h2>
+                    <p class="mt-1 text-sm text-navy-900/55">{{ __('home.booker.lede') }}</p>
                 </div>
 
                 <form action="{{ route('appointment.create') }}" method="GET" class="space-y-4 p-7">
                     <div>
-                        <label for="hero-department" class="label">Department</label>
+                        <label for="hero-department" class="label">{{ __('home.booker.department') }}</label>
                         <select id="hero-department" name="department" class="input">
-                            <option value="">Any department</option>
+                            <option value="">{{ __('common.any_department') }}</option>
                             @foreach ($departmentOptions as $dept)
                                 <option value="{{ $dept->slug }}">{{ $dept->name }}</option>
                             @endforeach
@@ -80,12 +88,12 @@
                     </div>
 
                     <button type="submit" class="btn-primary w-full">
-                        Continue to booking
+                        {{ __('home.booker.continue') }}
                         <x-icon name="arrow-right" size="16" />
                     </button>
 
                     <p class="text-center text-xs text-navy-900/45">
-                        Prefer to talk? Call
+                        {{ __('home.booker.prefer_to_talk') }}
                         <a href="tel:{{ setting('appointment_number') }}" class="font-semibold text-teal-700 hover:underline">
                             {{ setting('appointment_number') }}
                         </a>
@@ -95,10 +103,10 @@
                 <div class="flex items-center gap-3 border-t border-mist-200 bg-urgent-50 px-7 py-4">
                     <x-icon name="ambulance" size="22" class="shrink-0 text-urgent-600" />
                     <p class="text-sm text-navy-900/70">
-                        <span class="font-semibold text-urgent-700">Emergency?</span>
-                        Walk in any time or call
+                        <span class="font-semibold text-urgent-700">{{ __('home.booker.emergency_label') }}</span>
+                        {{ __('home.booker.emergency_body') }}
                         <a href="tel:{{ setting('hotline') }}" class="font-bold text-urgent-700 hover:underline">{{ setting('hotline') }}</a>.
-                        No appointment needed.
+                        {{ __('home.booker.emergency_suffix') }}
                     </p>
                 </div>
             </div>
@@ -111,12 +119,12 @@
     <div class="shell">
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
             @foreach ([
-                ['emergency', 'ambulance', 'Emergency', '24 hours', 'urgent'],
-                ['doctors.index', 'user-round', 'Find a Doctor', '180+ consultants', 'teal'],
-                ['appointment.create', 'calendar-check', 'Appointment', 'Book online', 'teal'],
-                ['departments.index', 'building', 'Departments', '16 specialties', 'navy'],
-                ['services.index', 'microscope', 'Diagnostics', 'Lab & imaging', 'navy'],
-                ['packages.index', 'check-circle', 'Health Checks', 'From ৳2,900', 'navy'],
+                ['emergency', 'ambulance', __('home.quick.emergency'), __('home.quick.emergency_sub'), 'urgent'],
+                ['doctors.index', 'user-round', __('home.quick.doctors'), __('home.quick.doctors_sub', ['count' => setting('stat_doctors')]), 'teal'],
+                ['appointment.create', 'calendar-check', __('home.quick.appointment'), __('home.quick.appointment_sub'), 'teal'],
+                ['departments.index', 'building', __('home.quick.departments'), __('home.quick.departments_sub', ['count' => setting('stat_departments')]), 'navy'],
+                ['services.index', 'microscope', __('home.quick.diagnostics'), __('home.quick.diagnostics_sub'), 'navy'],
+                ['packages.index', 'check-circle', __('home.quick.checks'), __('home.quick.checks_sub', ['price' => number_format($cheapestPackage)]), 'navy'],
             ] as [$route, $icon, $label, $sub, $tone])
                 <a href="{{ route($route) }}"
                    class="card-interactive group flex flex-col items-center gap-2 p-5 text-center">
@@ -140,11 +148,11 @@
 <section class="section">
     <div class="shell">
         <x-section-heading
-            eyebrow="Centres of Excellence"
-            title="Specialist care organised around the condition, not the corridor"
-            lede="Each centre brings physicians, surgeons, imaging and rehabilitation into one pathway, so patients are not left to coordinate their own care between departments."
+            :eyebrow="__('home.centres.eyebrow')"
+            :title="__('home.centres.title')"
+            :lede="__('home.centres.lede')"
             :link="route('departments.index')"
-            link-label="All departments"
+            :link-label="__('home.centres.link')"
             class="reveal" />
 
         <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -160,34 +168,34 @@
 <section class="section bg-mist-50">
     <div class="shell">
         <x-section-heading
-            eyebrow="Our Consultants"
-            title="Find the right doctor"
-            lede="Search by name, specialty or department. Every profile shows chamber times, consultation fees and the next available slot."
+            :eyebrow="__('home.doctors.eyebrow')"
+            :title="__('home.doctors.title')"
+            :lede="__('home.doctors.lede')"
             :link="route('doctors.index')"
-            link-label="All consultants"
+            :link-label="__('home.doctors.link')"
             class="reveal" />
 
         <form action="{{ route('doctors.index') }}" method="GET" class="reveal mt-10">
             <div class="card flex flex-col gap-3 p-3 sm:flex-row">
                 <div class="relative flex-1">
                     <x-icon name="search" size="18" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-navy-900/35" />
-                    <label for="home-doctor-q" class="sr-only">Search doctors</label>
+                    <label for="home-doctor-q" class="sr-only">{{ __('home.doctors.search_label') }}</label>
                     <input id="home-doctor-q" type="search" name="q"
-                           placeholder="Doctor name, specialty or condition…"
+                           placeholder="{{ __('home.doctors.search_placeholder') }}"
                            class="input border-0 pl-11 shadow-none focus:ring-0">
                 </div>
 
                 <div class="sm:w-64">
-                    <label for="home-doctor-dept" class="sr-only">Department</label>
+                    <label for="home-doctor-dept" class="sr-only">{{ __('home.booker.department') }}</label>
                     <select id="home-doctor-dept" name="department" class="input border-0 shadow-none focus:ring-0">
-                        <option value="">All departments</option>
+                        <option value="">{{ __('common.all_departments') }}</option>
                         @foreach ($departmentOptions as $dept)
                             <option value="{{ $dept->slug }}">{{ $dept->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <button type="submit" class="btn-primary sm:px-8">Search</button>
+                <button type="submit" class="btn-primary sm:px-8">{{ __('home.doctors.search_button') }}</button>
             </div>
         </form>
 
@@ -204,11 +212,11 @@
 <section class="section">
     <div class="shell">
         <x-section-heading
-            eyebrow="Medical Services"
-            title="Everything a patient needs, on one campus"
-            lede="From emergency resuscitation to routine physiotherapy — services designed so that a single visit rarely turns into three."
+            :eyebrow="__('home.services.eyebrow')"
+            :title="__('home.services.title')"
+            :lede="__('home.services.lede')"
             :link="route('services.index')"
-            link-label="All services"
+            :link-label="__('home.services.link')"
             class="reveal" />
 
         <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -222,7 +230,7 @@
                             <x-icon :name="$service->icon" size="24" />
                         </span>
                         @if ($service->is_247)
-                            <span class="chip-accent">24/7</span>
+                            <span class="chip-accent">{{ __('services.badge_247') }}</span>
                         @endif
                     </div>
 
@@ -231,7 +239,7 @@
                     </h3>
                     <p class="mt-2.5 text-sm leading-relaxed text-navy-900/60">{{ $service->summary }}</p>
                     <span class="mt-auto pt-5 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
-                        Learn more →
+                        {{ __('common.learn_more') }} →
                     </span>
                 </a>
             @endforeach
@@ -243,17 +251,17 @@
 <section class="section bg-navy-900 text-white">
     <div class="shell grid gap-14 lg:grid-cols-12">
         <div class="lg:col-span-5">
-            <p class="eyebrow text-teal-300"><span class="h-px w-6 bg-teal-400"></span> Why RBR Hospital</p>
-            <h2 class="h-section mt-3 text-white">Standards you can check, not just claims</h2>
-            <p class="lede mt-5 text-white/65">
-                We publish the things that actually determine outcomes — response times, staffing ratios,
-                accreditation — because those are what separate hospitals, not marketing language.
+            <p class="eyebrow text-teal-300">
+                <span class="h-px w-6 bg-teal-400"></span>
+                {{ __('home.why.eyebrow', ['name' => setting('site_name')]) }}
             </p>
+            <h2 class="h-section mt-3 text-white">{{ __('home.why.title') }}</h2>
+            <p class="lede mt-5 text-white/65">{{ __('home.why.lede') }}</p>
 
             <div class="mt-9 flex flex-wrap gap-3">
-                <a href="{{ route('about') }}" class="btn-accent">About the hospital</a>
+                <a href="{{ route('about') }}" class="btn-accent">{{ __('home.why.about_cta') }}</a>
                 <a href="{{ route('contact') }}" class="btn border border-white/25 text-white hover:bg-white/10">
-                    Visit us
+                    {{ __('home.why.visit_cta') }}
                 </a>
             </div>
         </div>
@@ -261,12 +269,12 @@
         <div class="lg:col-span-7">
             <div class="grid gap-4 sm:grid-cols-2">
                 @foreach ([
-                    ['ambulance', 'Emergency triage in under 5 minutes', 'Emergency physicians are on site around the clock, not on call from home.'],
-                    ['activity', 'Resident intensivists, 24 hours', 'Ventilated patients are nursed one-to-one across ' . setting('stat_icu_beds') . ' critical care beds.'],
-                    ['shield-check', 'JCI accredited, ISO certified', 'Independently audited against international patient-safety standards.'],
-                    ['users', setting('stat_doctors') . '+ specialist consultants', 'Sub-specialty depth across ' . setting('stat_departments') . ' departments, with multidisciplinary review for complex cases.'],
-                    ['heart-pulse', 'Door-to-balloon under 60 minutes', 'Two catheterisation labs mean a heart attack never waits for a planned case.'],
-                    ['file-text', 'Reports online, not in a queue', 'Lab and imaging results download from the patient portal as soon as they are verified.'],
+                    ['ambulance', __('home.why.triage_title'), __('home.why.triage_body')],
+                    ['activity', __('home.why.icu_title'), __('home.why.icu_body', ['count' => setting('stat_icu_beds')])],
+                    ['shield-check', __('home.why.accredited_title'), __('home.why.accredited_body')],
+                    ['users', __('home.why.consultants_title', ['count' => setting('stat_doctors')]), __('home.why.consultants_body', ['departments' => setting('stat_departments')])],
+                    ['heart-pulse', __('home.why.cardiac_title'), __('home.why.cardiac_body')],
+                    ['file-text', __('home.why.reports_title'), __('home.why.reports_body')],
                 ] as [$icon, $title, $body])
                     <div class="reveal rounded-2xl border border-white/10 bg-white/5 p-6"
                          style="transition-delay: {{ $loop->index * 60 }}ms">
@@ -286,11 +294,11 @@
 <section class="section">
     <div class="shell">
         <x-section-heading
-            eyebrow="Health Packages"
-            title="Preventive check-ups, finished in one visit"
-            lede="Structured screening completed in a single half-day, in a lounge separate from the main outpatient area — and a report that explains what the numbers mean."
+            :eyebrow="__('home.packages.eyebrow')"
+            :title="__('home.packages.title')"
+            :lede="__('home.packages.lede')"
             :link="route('packages.index')"
-            link-label="All packages"
+            :link-label="__('home.packages.link')"
             class="reveal" />
 
         <div class="mt-12 grid gap-5 lg:grid-cols-3">
@@ -306,9 +314,9 @@
 <section class="section bg-mist-50">
     <div class="shell">
         <x-section-heading
-            eyebrow="Patient Stories"
-            title="In their own words"
-            lede="Shared with permission by patients and families treated at RBR Hospital."
+            :eyebrow="__('home.testimonials.eyebrow')"
+            :title="__('home.testimonials.title')"
+            :lede="__('home.testimonials.lede', ['name' => setting('site_name')])"
             align="center"
             class="reveal" />
 
@@ -344,11 +352,11 @@
 <section class="section">
     <div class="shell">
         <x-section-heading
-            eyebrow="Health Hub"
-            title="Guidance from our consultants"
-            lede="Practical, locally relevant health writing — dengue season, diabetes control, when chest pain needs an ambulance."
+            :eyebrow="__('home.posts.eyebrow')"
+            :title="__('home.posts.title')"
+            :lede="__('home.posts.lede')"
             :link="route('posts.index')"
-            link-label="All articles"
+            :link-label="__('home.posts.link')"
             class="reveal" />
 
         <div class="mt-12 grid gap-5 md:grid-cols-3">
@@ -365,15 +373,17 @@
         <div class="reveal overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy-900 to-navy-950 text-white">
             <div class="grid gap-10 p-9 sm:p-12 lg:grid-cols-12 lg:items-center">
                 <div class="lg:col-span-7">
-                    <h2 class="h-section text-white">Come and see us</h2>
+                    <h2 class="h-section text-white">{{ __('home.visit.title') }}</h2>
                     <p class="lede mt-4 text-white/65">
-                        {{ setting('address_line') }}, {{ setting('address_city') }}.
-                        Outpatient clinics run 8:00 AM to 10:00 PM; the Emergency Department is open every hour of the year.
+                        {{ __('home.visit.lede', [
+                            'address' => setting('address_line'),
+                            'city' => setting('address_city'),
+                        ]) }}
                     </p>
 
                     <div class="mt-8 flex flex-wrap gap-3">
                         <a href="{{ route('contact') }}" class="btn-accent">
-                            <x-icon name="map-pin" size="16" /> Directions & contact
+                            <x-icon name="map-pin" size="16" /> {{ __('home.visit.directions_cta') }}
                         </a>
                         <a href="tel:{{ setting('hotline') }}" class="btn border border-white/25 text-white hover:bg-white/10">
                             <x-icon name="phone" size="16" /> {{ setting('hotline') }}
@@ -384,9 +394,9 @@
                 <div class="lg:col-span-5">
                     <div class="grid gap-3">
                         @foreach ([
-                            ['ambulance', 'Ambulance', setting('ambulance_number'), 'tel:' . setting('ambulance_number')],
-                            ['calendar', 'Appointments', setting('appointment_number'), 'tel:' . setting('appointment_number')],
-                            ['globe', 'International desk', setting('international_desk'), 'tel:' . setting('international_desk')],
+                            ['ambulance', __('home.visit.ambulance'), setting('ambulance_number'), 'tel:' . setting('ambulance_number')],
+                            ['calendar', __('home.visit.appointments'), setting('appointment_number'), 'tel:' . setting('appointment_number')],
+                            ['globe', __('home.visit.international'), setting('international_desk'), 'tel:' . setting('international_desk')],
                         ] as [$icon, $label, $value, $href])
                             <a href="{{ $href }}"
                                class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">

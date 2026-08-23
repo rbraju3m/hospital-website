@@ -15,6 +15,9 @@
     <meta property="og:url" content="{{ url()->current() }}">
     <meta name="theme-color" content="#0b2c4d">
     <link rel="canonical" href="{{ url()->current() }}">
+    @foreach (array_keys(config('app.available_locales', [])) as $altLocale)
+        <link rel="alternate" hreflang="{{ $altLocale }}" href="{{ route('locale.switch', $altLocale) }}">
+    @endforeach
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
@@ -24,7 +27,7 @@
 <a href="#main"
    class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full
           focus:bg-navy-900 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white">
-    Skip to main content
+    {{ __('common.skip_to_content') }}
 </a>
 
 @include('partials.header')

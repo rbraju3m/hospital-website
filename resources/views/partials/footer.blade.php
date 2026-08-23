@@ -6,18 +6,18 @@
             <div class="flex items-center gap-3 text-center sm:text-left">
                 <x-icon name="ambulance" size="28" stroke="1.6" class="hidden sm:block" />
                 <div>
-                    <p class="font-display text-lg font-bold text-white">Medical emergency? Do not wait.</p>
-                    <p class="text-sm text-white/85">Our Emergency Department is open 24 hours. No appointment needed.</p>
+                    <p class="font-display text-lg font-bold text-white">{{ __('nav.footer.emergency_heading') }}</p>
+                    <p class="text-sm text-white/85">{{ __('nav.footer.emergency_body') }}</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center justify-center gap-2">
                 <a href="tel:{{ setting('hotline') }}"
                    class="btn bg-white px-6 py-3 text-urgent-700 hover:bg-white/90">
-                    <x-icon name="phone" size="16" /> Call {{ setting('hotline') }}
+                    <x-icon name="phone" size="16" /> {{ __('nav.footer.call_number', ['number' => setting('hotline')]) }}
                 </a>
                 <a href="tel:{{ setting('ambulance_number') }}"
                    class="btn border border-white/40 px-6 py-3 text-white hover:bg-white/10">
-                    <x-icon name="ambulance" size="16" /> Ambulance
+                    <x-icon name="ambulance" size="16" /> {{ __('common.ambulance') }}
                 </a>
             </div>
         </div>
@@ -31,12 +31,15 @@
                 <span class="grid h-11 w-11 place-items-center rounded-xl bg-teal-600 text-white">
                     <x-icon name="heart-pulse" size="24" stroke="2" />
                 </span>
-                <span class="font-display text-xl font-extrabold tracking-tight text-white">RBR Hospital</span>
+                <span class="font-display text-xl font-extrabold tracking-tight text-white">{{ setting('site_name') }}</span>
             </div>
 
             <p class="mt-5 max-w-sm text-sm leading-relaxed">
-                A {{ setting('bed_count') }}-bed multidisciplinary hospital in Dhaka, serving patients since
-                {{ setting('established_year') }}. {{ setting('accreditation') }}.
+                {{ __('nav.footer.blurb', [
+                    'beds' => setting('bed_count'),
+                    'year' => setting('established_year'),
+                    'accreditation' => setting('accreditation'),
+                ]) }}
             </p>
 
             <div class="mt-6 space-y-3 text-sm">
@@ -51,7 +54,7 @@
                 <p class="flex items-center gap-3">
                     <x-icon name="phone" size="18" class="text-teal-400" />
                     <a href="tel:{{ setting('appointment_number') }}" class="transition hover:text-white">
-                        {{ setting('appointment_number') }} (Appointments)
+                        {{ __('nav.footer.appointments_suffix', ['number' => setting('appointment_number')]) }}
                     </a>
                 </p>
             </div>
@@ -71,7 +74,7 @@
 
         {{-- Centres of excellence --}}
         <div class="lg:col-span-3">
-            <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">Centres of Excellence</h3>
+            <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">{{ __('nav.footer.centres') }}</h3>
             <ul class="mt-5 space-y-2.5 text-sm">
                 @foreach ($navDepartments->take(8) as $dept)
                     <li>
@@ -80,7 +83,7 @@
                 @endforeach
                 <li>
                     <a href="{{ route('departments.index') }}" class="font-semibold text-teal-400 transition hover:text-teal-300">
-                        All departments →
+                        {{ __('nav.footer.all_departments') }}
                     </a>
                 </li>
             </ul>
@@ -88,16 +91,16 @@
 
         {{-- Patients --}}
         <div class="lg:col-span-2">
-            <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">For Patients</h3>
+            <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">{{ __('nav.footer.for_patients') }}</h3>
             <ul class="mt-5 space-y-2.5 text-sm">
                 @foreach ([
-                    ['appointment.create', 'Book Appointment'],
-                    ['doctors.index', 'Find a Doctor'],
-                    ['packages.index', 'Health Packages'],
-                    ['services.index', 'Our Services'],
-                    ['emergency', 'Emergency Care'],
-                    ['international', 'International Patients'],
-                    ['posts.index', 'Health Hub'],
+                    ['appointment.create', __('common.book_appointment_short')],
+                    ['doctors.index', __('nav.items.doctors')],
+                    ['packages.index', __('nav.items.packages')],
+                    ['services.index', __('nav.items.services')],
+                    ['emergency', __('nav.footer.emergency_care')],
+                    ['international', __('nav.items.international')],
+                    ['posts.index', __('nav.items.posts')],
                 ] as [$route, $label])
                     <li><a href="{{ route($route) }}" class="transition hover:text-teal-300">{{ $label }}</a></li>
                 @endforeach
@@ -106,15 +109,19 @@
 
         {{-- Hospital --}}
         <div class="lg:col-span-3">
-            <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">Hospital</h3>
+            <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">{{ __('nav.footer.hospital') }}</h3>
             <ul class="mt-5 space-y-2.5 text-sm">
-                <li><a href="{{ route('about') }}" class="transition hover:text-teal-300">About RBR Hospital</a></li>
-                <li><a href="{{ route('contact') }}" class="transition hover:text-teal-300">Contact & Directions</a></li>
-                <li><a href="{{ route('services.index') }}" class="transition hover:text-teal-300">Facilities</a></li>
+                <li>
+                    <a href="{{ route('about') }}" class="transition hover:text-teal-300">
+                        {{ __('nav.footer.about_link', ['name' => setting('site_name')]) }}
+                    </a>
+                </li>
+                <li><a href="{{ route('contact') }}" class="transition hover:text-teal-300">{{ __('nav.footer.contact_link') }}</a></li>
+                <li><a href="{{ route('services.index') }}" class="transition hover:text-teal-300">{{ __('nav.footer.facilities_link') }}</a></li>
             </ul>
 
             <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-teal-400">24-Hour Hotline</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-teal-400">{{ __('nav.footer.hotline_label') }}</p>
                 <a href="tel:{{ setting('hotline') }}"
                    class="mt-1 block font-display text-3xl font-extrabold text-white transition hover:text-teal-300">
                     {{ setting('hotline') }}
@@ -126,10 +133,8 @@
 
     <div class="border-t border-white/10">
         <div class="shell flex flex-col items-center justify-between gap-3 py-6 text-xs sm:flex-row">
-            <p>© {{ date('Y') }} RBR Hospital. All rights reserved.</p>
-            <p class="text-white/45">
-                Information on this site is for general guidance and does not replace professional medical advice.
-            </p>
+            <p>{{ __('nav.footer.copyright', ['year' => date('Y'), 'name' => setting('site_name')]) }}</p>
+            <p class="text-white/45">{{ __('nav.footer.disclaimer') }}</p>
         </div>
     </div>
 </footer>
