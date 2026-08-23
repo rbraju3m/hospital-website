@@ -1,13 +1,48 @@
 <?php
 
-/*
- | Bangla — departments strings.
- |
- | Intentionally empty. Laravel falls back to lang/en per key, so this file can
- | be filled in incrementally: copy a key across from lang/en/departments.php, translate
- | the value, and it takes effect immediately with no template changes.
- |
- | Translations must be reviewed by a native speaker before launch.
- */
+/* Bangla — departments index and detail pages. */
 
-return [];
+return [
+    'index' => [
+        'meta_title' => 'বিভাগ ও সেন্টার অব এক্সিলেন্স',
+        'meta_description' => ':name-এর :count টি ক্লিনিক্যাল বিভাগ দেখুন — কার্ডিয়াক সায়েন্স ও নিউরোসায়েন্স থেকে শিশু ও জরুরি চিকিৎসা পর্যন্ত।',
+        'eyebrow' => 'ক্লিনিক্যাল বিভাগসমূহ',
+        'title' => ':count টি বিভাগজুড়ে বিশেষায়িত সেবা',
+        'lede' => 'আটটি সেন্টার অব এক্সিলেন্স এবং তার সাথে পূর্ণাঙ্গ ক্লিনিক্যাল বিশেষত্ব — এমনভাবে সাজানো যাতে একাধিক সমস্যায় ভোগা রোগী একটি সমন্বিত দলের কাছেই চিকিৎসা পান।',
+        'crumb' => 'বিভাগসমূহ',
+
+        'centres_eyebrow' => 'সেন্টার অব এক্সিলেন্স',
+        'centres_title' => 'যেখানে আমাদের গভীরতা সবচেয়ে বেশি',
+        'centres_lede' => 'এই সেন্টারগুলো চিকিৎসক, সার্জন, ইমেজিং ও পুনর্বাসনকে একটি অভিন্ন পথে যুক্ত করে, জটিল কেসে বহুবিভাগীয় পর্যালোচনাসহ।',
+
+        'others_eyebrow' => 'সব বিশেষত্ব',
+        'others_title' => 'অন্যান্য ক্লিনিক্যাল বিভাগ',
+
+        'unsure_title' => 'কোন বিভাগে যাবেন বুঝতে পারছেন না?',
+        'unsure_body' => 'ইন্টারনাল মেডিসিন দিয়ে শুরু করুন। আমাদের চিকিৎসকগণ অনির্দিষ্ট উপসর্গ মূল্যায়ন করে আপনাকে সঠিক বিশেষজ্ঞের কাছে পাঠাবেন — অনুমান করে গিয়ে ফিরে আসার চেয়ে এটি অনেক দ্রুত।',
+        'unsure_cta' => 'একজন চিকিৎসকের সাথে বুক করুন',
+    ],
+
+    'show' => [
+        'centre_eyebrow' => 'সেন্টার অব এক্সিলেন্স',
+        'department_eyebrow' => 'ক্লিনিক্যাল বিভাগ',
+        'about_title' => 'বিভাগ সম্পর্কে',
+        'treatments_title' => 'চিকিৎসা ও প্রক্রিয়াসমূহ',
+
+        'contact_title' => 'বিভাগের যোগাযোগ',
+        'location' => 'অবস্থান',
+        'direct_line' => 'সরাসরি নম্বর',
+        'consultants' => 'কনসালট্যান্ট',
+        'specialists' => ':count জন বিশেষজ্ঞ',
+
+        'emergency_title' => 'জরুরি',
+        'emergency_body' => 'জরুরি উপসর্গে সরাসরি জরুরি বিভাগে চলে আসুন — কোনো অ্যাপয়েন্টমেন্ট বা রেফারেল লাগবে না।',
+
+        'team_eyebrow' => 'আমাদের দল',
+        'team_title' => ':department বিভাগের কনসালট্যান্টগণ',
+        'team_lede' => 'প্রতিটি প্রোফাইলে চেম্বারের সময়, কনসালটেশন ফি এবং অনলাইনে বুকিং সুবিধার তথ্য রয়েছে।',
+
+        'explore_eyebrow' => 'আরও দেখুন',
+        'explore_title' => 'অন্যান্য বিভাগ',
+    ],
+];

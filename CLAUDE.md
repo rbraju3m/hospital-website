@@ -34,7 +34,7 @@ php8.3 artisan migrate
 php8.3 artisan migrate:fresh --seed        # rebuild + reseed (seeders are idempotent)
 php8.3 artisan db:seed --class=DoctorSeeder
 
-# Tests (35 feature tests)
+# Tests (37 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -96,13 +96,21 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/bn/` currently translates `common` and `nav` only; the other files are present but return `[]`. That is deliberate, not unfinished-by-accident: Laravel falls back **per key**, so an untranslated key renders English rather than a raw key. To translate more, copy a key across from the matching `lang/en` file and translate the value — no template changes needed. All Bangla needs native-speaker review before launch; clinical copy has not been translated at all.
+`lang/en` and `lang/bn` are both complete — 506 keys across 11 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
-Two tests keep the locales honest: one asserts every locale has a file per domain, another asserts no `bn` key exists that has no `en` counterpart (such a key would silently never render).
+**All Bangla needs native-speaker review before launch.** It was written without one.
 
-Things that are correctly *not* translated: phone/email format examples in placeholders (`01712345678`), and all seeded database content (department names, doctor names, article bodies) — content localisation would need translated columns, which is Phase 2.
+Three tests keep the locales honest and will fail the moment a key is added to one locale only:
 
-Dates in the Alpine booking component format via `document.documentElement.lang`; server-side dates use `translatedFormat()` rather than `format()` where the month or weekday name is shown.
+- every locale has a file per domain
+- the locales define **exactly** the same key set, in both directions
+- **every `:placeholder` survives translation** — a dropped `:count` or `:name` leaves a literal gap mid-sentence that no page-level test would catch
+
+When adding a UI string, add it to *both* locales in the same change.
+
+Things that are correctly *not* translated: phone/email format examples in placeholders (`01712345678`), and all seeded **database** content — department and service names, doctor names and qualifications, package test lists, testimonials, article bodies, and the `settings` values (address, tagline, accreditation). On a Bangla page every piece of chrome is Bangla and everything still in English comes from the database. Localising that needs translated columns, which is Phase 2.
+
+**Dates need two things set, not one.** Carbon keeps its own locale independently of the app locale, so `SetLocale` sets `Carbon::setLocale()` and `CarbonImmutable::setLocale()` as well — without that, month and weekday names stay English on an otherwise Bangla page. Always use `translatedFormat()` (never `format()`) where a month or weekday **name** is rendered; `format()` stays correct for machine formats like `H:i` and `Y-m-d`. Weekday labels in the chamber schedule come from `DoctorSchedule::dayLabel()`, not the `DAYS` constant — that constant is English-only and exists for seeding and internal reference. Dates in the Alpine booking component format via `document.documentElement.lang`.
 
 ## Design system
 
@@ -130,4 +138,4 @@ Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/j
 
 Admin CRUD, patient portal, diagnostics test catalogue with pricing.
 
-On localisation specifically: the i18n **layer** is done and tested, but the Bangla **content** is not. Outstanding are the eight empty `lang/bn` domain files, native-speaker review of the two that are translated, and translated columns on the content models so department names, doctor profiles and articles can be localised too.
+On localisation specifically: the UI is fully translated in both locales, but **database content is not**. Outstanding are translated columns on the content models (departments, doctors, services, packages, posts, testimonials) plus the `settings` table, and native-speaker review of the existing Bangla.

@@ -1,13 +1,43 @@
 <?php
 
-/*
- | Bangla — services strings.
- |
- | Intentionally empty. Laravel falls back to lang/en per key, so this file can
- | be filled in incrementally: copy a key across from lang/en/services.php, translate
- | the value, and it takes effect immediately with no template changes.
- |
- | Translations must be reviewed by a native speaker before launch.
- */
+/* Bangla — services index and detail pages. */
 
-return [];
+return [
+    'index' => [
+        'meta_title' => 'চিকিৎসা সেবা ও সুযোগ-সুবিধা',
+        'meta_description' => 'জরুরি সেবা, নিবিড় পরিচর্যা, ডায়াগনস্টিক ইমেজিং, ল্যাবরেটরি, ফার্মেসি, ফিজিওথেরাপিসহ :name-এর পূর্ণাঙ্গ সেবার তালিকা।',
+        'eyebrow' => 'সেবা ও সুযোগ-সুবিধা',
+        'title' => 'রোগীর প্রয়োজনীয় সবকিছু, এক ক্যাম্পাসেই',
+        'lede' => 'ক্লিনিক্যাল সেবা, ডায়াগনস্টিক ও রোগী-সহায়তা এমনভাবে সাজানো যাতে একটি ভিজিটের জন্য তিনবার আসতে না হয়।',
+        'crumb' => 'সেবাসমূহ',
+    ],
+
+    'groups' => [
+        'clinical' => 'ক্লিনিক্যাল সেবা',
+        'clinical_blurb' => 'পুনরুজ্জীবন থেকে পুনর্বাসন পর্যন্ত সরাসরি রোগীর চিকিৎসা।',
+        'diagnostic' => 'ডায়াগনস্টিক',
+        'diagnostic_blurb' => 'ইমেজিং ও ল্যাবরেটরি সেবা, রিপোর্ট অনলাইনে পাওয়া যায়।',
+        'support' => 'সহায়ক সেবা',
+        'support_blurb' => 'যে অবকাঠামো চিকিৎসাকে সচল রাখে।',
+        'patient-care' => 'রোগী সেবা',
+        'patient-care_blurb' => 'চিকিৎসার পাশাপাশি ব্যবহারিক সহায়তা।',
+    ],
+
+    'show' => [
+        'eyebrow_247' => '২৪ ঘণ্টা খোলা',
+        'eyebrow' => 'আমাদের সেবা',
+        'includes_title' => 'যা যা অন্তর্ভুক্ত',
+
+        'contact_title' => 'যোগাযোগ করুন',
+        'hotline' => 'হটলাইন',
+        'hours' => 'সময়',
+        'hours_247' => 'প্রতিদিন ২৪ ঘণ্টা খোলা',
+        'address' => 'ঠিকানা',
+
+        'related_eyebrow' => 'সম্পর্কিত',
+        'related_title' => 'অন্যান্য সেবা',
+        'related_link' => 'সব সেবা',
+    ],
+
+    'badge_247' => '২৪/৭',
+];

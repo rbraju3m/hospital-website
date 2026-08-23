@@ -125,7 +125,7 @@
                                 @foreach ($doctor->schedules->groupBy('day_of_week') as $day => $blocks)
                                     <tr>
                                         <th scope="row" class="px-5 py-3.5 font-semibold text-navy-900">
-                                            {{ \App\Models\DoctorSchedule::DAYS[$day] }}
+                                            {{ \App\Models\DoctorSchedule::dayLabel($day) }}
                                         </th>
                                         <td class="px-5 py-3.5 text-navy-900/70">
                                             {{ $blocks->map->timeRange()->implode(' · ') }}
@@ -166,7 +166,7 @@
                                           transition hover:border-teal-300 hover:bg-teal-50">
                                     <span>
                                         <span class="block text-sm font-semibold text-navy-900">
-                                            {{ \Carbon\Carbon::parse($day['date'])->format('l, j F') }}
+                                            {{ \Carbon\Carbon::parse($day['date'])->translatedFormat('l, j F') }}
                                         </span>
                                         <span class="block text-xs text-navy-900/50">
                                             {{ trans_choice('doctors.show.slots_open', $day['slots'], ['count' => $day['slots']]) }}

@@ -1,13 +1,17 @@
 <?php
 
-/*
- | Bangla — forms strings.
- |
- | Intentionally empty. Laravel falls back to lang/en per key, so this file can
- | be filled in incrementally: copy a key across from lang/en/forms.php, translate
- | the value, and it takes effect immediately with no template changes.
- |
- | Translations must be reviewed by a native speaker before launch.
- */
+/* Bangla — validation messages and field labels for the public forms. */
 
-return [];
+return [
+    'phone_invalid' => 'সঠিক বাংলাদেশি মোবাইল নম্বর দিন, যেমন ০১৭১২৩৪৫৬৭৮।',
+    'booking_window' => 'সর্বোচ্চ :days দিন আগে পর্যন্ত অ্যাপয়েন্টমেন্ট নেওয়া যায়।',
+    'slot_taken' => 'এই সময়টি এইমাত্র বুক হয়ে গেছে। অনুগ্রহ করে অন্য একটি সময় বেছে নিন।',
+    'no_online_booking' => 'এই কনসালট্যান্ট অনলাইনে অ্যাপয়েন্টমেন্ট নেন না। অনুগ্রহ করে আমাদের হটলাইনে কল করুন।',
+
+    'attributes' => [
+        'doctor_id' => 'ডাক্তার',
+        'appointment_date' => 'তারিখ',
+        'appointment_time' => 'সময়',
+        'patient_name' => 'রোগীর নাম',
+    ],
+];

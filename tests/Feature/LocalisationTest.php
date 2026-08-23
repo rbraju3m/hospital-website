@@ -43,11 +43,12 @@ class LocalisationTest extends TestCase
     {
         app()->setLocale('bn');
 
-        // Deliberately absent from lang/bn/home.php.
-        $this->assertSame(
-            __('home.hero.stat_beds', locale: 'en'),
-            __('home.hero.stat_beds')
-        );
+        // lang/bn is complete today, so assert the mechanism itself rather than
+        // relying on a specific gap: register a key in English only and confirm
+        // it renders its English value under bn, not the raw key.
+        app('translator')->addLines(['probe.only_in_english' => 'Fallback value'], 'en');
+
+        $this->assertSame('Fallback value', __('probe.only_in_english'));
     }
 
     public function test_an_unknown_locale_is_rejected(): void
@@ -87,23 +88,70 @@ class LocalisationTest extends TestCase
         );
     }
 
-    public function test_translated_keys_exist_in_the_english_source(): void
+    public function test_the_locales_define_exactly_the_same_keys(): void
     {
-        // Guards against a Bangla key that no longer matches any English key —
-        // it would silently never render.
-        foreach (File::files(lang_path('bn')) as $file) {
+        foreach (File::files(lang_path('en')) as $file) {
             $domain = $file->getFilenameWithoutExtension();
-            $translated = Arr::dot(require $file->getPathname());
-            $source = Arr::dot(require lang_path("en/{$domain}.php"));
+            $source = Arr::dot(require $file->getPathname());
+            $translated = Arr::dot(require lang_path("bn/{$domain}.php"));
 
-            foreach (array_keys($translated) as $key) {
-                $this->assertArrayHasKey(
-                    $key,
-                    $source,
-                    "lang/bn/{$domain}.php defines [{$key}], which does not exist in lang/en/{$domain}.php."
+            $this->assertSame(
+                [],
+                array_diff(array_keys($source), array_keys($translated)),
+                "lang/bn/{$domain}.php is missing keys that lang/en/{$domain}.php defines."
+            );
+
+            // A Bangla key with no English counterpart would silently never render.
+            $this->assertSame(
+                [],
+                array_diff(array_keys($translated), array_keys($source)),
+                "lang/bn/{$domain}.php defines keys that lang/en/{$domain}.php does not."
+            );
+        }
+    }
+
+    public function test_translations_preserve_every_placeholder(): void
+    {
+        // A dropped :count or :name renders as a literal gap in the sentence,
+        // which no amount of page-level testing would catch.
+        foreach (File::files(lang_path('en')) as $file) {
+            $domain = $file->getFilenameWithoutExtension();
+            $source = Arr::dot(require $file->getPathname());
+            $translated = Arr::dot(require lang_path("bn/{$domain}.php"));
+
+            foreach ($source as $key => $value) {
+                $this->assertSame(
+                    $this->placeholders($value),
+                    $this->placeholders($translated[$key] ?? ''),
+                    "Placeholders differ between locales for [{$domain}.{$key}]."
                 );
             }
         }
+    }
+
+    /** @return list<string> */
+    private function placeholders(string $line): array
+    {
+        preg_match_all('/:([a-z_]+)/', $line, $matches);
+        $found = array_unique($matches[1]);
+        sort($found);
+
+        return array_values($found);
+    }
+
+    public function test_dates_follow_the_active_locale(): void
+    {
+        // Carbon carries its own locale; the middleware has to set it too, or
+        // month and weekday names stay English on an otherwise Bangla page.
+        $this->withSession(['locale' => 'bn'])
+            ->get(route('doctors.index'))
+            ->assertOk();
+
+        $this->assertSame('bn', \Illuminate\Support\Carbon::getLocale());
+        $this->assertSame(
+            'সোমবার',
+            \Illuminate\Support\Carbon::parse('2026-08-24')->translatedFormat('l')
+        );
     }
 
     public function test_pages_render_in_every_available_locale(): void

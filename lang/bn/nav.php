@@ -27,6 +27,7 @@ return [
         'emergency_heading' => 'জরুরি অবস্থা? অপেক্ষা করবেন না।',
         'emergency_body' => 'আমাদের জরুরি বিভাগ ২৪ ঘণ্টা খোলা। অ্যাপয়েন্টমেন্ট লাগবে না।',
         'call_number' => ':number নম্বরে কল করুন',
+        'blurb' => 'ঢাকার একটি :beds শয্যার বহুবিভাগীয় হাসপাতাল, :year সাল থেকে রোগীদের সেবা দিয়ে আসছে। :accreditation।',
         'appointments_suffix' => ':number (অ্যাপয়েন্টমেন্ট)',
         'centres' => 'সেন্টার অব এক্সিলেন্স',
         'all_departments' => 'সব বিভাগ →',

@@ -16,6 +16,10 @@ class DoctorSchedule extends Model
         ];
     }
 
+    /**
+     * Canonical English day names, keyed to Carbon::dayOfWeek. Used for seeding
+     * and internal reference — render dayLabel() instead, which is localised.
+     */
     public const DAYS = [
         0 => 'Sunday',
         1 => 'Monday',
@@ -26,6 +30,12 @@ class DoctorSchedule extends Model
         6 => 'Saturday',
     ];
 
+    /** The day name in the active locale. */
+    public static function dayLabel(int $dayOfWeek): string
+    {
+        return __('common.days.'.$dayOfWeek);
+    }
+
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class);
@@ -33,7 +43,7 @@ class DoctorSchedule extends Model
 
     public function dayName(): string
     {
-        return self::DAYS[$this->day_of_week] ?? '';
+        return self::dayLabel($this->day_of_week);
     }
 
     public function timeRange(): string

@@ -23,7 +23,7 @@
             </span>
             <span class="flex items-center gap-2">
                 <x-icon name="calendar" size="16" class="text-teal-300" />
-                <time datetime="{{ $post->published_at->toDateString() }}">{{ $post->published_at->format('j F Y') }}</time>
+                <time datetime="{{ $post->published_at->toDateString() }}">{{ $post->published_at->translatedFormat('j F Y') }}</time>
             </span>
             <span class="flex items-center gap-2">
                 <x-icon name="clock" size="16" class="text-teal-300" />

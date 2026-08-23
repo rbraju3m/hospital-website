@@ -1,13 +1,34 @@
 <?php
 
-/*
- | Bangla — posts strings.
- |
- | Intentionally empty. Laravel falls back to lang/en per key, so this file can
- | be filled in incrementally: copy a key across from lang/en/posts.php, translate
- | the value, and it takes effect immediately with no template changes.
- |
- | Translations must be reviewed by a native speaker before launch.
- */
+/* Bangla — Health Hub listing and article pages. */
 
-return [];
+return [
+    'index' => [
+        'meta_title' => 'স্বাস্থ্য তথ্য',
+        'meta_description' => ':name-এর কনসালট্যান্টদের স্বাস্থ্য পরামর্শ — ডেঙ্গুর সতর্ক লক্ষণ, বুকে ব্যথা, ডায়াবেটিস নিয়ন্ত্রণ ও প্রতিরোধমূলক স্ক্রিনিং।',
+        'eyebrow' => 'স্বাস্থ্য তথ্য',
+        'title' => 'আমাদের কনসালট্যান্টদের পরামর্শ',
+        'lede' => 'বাস্তবসম্মত ও স্থানীয় প্রেক্ষাপটে প্রাসঙ্গিক স্বাস্থ্য লেখা — কখন দুশ্চিন্তা করবেন, কখন করবেন না, আর কী করবেন।',
+        'crumb' => 'স্বাস্থ্য তথ্য',
+
+        'all' => 'সব লেখা',
+        'empty' => 'এই শ্রেণিতে এখনও কোনো লেখা নেই।',
+    ],
+
+    'show' => [
+        'crumb' => 'স্বাস্থ্য তথ্য',
+
+        'disclaimer_lead' => 'এই লেখাটি সম্পর্কে একটি কথা।',
+        'disclaimer_body' => 'এটি সাধারণ দিকনির্দেশনার জন্য লেখা এবং আপনার নিজস্ব রোগের ইতিহাস বিবেচনা করতে পারে না। এখানকার কিছু যদি আপনার ক্ষেত্রে প্রযোজ্য মনে হয়, নিজে থেকে সিদ্ধান্ত না নিয়ে একজন চিকিৎসকের পরামর্শ নিন — আর জরুরি অবস্থায় কল করুন',
+
+        'specialist_title' => 'বিশেষজ্ঞের সাথে কথা বলুন',
+        'specialist_body' => 'আমাদের কনসালট্যান্টগণ :count টি বিভাগে সপ্তাহের সাত দিনই রোগী দেখেন।',
+
+        'emergency_title' => 'জরুরি',
+        'emergency_body' => '২৪ ঘণ্টা খোলা। অ্যাপয়েন্টমেন্ট লাগবে না।',
+
+        'related_eyebrow' => 'আরও পড়ুন',
+        'related_title' => 'সম্পর্কিত লেখা',
+        'related_link' => 'সব লেখা',
+    ],
+];

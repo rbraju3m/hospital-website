@@ -84,8 +84,8 @@ class AppointmentSlotService
             ->map(fn (int $offset) => $today->addDays($offset))
             ->map(fn (CarbonImmutable $date) => [
                 'date' => $date->toDateString(),
-                'label' => $date->format('j M'),
-                'weekday' => $date->format('D'),
+                'label' => $date->translatedFormat('j M'),
+                'weekday' => $date->translatedFormat('D'),
                 'slots' => $this->slotsFor($doctor, $date)->count(),
             ])
             ->filter(fn (array $day) => $day['slots'] > 0)

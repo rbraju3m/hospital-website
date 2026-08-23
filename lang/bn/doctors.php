@@ -1,13 +1,70 @@
 <?php
 
-/*
- | Bangla — doctors strings.
- |
- | Intentionally empty. Laravel falls back to lang/en per key, so this file can
- | be filled in incrementally: copy a key across from lang/en/doctors.php, translate
- | the value, and it takes effect immediately with no template changes.
- |
- | Translations must be reviewed by a native speaker before launch.
- */
+/* Bangla — doctor directory and profile pages. */
 
-return [];
+return [
+    'index' => [
+        'meta_title' => 'ডাক্তার খুঁজুন',
+        'meta_description' => ':name-এর :count+ জন বিশেষজ্ঞ কনসালট্যান্টকে নাম, বিশেষত্ব বা বিভাগ দিয়ে খুঁজুন। চেম্বারের সময় ও ফি দেখে অনলাইনে বুক করুন।',
+        'eyebrow' => 'আমাদের কনসালট্যান্টগণ',
+        'title' => 'ডাক্তার খুঁজুন',
+        'lede' => 'নাম, বিশেষত্ব বা বিভাগ দিয়ে খুঁজুন। প্রতিটি প্রোফাইলে শিক্ষাগত যোগ্যতা, চেম্বারের সময়সূচি, কনসালটেশন ফি এবং পরবর্তী খালি অ্যাপয়েন্টমেন্ট দেখানো আছে।',
+        'crumb' => 'ডাক্তার খুঁজুন',
+
+        'search' => 'খুঁজুন',
+        'search_placeholder' => 'নাম বা বিশেষত্ব',
+        'department' => 'বিভাগ',
+        'gender_legend' => 'কনসালট্যান্টের লিঙ্গ',
+        'gender_any' => 'যেকোনো',
+        'gender_female' => 'নারী',
+        'gender_male' => 'পুরুষ',
+        'sort' => 'সাজান',
+        'sort_name' => 'নাম (ক–হ)',
+        'sort_experience' => 'সবচেয়ে অভিজ্ঞ',
+        'sort_fee' => 'সবচেয়ে কম ফি',
+        'apply' => 'প্রয়োগ করুন',
+        'clear' => 'মুছুন',
+
+        'found' => '{1} :count জন কনসালট্যান্ট পাওয়া গেছে|[2,*] :count জন কনসালট্যান্ট পাওয়া গেছে',
+        'found_for' => '“:term” এর জন্য',
+        'page_of' => ':last টির মধ্যে :current নম্বর পৃষ্ঠা',
+
+        'empty_title' => 'এই অনুসন্ধানে কোনো কনসালট্যান্ট পাওয়া যায়নি',
+        'empty_body' => 'আরও সাধারণ কোনো শব্দ দিয়ে চেষ্টা করুন, অথবা বিভাগ ধরে দেখুন।',
+        'empty_clear' => 'ফিল্টার মুছুন',
+        'empty_browse' => 'বিভাগ দেখুন',
+    ],
+
+    'show' => [
+        'meta_description' => ':hospital-এর :designation :name। :qualifications। :years বছরের অভিজ্ঞতা। অনলাইনে বুক করুন।',
+        'crumb' => 'ডাক্তারগণ',
+
+        'experience' => ':count বছরের অভিজ্ঞতা',
+        'fee' => '৳:amount কনসালটেশন',
+        'booking_unavailable' => 'অনলাইন বুকিং নেই',
+
+        'about_title' => ':name সম্পর্কে',
+        'expertise_title' => 'বিশেষজ্ঞতার ক্ষেত্র',
+
+        'schedule_title' => 'চেম্বারের সময়সূচি',
+        'schedule_note' => 'এখানে নিয়মিত চেম্বারের সময় দেখানো হয়েছে। সময় পরিবর্তন হতে পারে — বুকিং পাতায় সবসময় বর্তমানে খালি সময়গুলোই দেখানো হয়।',
+        'schedule_day' => 'দিন',
+        'schedule_time' => 'সময়',
+        'schedule_location' => 'স্থান',
+
+        'next_available' => 'পরবর্তী খালি সময়',
+        'no_online_booking' => 'এই কনসালট্যান্ট অনলাইনে অ্যাপয়েন্টমেন্ট নেন না। অনুগ্রহ করে অ্যাপয়েন্টমেন্ট ডেস্কে কল করুন।',
+        'no_slots' => 'আগামী দুই সপ্তাহে কোনো খালি সময় নেই। অপেক্ষমাণ তালিকায় নাম লেখাতে অ্যাপয়েন্টমেন্ট ডেস্কে কল করুন।',
+        'call_desk' => 'ডেস্কে কল করুন',
+        'slots_open' => '{1} :count টি সময় খালি|[2,*] :count টি সময় খালি',
+        'see_all_dates' => 'সব তারিখ দেখুন',
+
+        'fee_new' => 'নতুন কনসালটেশন',
+        'fee_follow_up' => 'ফলো-আপ',
+        'languages' => 'ভাষা',
+
+        'colleagues_eyebrow' => 'একই বিভাগ',
+        'colleagues_title' => ':department বিভাগের অন্যান্য কনসালট্যান্ট',
+        'colleagues_link' => 'বিভাগ দেখুন',
+    ],
+];

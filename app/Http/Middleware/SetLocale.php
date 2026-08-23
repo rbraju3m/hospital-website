@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -18,7 +20,14 @@ class SetLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        app()->setLocale($this->resolve($request));
+        $locale = $this->resolve($request);
+
+        app()->setLocale($locale);
+
+        // Carbon keeps its own locale, so translatedFormat() would otherwise
+        // still print English month and weekday names.
+        Carbon::setLocale($locale);
+        CarbonImmutable::setLocale($locale);
 
         return $next($request);
     }

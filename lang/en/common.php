@@ -35,4 +35,15 @@ return [
     'home' => 'Home',
     'rating_aria' => ':rating out of 5',
     'switch_language' => 'Change language',
+
+    // Keyed to Carbon::dayOfWeek (0 = Sunday), matching DoctorSchedule::DAYS.
+    'days' => [
+        0 => 'Sunday',
+        1 => 'Monday',
+        2 => 'Tuesday',
+        3 => 'Wednesday',
+        4 => 'Thursday',
+        5 => 'Friday',
+        6 => 'Saturday',
+    ],
 ];
