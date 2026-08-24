@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Appointment;
 use App\Models\ContactMessage;
 use App\Models\Department;
+use App\Payments\SslcommerzGateway;
 use App\Sms\Contracts\SmsGateway;
 use App\Sms\SmsManager;
 use Illuminate\Support\Facades\View;
@@ -18,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
         // One gateway for the whole app; which driver it is comes from
         // config/sms.php, so tests and staging can swap in `null`.
         $this->app->singleton(SmsGateway::class, fn () => new SmsManager);
+
+        $this->app->singleton(SslcommerzGateway::class, fn () => new SslcommerzGateway(config('sslcommerz')));
     }
 
     public function boot(): void

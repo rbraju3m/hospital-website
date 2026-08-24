@@ -55,6 +55,16 @@ return [
         'cta' => 'Open in the staff panel',
     ],
 
+    'payment_received' => [
+        'subject' => 'Payment received — :hospital',
+        'preheader' => 'Your payment has been recorded.',
+        'heading' => 'Payment received',
+        'intro' => 'Thank you — your payment for :title of :amount has been recorded.',
+        'amount_label' => 'Amount',
+        'date_label' => 'Date paid',
+        'closing' => 'If you have any questions, please call us.',
+    ],
+
     'labels' => [
         'phone' => 'Phone',
         'email' => 'Email',

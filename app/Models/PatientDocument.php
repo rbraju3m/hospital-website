@@ -12,6 +12,7 @@ class PatientDocument extends Model
     protected $guarded = [];
 
     public const CATEGORIES = ['report', 'prescription', 'bill'];
+    public const PAYMENT_STATUSES = ['unpaid', 'paid', 'waived'];
 
     protected function casts(): array
     {

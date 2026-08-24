@@ -17,11 +17,21 @@ return Application::configure(basePath: dirname(__DIR__))
             // all apply, so /admin is bilingual for exactly the same reasons.
             Route::middleware('web')->group(base_path('routes/admin.php'));
             Route::middleware('web')->group(base_path('routes/portal.php'));
+            // Payment gateway IPN callbacks: no session, no CSRF, no SetLocale needed.
+            Route::group([], base_path('routes/payments.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Runs after the session is started, so a stored locale choice is visible.
         $middleware->appendToGroup('web', SetLocale::class);
+
+        // SSLCommerz redirect back from the payment gateway: the browser returns
+        // after payment, and SSLCommerz posts the result without a CSRF token.
+        $middleware->validateCsrfTokens(except: [
+            'portal/payments/*/success',
+            'portal/payments/*/fail',
+            'portal/payments/*/cancel',
+        ]);
 
         // Two audiences, two sign-in screens. A patient sent to the staff
         // login would be told to ask IT for an account that does not exist.

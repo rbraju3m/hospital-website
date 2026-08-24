@@ -120,6 +120,22 @@ return [
         'bill' => 'Bill',
     ],
 
+    'payments' => [
+        'pay_now' => 'Pay ৳:amount',
+        'paid' => 'Paid',
+        'unpaid' => 'Unpaid',
+        'result_title' => 'Payment',
+        'success_title' => 'Payment received',
+        'success_body' => 'Thank you — your payment for :title has been recorded.',
+        'fail_title' => 'Payment failed',
+        'fail_body' => 'The payment did not go through. You can try again from your documents.',
+        'cancel_title' => 'Payment cancelled',
+        'cancel_body' => 'No amount was charged.',
+        'pending_title' => 'Payment processing',
+        'pending_body' => 'We are confirming this with the payment provider — refresh in a moment.',
+        'back_to_bills' => 'Back to my bills',
+    ],
+
     'profile' => [
         'title' => 'My details',
         'lede' => 'What we show on your records here. It does not change what reception holds.',
