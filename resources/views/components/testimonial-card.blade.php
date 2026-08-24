@@ -24,7 +24,7 @@
                  class="h-11 w-11 shrink-0 rounded-full bg-mist-100 object-cover
                         ring-2 ring-white transition duration-300 ease-out group-hover:ring-teal-200">
         @else
-            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-navy-900 text-xs font-bold text-white">
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-navy-900 dark:bg-navy-100 text-xs font-bold text-white">
                 {{ str($testimonial->patient_name)->substr(0, 1) }}
             </span>
         @endif

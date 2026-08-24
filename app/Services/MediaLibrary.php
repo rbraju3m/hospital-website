@@ -75,6 +75,62 @@ class MediaLibrary
     /** The validation rules an image field should carry. */
     public static function rules(): array
     {
-        return ['nullable', 'image', 'mimes:'.implode(',', self::MIME_TYPES), 'max:'.self::MAX_KILOBYTES];
+        return ['nullable', 'image', 'mimes:'.implode(',', self::MIME_TYPES), 'max:'.self::maxKilobytes()];
+    }
+
+    /**
+     * What an upload may actually weigh, here, on this machine.
+     *
+     * PHP rejects an oversized file before Laravel ever sees it: the file
+     * silently does not arrive, and the form comes back saying the field is
+     * required. Worse, a *batch* over `post_max_size` empties the whole request
+     * — including the CSRF token — which surfaces as "page expired" rather than
+     * as anything to do with photographs. So the app validates against the real
+     * ceiling and says what it is, rather than promising 4 MB and failing at 2.
+     */
+    public static function maxKilobytes(): int
+    {
+        return (int) min(
+            self::MAX_KILOBYTES,
+            self::iniKilobytes('upload_max_filesize') ?: self::MAX_KILOBYTES,
+            self::iniKilobytes('post_max_size') ?: self::MAX_KILOBYTES,
+        );
+    }
+
+    /**
+     * How many files may be sent in one request.
+     *
+     * Bounded by `max_file_uploads` only. Dividing `post_max_size` by the
+     * per-file ceiling was the obvious thing to do and was wrong: it prices
+     * every picture at the worst case, so a 2 MB limit and an 8 MB post allowed
+     * three photographs even when the browser had already shrunk them to 200 KB
+     * each. Total weight is PHP's own business, and a request that does overrun
+     * it now comes back as a sentence rather than as an expired page.
+     */
+    public static function maxFilesPerRequest(int $ceiling): int
+    {
+        $files = (int) ini_get('max_file_uploads');
+
+        return (int) max(1, min($ceiling, $files ?: $ceiling));
+    }
+
+    /** An ini shorthand size ("2M", "512K", "1G") in kilobytes. */
+    private static function iniKilobytes(string $directive): int
+    {
+        $value = trim((string) ini_get($directive));
+
+        if ($value === '' || $value === '-1') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($value, -1));
+        $number = (float) $value;
+
+        return (int) match ($unit) {
+            'g' => $number * 1024 * 1024,
+            'm' => $number * 1024,
+            'k' => $number,
+            default => $number / 1024,
+        };
     }
 }

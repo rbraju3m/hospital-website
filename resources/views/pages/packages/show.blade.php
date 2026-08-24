@@ -19,11 +19,7 @@
     <div class="shell grid gap-12 lg:grid-cols-12">
 
         <div class="lg:col-span-8">
-            <div class="space-y-4 text-base leading-relaxed text-navy-900/70">
-                @foreach (preg_split('/\n+/', $package->description) as $paragraph)
-                    <p>{{ $paragraph }}</p>
-                @endforeach
-            </div>
+            <x-article-body :body="$package->description" />
 
             @if ($package->tests)
                 <h2 class="mt-14 font-display text-xl font-bold text-navy-900">
@@ -32,7 +28,7 @@
                 </h2>
                 <ul class="mt-6 grid gap-3 sm:grid-cols-2">
                     @foreach ($package->tests as $test)
-                        <li class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white p-4">
+                        <li class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white dark:bg-navy-100 p-4">
                             <x-icon name="check" size="16" stroke="2.5" class="mt-0.5 shrink-0 text-teal-600" />
                             <span class="text-sm text-navy-900/75">{{ $test }}</span>
                         </li>
@@ -50,7 +46,7 @@
                         [__('packages.show.step_4_title'), __('packages.show.step_4_body')],
                     ] as $i => [$title, $body])
                         <li class="flex gap-4">
-                            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-900 font-display text-sm font-bold text-white">
+                            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-900 dark:bg-navy-100 font-display text-sm font-bold text-white">
                                 {{ $i + 1 }}
                             </span>
                             <div>

@@ -41,7 +41,7 @@
     ])->where('show', true)->values();
 @endphp
 
-<div class="fixed inset-x-0 bottom-0 z-40 border-t border-mist-200 bg-white/90 backdrop-blur-xl
+<div class="fixed inset-x-0 bottom-0 z-40 border-t border-mist-200 bg-white/90 dark:bg-navy-100/90 backdrop-blur-xl
             shadow-[0_-8px_24px_-16px_rgb(11_44_77/0.35)] lg:hidden">
     <div class="grid" style="grid-template-columns: repeat({{ $actions->count() }}, minmax(0, 1fr))">
         @foreach ($actions as $action)

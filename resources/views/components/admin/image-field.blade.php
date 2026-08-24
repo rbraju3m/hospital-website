@@ -32,7 +32,7 @@
                 <img src="{{ $preview }}" alt="" class="h-full w-full object-cover">
 
                 @unless ($uploaded)
-                    <span class="absolute inset-x-0 bottom-0 bg-navy-950/70 py-1 text-center text-[10px]
+                    <span class="absolute inset-x-0 bottom-0 bg-navy-950/70 dark:bg-navy-50/70 py-1 text-center text-[10px]
                                  font-semibold uppercase tracking-wide text-white">
                         {{ __('admin.form.stand_in') }}
                     </span>
@@ -46,13 +46,16 @@
 
         <div class="min-w-0 flex-1">
             <input id="{{ $name }}" name="{{ $name }}" type="file" accept="image/*"
+                   data-compress
+                   data-compress-busy="{{ __('admin.form.optimising') }}"
+                   data-compress-done="{{ __('admin.form.optimised') }}"
                    class="block w-full text-sm text-navy-900/70
-                          file:me-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-4 file:py-2
+                          file:me-3 file:rounded-lg file:border-0 file:bg-navy-900 file:dark:bg-navy-100 file:px-4 file:py-2
                           file:text-sm file:font-semibold file:text-white file:transition file:duration-200
                           hover:file:bg-teal-600">
 
             <p class="mt-1.5 text-xs text-navy-900/45">
-                {{ $help ?? __('admin.form.image_help', ['formats' => 'JPG, PNG, WebP', 'size' => 4]) }}
+                {{ $help ?? __('admin.form.image_help', ['formats' => 'JPG, PNG, WebP', 'size' => round(\App\Services\MediaLibrary::maxKilobytes() / 1024, 1)]) }}
             </p>
 
             @if (! $uploaded && $preview)

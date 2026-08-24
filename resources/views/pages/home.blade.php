@@ -15,7 +15,7 @@
     $showBooker = feature('home_booker');
 @endphp
 
-<section class="relative overflow-hidden bg-navy-900">
+<section class="relative overflow-hidden bg-navy-900 dark:bg-navy-100">
     {{-- Photography carries the hero; the navy wash over it is what keeps the
          headline legible at every crop. Grid and orbs sit on top for depth.
          All of it is switched off under prefers-reduced-motion, and by the
@@ -25,8 +25,8 @@
             <img src="{{ $heroImage }}" alt=""
                  class="ken-burns h-full w-full object-cover object-[62%_center] opacity-[0.55]"
                  data-parallax="0.10">
-            <div class="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/88 to-navy-950/25"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/10 to-navy-950/60"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-navy-950 dark:from-navy-50 via-navy-950/88 dark:via-navy-50/88 to-navy-950/25 dark:to-navy-50/25"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-navy-900 dark:from-navy-100 via-navy-900/10 dark:via-navy-100/10 to-navy-950/60 dark:to-navy-50/60"></div>
         </div>
     @endif
 
@@ -179,7 +179,7 @@
                         'grid h-11 w-11 place-items-center rounded-xl transition duration-300 ease-out group-hover:scale-110',
                         'bg-urgent-50 text-urgent-600 group-hover:bg-urgent-600 group-hover:text-white' => $tone === 'urgent',
                         'bg-teal-50 text-teal-700 group-hover:bg-teal-600 group-hover:text-white' => $tone === 'teal',
-                        'bg-navy-50 text-navy-700 group-hover:bg-navy-900 group-hover:text-white' => $tone === 'navy',
+                        'bg-navy-50 text-navy-700 group-hover:bg-navy-900 group-hover:dark:bg-navy-100 group-hover:text-white' => $tone === 'navy',
                     ])>
                         <x-icon :name="$icon" size="21" />
                     </span>
@@ -277,7 +277,7 @@
                    class="card-interactive reveal group flex flex-col p-7">
                     <div class="flex items-center justify-between">
                         <span class="grid h-12 w-12 place-items-center rounded-xl bg-navy-50 text-navy-800
-                                     transition duration-300 ease-out group-hover:scale-105 group-hover:bg-navy-900 group-hover:text-white">
+                                     transition duration-300 ease-out group-hover:scale-105 group-hover:bg-navy-900 group-hover:dark:bg-navy-100 group-hover:text-white">
                             <x-icon :name="$service->icon" size="24" />
                         </span>
                         @if ($service->is_247)
@@ -301,7 +301,7 @@
 
 {{-- ======================= WHY CHOOSE US ======================= --}}
 @if (feature('home_why'))
-<section class="section bg-navy-900 text-white">
+<section class="section bg-navy-900 dark:bg-navy-100 text-white">
     <div class="shell grid gap-14 lg:grid-cols-12">
         <div class="lg:col-span-5">
             <p class="eyebrow text-teal-300">
@@ -447,7 +447,7 @@
 @if (feature('home_visit'))
 <section class="pb-20">
     <div class="shell">
-        <div class="reveal overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy-900 to-navy-950 text-white">
+        <div class="reveal overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy-900 dark:from-navy-100 to-navy-950 dark:to-navy-50 text-white">
             <div class="grid gap-10 p-9 sm:p-12 lg:grid-cols-12 lg:items-center">
                 <div class="lg:col-span-7">
                     <h2 class="h-section text-white">{{ __('home.visit.title') }}</h2>

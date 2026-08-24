@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DoctorScheduleController;
 use App\Http\Controllers\Admin\GalleryAlbumController;
 use App\Http\Controllers\Admin\GalleryPhotoController;
 use App\Http\Controllers\Admin\HealthPackageController;
+use App\Http\Controllers\Admin\ListController;
 use App\Http\Controllers\Admin\PatientController;
 use App\Http\Controllers\Admin\PatientDocumentController;
 use App\Http\Controllers\Admin\PostController;
@@ -67,10 +68,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('gallery', GalleryAlbumController::class)->parameters(['gallery' => 'album']);
 
         // Photographs hang off an album, the way chamber hours hang off a doctor.
+        // Two writes: add files, and save the list (captions, order, cover, and
+        // whatever was ticked for deletion).
         Route::post('gallery/{album}/photos', [GalleryPhotoController::class, 'store'])
             ->name('gallery.photos.store');
-        Route::put('gallery/{album}/photos/{photo}', [GalleryPhotoController::class, 'update'])
+        Route::post('gallery/{album}/photos/order', [GalleryPhotoController::class, 'order'])
+            ->name('gallery.photos.order');
+        Route::patch('gallery/{album}/photos/{photo}', [GalleryPhotoController::class, 'update'])
             ->name('gallery.photos.update');
+        Route::post('gallery/{album}/photos/{photo}/cover', [GalleryPhotoController::class, 'cover'])
+            ->name('gallery.photos.cover');
         Route::delete('gallery/{album}/photos/{photo}', [GalleryPhotoController::class, 'destroy'])
             ->name('gallery.photos.destroy');
 
@@ -93,6 +100,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('patients', [PatientController::class, 'index'])->name('patients.index');
         Route::get('patients/{patient}/documents', [PatientController::class, 'documents'])->name('patients.documents');
         Route::patch('patients/{patient}/toggle', [PatientController::class, 'toggle'])->name('patients.toggle');
+
+        // Every listing can be dragged into order and switched on or off from
+        // the table itself. The whitelist lives in App\Support\ManagedLists —
+        // the list name arrives from the browser.
+        Route::post('lists/{list}/order', [ListController::class, 'reorder'])->name('lists.order');
+        Route::patch('lists/{list}/{id}/toggle', [ListController::class, 'toggle'])->name('lists.toggle');
 
         Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');

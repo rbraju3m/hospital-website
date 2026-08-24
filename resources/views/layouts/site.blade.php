@@ -24,14 +24,40 @@
         @endforeach
     @endif
 
+    {{-- Settle the theme before the first paint. Anything later and the page
+         flashes the other one on every navigation. --}}
+    <script>
+        (function () {
+            // Reveals are hidden until this class says the animation can run.
+            // It is set here so nothing flashes visible before being hidden —
+            // but this script running only proves *inline* script runs, not
+            // that the bundle did. If app.js has not reported in shortly, drop
+            // the class again and let the page show itself.
+            document.documentElement.classList.add('has-js');
+
+            setTimeout(function () {
+                if (! document.documentElement.classList.contains('js-ready')) {
+                    document.documentElement.classList.remove('has-js');
+                }
+            }, 1500);
+
+            try {
+                var stored = localStorage.getItem('theme');
+                var dark = stored ? stored === 'dark'
+                    : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('dark', dark);
+            } catch (error) {}
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
-<body class="min-h-screen bg-white {{ feature('chrome_mobile_bar') ? 'pb-16 lg:pb-0' : '' }}">
+<body class="min-h-screen bg-white dark:bg-navy-50 {{ feature('chrome_mobile_bar') ? 'pb-16 lg:pb-0' : '' }}">
 
 <a href="#main"
    class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full
-          focus:bg-navy-900 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white">
+          focus:bg-navy-900 focus:dark:bg-navy-100 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white">
     {{ __('common.skip_to_content') }}
 </a>
 

@@ -1,6 +1,6 @@
 @props(['eyebrow' => null, 'title', 'lede' => null, 'crumbs' => []])
 
-<section class="relative overflow-hidden bg-navy-900 text-white">
+<section class="relative overflow-hidden bg-navy-900 dark:bg-navy-100 text-white">
     {{-- Decorative grid + glow; purely presentational --}}
     <div aria-hidden="true" class="hero-grid opacity-[0.15]"></div>
     <div aria-hidden="true" class="orb -right-32 -top-32 h-96 w-96 bg-teal-500/20"></div>

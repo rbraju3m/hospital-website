@@ -16,7 +16,7 @@
 
 <div class="relative w-full max-w-md">
     <a href="{{ route('home') }}" class="anim-fade-up group mb-8 flex items-center justify-center gap-3">
-        <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy-900 font-display text-sm font-extrabold text-white
+        <span class="grid h-11 w-11 place-items-center rounded-xl bg-navy-900 dark:bg-navy-100 font-display text-sm font-extrabold text-white
                      transition duration-300 ease-out group-hover:scale-105 group-hover:bg-teal-600">
             RBR
         </span>

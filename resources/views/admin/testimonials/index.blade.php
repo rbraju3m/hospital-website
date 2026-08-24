@@ -9,7 +9,11 @@
                          :create-label="__('admin.testimonials.create')"
                          :placeholder="__('admin.testimonials.search')" />
 
-    <div class="admin-card overflow-hidden">
+    <div class="admin-card overflow-hidden"
+         x-data="adminList({ list: 'testimonials', sortable: true,
+             labels: { saved: @js(__('admin.lists.saved')), failed: @js(__('admin.lists.failed')) } })">
+        <x-admin.list-status />
+
         @if ($testimonials->isEmpty())
             <x-admin.empty :message="__('admin.testimonials.empty')" :action="__('admin.testimonials.create')"
                            :href="route('admin.testimonials.create')" icon="quote" />
@@ -18,17 +22,20 @@
                 <table class="w-full min-w-[46rem]">
                     <thead class="bg-mist-50">
                         <tr>
+                            <th class="admin-th w-8"></th>
                             <th class="admin-th">{{ __('admin.fields.patient_name') }}</th>
                             <th class="admin-th">{{ __('admin.fields.quote') }}</th>
                             <th class="admin-th">{{ __('admin.fields.rating') }}</th>
-                            <th class="admin-th">{{ __('admin.form.languages') }}</th>
-                            <th class="admin-th">{{ __('admin.fields.is_active') }}</th>
+                            <th class="admin-th">{{ __('admin.lists.live') }}</th>
                             <th class="admin-th text-end">{{ __('admin.actions.label') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($testimonials as $testimonial)
-                            <tr class="admin-row">
+                            <tr class="admin-row" data-id="{{ $testimonial->id }}"
+                                @dragstart="dragStart($event)" @dragover.prevent="dragOver($event)"
+                                @dragend="dragEnd()">
+                                <td class="admin-td w-8 px-2"><x-admin.drag-handle /></td>
                                 <td class="admin-td">
                                     <a href="{{ route('admin.testimonials.edit', $testimonial) }}"
                                        class="block truncate font-semibold text-navy-900 hover:text-teal-700">
@@ -40,13 +47,11 @@
                                     <span class="line-clamp-2 text-xs text-navy-900/60">{{ $testimonial->untranslated('quote') }}</span>
                                 </td>
                                 <td class="admin-td"><x-rating :rating="$testimonial->rating" /></td>
-                                <td class="admin-td"><x-admin.translation-state :model="$testimonial" /></td>
                                 <td class="admin-td">
-                                    @if ($testimonial->is_active)
-                                        <span class="badge-teal">{{ __('admin.states.active') }}</span>
-                                    @else
-                                        <span class="badge-slate">{{ __('admin.states.hidden') }}</span>
-                                    @endif
+                                    <div class="flex items-center gap-2">
+                                        <x-admin.live-switch :model="$testimonial" />
+                                        <x-admin.translation-state :model="$testimonial" compact />
+                                    </div>
                                 </td>
                                 <td class="admin-td text-end">
                                     <div class="flex items-center justify-end gap-1">

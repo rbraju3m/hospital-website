@@ -28,17 +28,13 @@
 <section class="section">
     <div class="shell grid gap-12 lg:grid-cols-12">
         <div class="lg:col-span-8">
-            <div class="space-y-4 text-base leading-relaxed text-navy-900/70">
-                @foreach (preg_split('/\n+/', $service->description) as $paragraph)
-                    <p>{{ $paragraph }}</p>
-                @endforeach
-            </div>
+            <x-article-body :body="$service->description" />
 
             @if ($service->highlights)
                 <h2 class="mt-14 font-display text-xl font-bold text-navy-900">{{ __('services.show.includes_title') }}</h2>
                 <div class="mt-6 grid gap-4 sm:grid-cols-2">
                     @foreach ($service->highlights as $highlight)
-                        <div class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white p-5">
+                        <div class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white dark:bg-navy-100 p-5">
                             <x-icon name="check-circle" size="19" class="mt-0.5 shrink-0 text-teal-600" />
                             <span class="text-sm text-navy-900/75">{{ $highlight }}</span>
                         </div>

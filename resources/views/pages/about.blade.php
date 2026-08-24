@@ -97,7 +97,7 @@
     </div>
 </section>
 
-<section class="section bg-navy-900 text-white">
+<section class="section bg-navy-900 dark:bg-navy-100 text-white">
     <div class="shell">
         <x-section-heading
             :eyebrow="__('pages.about.values_eyebrow')"

@@ -21,7 +21,7 @@
     {{-- No photo, and stand-ins switched off: an initials tile reads better
          than a generic silhouette. --}}
     <span aria-hidden="true"
-          {{ $attributes->merge(['class' => "$dimensions $rounded grid shrink-0 place-items-center bg-gradient-to-br from-navy-800 to-navy-950 font-display font-bold text-white/90"]) }}>
+          {{ $attributes->merge(['class' => "$dimensions $rounded grid shrink-0 place-items-center bg-gradient-to-br from-navy-800 dark:from-navy-200 to-navy-950 dark:to-navy-50 font-display font-bold text-white/90"]) }}>
         {{ $doctor->initials() }}
     </span>
 @endif

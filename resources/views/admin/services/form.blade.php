@@ -37,7 +37,7 @@
                 <x-admin.translatable name="highlights" type="list" :label="__('admin.fields.highlights')" :model="$service" />
 
                 <x-admin.translatable name="summary" type="textarea" :rows="3" :label="__('admin.fields.summary')" :model="$service" class="sm:col-span-2" />
-                <x-admin.translatable name="description" type="textarea" :rows="8" :label="__('admin.fields.description')" :model="$service"
+                <x-admin.translatable name="description" type="richtext" :rows="8" :label="__('admin.fields.description')" :model="$service"
                                       :help="__('admin.form.markup_help')" class="sm:col-span-2" />
             </div>
         </x-admin.section>

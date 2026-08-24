@@ -26,7 +26,7 @@
         <p class="lede mt-5 max-w-2xl text-white/80">{{ __('pages.emergency.lede') }}</p>
 
         <div class="mt-9 flex flex-wrap gap-3">
-            <a href="tel:{{ setting('hotline') }}" class="btn btn-lg bg-white text-urgent-700 hover:bg-white/90">
+            <a href="tel:{{ setting('hotline') }}" class="btn btn-lg bg-white dark:bg-navy-100 text-urgent-700 hover:bg-white/90 hover:dark:bg-navy-100/90">
                 <x-icon name="phone" size="18" /> {{ __('pages.emergency.call', ['number' => setting('hotline')]) }}
             </a>
             <a href="tel:{{ setting('ambulance_number') }}"
@@ -88,7 +88,7 @@
                             [__('pages.emergency.number_department'), setting('emergency_number')],
                         ] as [$label, $number])
                             <a href="tel:{{ $number }}"
-                               class="flex items-center justify-between rounded-xl bg-white px-5 py-4 transition hover:bg-white/70">
+                               class="flex items-center justify-between rounded-xl bg-white dark:bg-navy-100 px-5 py-4 transition hover:bg-white/70">
                                 <span>
                                     <span class="block text-xs text-navy-900/50">{{ $label }}</span>
                                     <span class="block font-display text-lg font-bold text-navy-900">{{ $number }}</span>
@@ -138,7 +138,7 @@
                 @foreach ($services as $service)
                     <a href="{{ route('services.show', $service) }}" class="card-interactive group flex flex-col p-7 reveal">
                         <span class="grid h-12 w-12 place-items-center rounded-xl bg-navy-50 text-navy-800
-                                     transition group-hover:bg-navy-900 group-hover:text-white">
+                                     transition group-hover:bg-navy-900 group-hover:dark:bg-navy-100 group-hover:text-white">
                             <x-icon :name="$service->icon" size="24" />
                         </span>
                         <h3 class="mt-5 font-display text-lg font-bold text-navy-900 group-hover:text-teal-700">{{ $service->name }}</h3>

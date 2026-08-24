@@ -8,6 +8,32 @@
 
     <title>@yield('title', __('admin.panel')) — {{ __('admin.panel') }}</title>
 
+    {{-- Settle the theme before the first paint. Anything later and the page
+         flashes the other one on every navigation. --}}
+    <script>
+        (function () {
+            // Reveals are hidden until this class says the animation can run.
+            // It is set here so nothing flashes visible before being hidden —
+            // but this script running only proves *inline* script runs, not
+            // that the bundle did. If app.js has not reported in shortly, drop
+            // the class again and let the page show itself.
+            document.documentElement.classList.add('has-js');
+
+            setTimeout(function () {
+                if (! document.documentElement.classList.contains('js-ready')) {
+                    document.documentElement.classList.remove('has-js');
+                }
+            }, 1500);
+
+            try {
+                var stored = localStorage.getItem('theme');
+                var dark = stored ? stored === 'dark'
+                    : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('dark', dark);
+            } catch (error) {}
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-mist-50 text-navy-900/85">
@@ -16,10 +42,10 @@
 
     {{-- Off-canvas below lg, permanent from lg up. --}}
     <div x-show="menu" x-cloak @click="menu = false" x-transition.opacity.duration.200ms
-         class="fixed inset-0 z-30 bg-navy-950/50 backdrop-blur-sm lg:hidden"></div>
+         class="fixed inset-0 z-30 bg-navy-950/50 dark:bg-navy-50/50 backdrop-blur-sm lg:hidden"></div>
 
     <aside :class="menu && 'is-open'"
-           class="admin-drawer fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 shadow-lift
+           class="admin-drawer fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 dark:bg-navy-50 shadow-lift
                   lg:sticky lg:top-0 lg:h-screen lg:shadow-none">
         @include('admin.partials.sidebar')
     </aside>

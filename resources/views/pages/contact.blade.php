@@ -25,7 +25,7 @@
                     'grid h-11 w-11 shrink-0 place-items-center rounded-xl transition duration-300',
                     'bg-urgent-50 text-urgent-600 group-hover:bg-urgent-600 group-hover:text-white' => $tone === 'urgent',
                     'bg-teal-50 text-teal-700 group-hover:bg-teal-600 group-hover:text-white' => $tone === 'teal',
-                    'bg-navy-50 text-navy-700 group-hover:bg-navy-900 group-hover:text-white' => $tone === 'navy',
+                    'bg-navy-50 text-navy-700 group-hover:bg-navy-900 group-hover:dark:bg-navy-100 group-hover:text-white' => $tone === 'navy',
                 ])>
                     <x-icon :name="$icon" size="21" />
                 </span>

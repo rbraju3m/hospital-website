@@ -6,6 +6,12 @@
  */
 
 return [
+
+    'theme' => [
+        'toggle' => 'Switch between light and dark',
+        'light' => 'Light mode',
+        'dark' => 'Dark mode',
+    ],
     'book_appointment' => 'Book an Appointment',
     'book_appointment_short' => 'Book Appointment',
     'book_now' => 'Book',

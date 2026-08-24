@@ -111,4 +111,31 @@ class DemoImageTest extends TestCase
             ->assertOk()
             ->assertSee(DemoImages::portrait($doctor->gender, $doctor->id));
     }
+
+    public function test_an_uploaded_image_is_addressed_without_a_hostname(): void
+    {
+        // The public disk builds its URLs from APP_URL, which pins every upload
+        // to one hostname. Reached by any other name — artisan serve on
+        // 127.0.0.1, the LAN address, a staging alias — those images 404 while
+        // the root-relative stand-ins carry on working, so only the real
+        // photographs vanish and nothing looks broken until someone notices.
+        config(['app.url' => 'http://hospital.local']);
+
+        $this->assertSame('/storage/gallery/ward.jpg', media_url('gallery/ward.jpg'));
+    }
+
+    public function test_an_image_on_another_host_keeps_its_hostname(): void
+    {
+        // There the hostname is the point.
+        config(['app.url' => 'http://hospital.local']);
+        config(['filesystems.disks.public.url' => 'https://cdn.example.com/media']);
+
+        $this->assertSame('https://cdn.example.com/media/gallery/ward.jpg', media_url('gallery/ward.jpg'));
+    }
+
+    public function test_a_column_holding_an_absolute_url_is_left_alone(): void
+    {
+        $this->assertSame('https://example.com/x.jpg', media_url('https://example.com/x.jpg'));
+        $this->assertSame('/images/demo/cover/cover-01.jpg', media_url('/images/demo/cover/cover-01.jpg'));
+    }
 }

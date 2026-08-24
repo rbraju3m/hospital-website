@@ -18,7 +18,7 @@
                         ৳{{ number_format($transaction->amount) }}
                     </p>
                 </div>
-                <div class="border-t border-navy-900/5 px-5 py-4">
+                <div class="border-t border-navy-900/5 dark:border-navy-100/5 px-5 py-4">
                     <a href="{{ route('portal.documents') }}" class="btn btn-primary w-full">
                         {{ __('portal.payments.back_to_bills') }}
                     </a>
@@ -35,7 +35,7 @@
                         {{ __('portal.payments.fail_body') }}
                     </p>
                 </div>
-                <div class="border-t border-navy-900/5 px-5 py-4">
+                <div class="border-t border-navy-900/5 dark:border-navy-100/5 px-5 py-4">
                     <a href="{{ route('portal.documents') }}" class="btn btn-primary w-full">
                         {{ __('portal.payments.back_to_bills') }}
                     </a>
@@ -52,7 +52,7 @@
                         {{ __('portal.payments.cancel_body') }}
                     </p>
                 </div>
-                <div class="border-t border-navy-900/5 px-5 py-4">
+                <div class="border-t border-navy-900/5 dark:border-navy-100/5 px-5 py-4">
                     <a href="{{ route('portal.documents') }}" class="btn btn-primary w-full">
                         {{ __('portal.payments.back_to_bills') }}
                     </a>
@@ -61,13 +61,13 @@
         @else
             <div class="card">
                 <div class="px-5 py-8 text-center">
-                    <div class="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-navy-900/10 border-t-teal-600"></div>
+                    <div class="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-navy-900/10 dark:border-navy-100/10 border-t-teal-600"></div>
                     <h1 class="mt-4 text-xl font-bold text-navy-900">{{ __('portal.payments.pending_title') }}</h1>
                     <p class="mt-2 text-sm text-navy-900/60">
                         {{ __('portal.payments.pending_body') }}
                     </p>
                 </div>
-                <div class="border-t border-navy-900/5 px-5 py-4">
+                <div class="border-t border-navy-900/5 dark:border-navy-100/5 px-5 py-4">
                     <a href="{{ route('portal.documents') }}" class="btn btn-primary w-full">
                         {{ __('portal.payments.back_to_bills') }}
                     </a>

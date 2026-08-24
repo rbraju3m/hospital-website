@@ -13,16 +13,27 @@ use App\Services\MediaLibrary;
  */
 class GalleryPhotoUploadRequest extends AdminFormRequest
 {
+    /** What the form offers, before this machine's own limits are applied. */
     public const MAX_PER_UPLOAD = 20;
+
+    /**
+     * The real cap: PHP's `max_file_uploads` and `post_max_size` both bite
+     * before Laravel does, and a batch that overruns the second one arrives
+     * with no CSRF token and reads as an expired page.
+     */
+    public static function batchSize(): int
+    {
+        return MediaLibrary::maxFilesPerRequest(self::MAX_PER_UPLOAD);
+    }
 
     public function rules(): array
     {
         return [
-            'photos' => ['required', 'array', 'max:'.self::MAX_PER_UPLOAD],
+            'photos' => ['required', 'array', 'max:'.self::batchSize()],
             'photos.*' => [
                 'required', 'image',
                 'mimes:'.implode(',', MediaLibrary::MIME_TYPES),
-                'max:'.MediaLibrary::MAX_KILOBYTES,
+                'max:'.MediaLibrary::maxKilobytes(),
             ],
         ];
     }

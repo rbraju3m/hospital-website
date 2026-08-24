@@ -32,8 +32,9 @@ Both satisfy Laravel 13's `^8.3`. Always invoke CLI work as `php8.3` so Composer
 ## Common commands
 
 ```bash
-# Serve (dev)
-php8.3 artisan serve --host=127.0.0.1 --port=8321
+# Serve (dev). The -d flags matter: the CLI runtime caps uploads at 2M/8M,
+# which is well under what a phone photograph weighs.
+php8.3 -d upload_max_filesize=32M -d post_max_size=64M artisan serve --host=127.0.0.1 --port=8321
 npm run dev                       # Vite HMR alongside the above
 
 # Assets — required after any CSS/JS/Blade class change if not running `npm run dev`
@@ -61,7 +62,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (313 feature tests)
+# Tests (325 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -75,6 +76,7 @@ vendor/bin/phpunit --filter ContentTranslationTest # database content
 vendor/bin/phpunit --filter 'SiteFeature|SiteControl'  # the site's on/off switches
 vendor/bin/phpunit --filter DemoImage             # stand-in photography
 vendor/bin/phpunit --filter Gallery                # the photo gallery, public and panel
+vendor/bin/phpunit --filter AdminListControl       # drag-to-reorder and the live switches
 vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit screen renders
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
@@ -200,12 +202,57 @@ Call sites go through **`image_url($path, $set, $seed, $group)`** (upload first,
 `/gallery` lists **albums**; `/gallery/<slug>` shows one album's photographs in a grid that opens a lightbox. Two tables: `gallery_albums` (translatable title, summary, description, a cover) and `gallery_photos` (a file, a translatable caption, a sort order), the photos cascading with their album.
 
 - **A photograph's file is nullable, and that is deliberate.** An empty `path` renders stand-in imagery through `GalleryPhoto::url()`, which is what lets the seeded albums ship as a working gallery before anybody has uploaded anything. The panel still requires a file when a photo is added by hand — only the seeder creates rows without one. With `behaviour_demo_images` off, a photo with no upload has nothing to show, so the album page **drops** it rather than rendering an empty frame; an album where every photo drops out reads as empty.
-- **One list drives the grid and the lightbox.** `$slides` is built once in the view, so a tile and the slide it opens cannot drift apart after a filter.
+- **One list drives the grid, the viewer and the thumbnails.** `$slides` is built once in the view, so a tile and the slide it opens cannot drift apart after a filter.
+- **The viewer is `Alpine.data('galleryLightbox')` in `resources/js/app.js`, not an inline script.** Arrow keys, Home/End, Escape, `F` for fullscreen, swipe, click-to-zoom around the point clicked, a thumbnail strip, neighbour preloading, and focus handed back to the tile it opened from. Tiles are real `<a href>` links to the file, so the grid still opens photographs with the viewer unavailable.
+- **The album's photo screen has no Save button.** It is a media manager: files upload as they are dropped, a caption saves as it is typed (debounced), an order saves as it is dragged, the cover and a deletion save on the click. Every action is one small JSON write on `GalleryPhotoController`, and the grid is rendered from an array so a photograph appears the moment its upload finishes rather than after a reload.
+- **Files go up one request each.** A batch large enough to pass `post_max_size` arrives with its body discarded, CSRF token included, and reads as an expired page. One at a time makes that impossible and buys a per-picture progress bar for free.
+- **Endpoint URLs carry an `__ID__` placeholder** the browser swaps per tile — one route generated once. Generating it with a literal `0` looks identical in the markup and sends every write to photograph zero.
+- **The cover holds a copy of a photograph's path.** Deleting that photograph clears the album's `image`, or the row points at a file that is no longer there. Promoting a photograph to cover, on the other hand, **does not delete the cover the album had before**: that is a file somebody deliberately uploaded, and one click on a star must not be able to destroy it. Replacing or clearing a cover is what the image field on the album form is for, and that does delete. Only an uploaded file can become a cover — a stand-in has no path, and writing one would freeze today's placeholder into the row.
 - **`GalleryPhoto` has no `is_active`.** A photograph has no URL of its own to leave dangling, so hiding one and deleting one are the same act.
 - **`GalleryPhoto::recent()` is shared** by the home band and the About strip, so the two cannot disagree about what "recent" means.
 - Photographs are managed on the album's own page — their own little forms, for the same reason chamber hours are. Captions there are written out per locale by hand rather than through `x-admin.translatable`: that component reads `old()`, and every card on the page posts the same field names, so one rejected caption would repopulate all of them.
 - Uploads take **many files at once** (`photos[]`, capped per submission) and continue the existing sort order rather than restarting at zero.
 - Deleting an album deletes its photographs' **files** in the controller. The rows cascade; the files would not, and an orphan on the public disk is invisible from the panel forever after.
+
+### Writing prose in the panel
+
+`x-admin.translatable type="richtext"` puts a toolbar over the textarea — bold, italic, link, heading, subheading, bullet and numbered lists, quote, divider, and a preview that renders the text the way the site will. Ctrl/Cmd+B, +I and +K are wired to the first three. It is **not** a WYSIWYG, and that is the point: the public site renders a deliberately small markup language through `x-article-body`, which escapes everything first and re-introduces only what it recognises. Storing HTML instead would mean trusting whatever an editor pasted, on pages a patient reads.
+
+`renderMarkupLite()` in `app.js` mirrors `article-body.blade.php` block for block, and `inlineMarkup()` mirrors `inline_markup()`. If one changes, the other changes with it — a preview that lies is worse than no preview.
+
+Three details in the editor that are there for a reason:
+
+- **Buttons carry `@mousedown.prevent`**, so pressing one never moves the caret out of the text it is about to act on.
+- **Edits go through `document.execCommand('insertText')`** rather than assigning to `value`. Assigning is simpler and throws away the browser's undo stack, which is exactly the kind of thing that makes an editor feel broken.
+- **Links take a scheme allowlist** (`http(s)`, `mailto:`, `tel:`, root-relative, anchor) and one level of nested parentheses in the address — `[x](javascript:alert(1))` would otherwise end the match early, leave a stray bracket in the sentence, and only be *half* rejected.
+
+Applied to department, service and package descriptions, doctor `about`, and post `body`. **Those first four used to split on newlines and print `##` and `-` literally** while the panel's help text promised they worked, so they now render through `x-article-body` too.
+
+### Every panel listing reorders and publishes in place
+
+Two endpoints, both JSON, both driven from the table: `POST admin/lists/{list}/order` and `PATCH admin/lists/{list}/{id}/toggle`. Drag a row by its handle to set `sort_order` — which is the order the public site renders — or flip the switch in the row to show or hide the record without opening it.
+
+- **`App\Support\ManagedLists` is a whitelist, not a lookup.** The list name arrives from the browser; "any model, any column" is how a listing endpoint becomes a way to flip a row on the users table. `posts` is deliberately listed as **not** sortable: articles are ordered by publication date, and a hand-sorted news list would be a second, contradictory answer to what comes first.
+- **Reordering renumbers from the block's own lowest position**, not from 1 — the listings are paginated, and page two starting again at 1 would shuffle it in among page one.
+- **The row is only draggable while the handle is held.** A permanently draggable row swallows text selection and turns every link in it into a drag.
+- Both are additive: `sort_order` and the visibility toggle are still on the edit form, so a browser that cannot do this loses a convenience, not a capability.
+- The listings show **Live** rather than "Published", and translation state is a **compact** chip beside the switch — it only appears when a locale is actually missing something. A chip per language on every row was a column's worth of noise saying "fine, fine, fine"; the `?untranslated=<locale>` filter is still the way to find gaps deliberately.
+
+### Uploads fail at PHP's limits, not the application's
+
+`MediaLibrary::MAX_KILOBYTES` is what the application would like; `MediaLibrary::maxKilobytes()` is what this machine will actually accept, and validation and every help string use the second one. This matters because PHP rejects an oversized file *before* Laravel sees it — the file simply does not arrive and the form comes back saying the field is required.
+
+Worse, a batch over `post_max_size` reaches PHP with its body discarded, CSRF token included, which surfaces as **"page expired"** rather than as anything to do with photographs. `PostTooLargeException` is therefore rendered back to the form as a sentence naming the real limit.
+
+**On this box the CLI runtime is the tight one:** `php8.3` has `upload_max_filesize = 2M` and `post_max_size = 8M`, while Apache's `php.ini` is set to 5G. So uploads that work through Apache fail under `artisan serve`. Start the dev server with `-d upload_max_filesize=32M -d post_max_size=64M` (the command above) rather than editing `/etc/php/8.3/cli/php.ini`, which needs sudo.
+
+**Pictures are shrunk in the browser before they are sent** (`initUploadShrinking` in `resources/js/app.js`, switched on per field with `data-compress`). A phone photograph is 4–8 MB and a screenshot is often a 1.5 MB PNG; resized to a 2400px edge and re-encoded as JPEG they land at a couple of hundred kilobytes, which is both an upload that fits and a page that loads. Three things in there are load-bearing:
+
+- **The original is kept whenever this cannot improve on it** — an image that is already smaller, a GIF or SVG (neither survives a canvas), or a browser without `createImageBitmap`/`DataTransfer`.
+- **Transparency is filled white first.** JPEG has no alpha, and without the fill a transparent PNG comes out black.
+- **A form submitted mid-shrink is held and released**, or it would send exactly the originals this exists to avoid.
+
+`max_file_uploads` bounds a batch; total weight is PHP's own business. Dividing `post_max_size` by the per-file ceiling was the obvious thing to do and was wrong — it prices every picture at the worst case, so three 200 KB photographs were refused against an 8 MB budget.
 
 ### The primary navigation is one line
 
@@ -289,7 +336,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 1,340 keys across 17 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 1,362 keys across 17 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 
@@ -350,10 +397,23 @@ Reusable Blade components are in `resources/views/components/`: `icon` (inline L
 
 Article bodies use a markdown-lite convention (`## heading`, `- bullet`, `**bold**`) rendered by `x-article-body`, which escapes first and re-introduces only bold via the `inline_markup()` helper. Do not render post bodies with raw `{!! !!}`.
 
+### Dark mode
+
+The site and the panel both carry it, and it is a **palette swap rather than a `dark:` class on every element**. The templates use `text-navy-*` 524 times against `bg-navy-9xx` 41 times, so `.dark` inverts the navy ramp — which is really the *text* ramp — and the whole site flips correctly, leaving a countable set of exceptions.
+
+Three rules to keep it working:
+
+- **Navy as a *background* must name its dark shade explicitly.** Heroes, the footer, the panel sidebar and scrims over photographs carry `dark:bg-navy-100` / `dark:bg-navy-50` — the other end of the inverted ramp — so they stay dark in both themes. Adding a new navy surface without that gives you a light hero in dark mode.
+- **White is never remapped.** `text-white` sits on those same dark surfaces 163 times and has to stay white; `bg-white` is patched to `dark:bg-navy-100` instead. Low-alpha white (`bg-white/10`) is glass on a navy hero and is left alone.
+- **Shadows and the two "teal as text" shades are theme-dependent** and are overridden in the `.dark` block: a navy glow on a navy surface is nothing, and `teal-700` on a dark surface is about 2:1.
+
+The theme is applied by an inline script in the `<head>` of both layouts, before first paint — anything later flashes the other theme on every navigation. Nothing is stored until somebody actually chooses, so a visitor with no preference follows their device, and `x-theme-toggle` reads its state from `<html>` rather than from a server-rendered value.
+
 ### Motion
 
 Motion is part of the design system, not decoration bolted onto pages. Tokens live in `@theme`: one easing curve (`--ease-out-expo`) does almost all the work, with `--ease-spring` reserved for affordances that should feel physical. Durations are `--duration-fast|base|slow`. Reach for an existing utility before writing a bespoke transition.
 
+- **Content must never need JavaScript to become visible.** `.reveal` starts at opacity 0 and `.reveal-clip` starts fully clipped, so anything that stops `app.js` running takes the content with it — a gallery whose photographs are served, sized and in the markup, showing an empty page. The inline head script stamps `has-js` before first paint (so nothing flashes visible then hides), `app.js` stamps `js-ready` as its first act, and a 1.5s watchdog drops `has-js` if the bundle never reported in. `html:not(.has-js) .reveal` then renders everything in its final state. JavaScript switches the animation **on**; it does not switch the content off.
 - **Scroll reveals** — add `class="reveal"` and the IntersectionObserver in `resources/js/app.js` adds `reveal-in`. Direction variants: `reveal-left`, `reveal-right`, `reveal-zoom`. **These are nested inside `@utility reveal`, not declared as sibling utilities** — siblings carry equal specificity and Tailwind does not emit custom utilities in source order, so `.reveal.reveal-in` (0,2,0) is what guarantees revealed content actually appears. Do not flatten them.
 - **Staggering** — put `data-reveal-stagger="70"` on the grid rather than an inline `transition-delay` per card; `app.js` writes an increasing `--reveal-delay` on each child, capped at 8 steps so a long list does not end in a two-second wait. **The children still need `class="reveal"` rendered server-side** — JS adds it as a fallback, but an element that paints visible and is then hidden by JS flashes, which is worse than not animating it.
 - **Entrance, not reveal** — `anim-fade-up`, `anim-fade-in`, `anim-scale-in` fire on load with `--anim-delay`. Use these above the fold, where an IntersectionObserver would fire immediately anyway.
@@ -377,6 +437,7 @@ Motion is part of the design system, not decoration bolted onto pages. Tokens li
 - Copy is written plainly and avoids marketing superlatives — claims in seeded content are specific and checkable (response times, staffing ratios) by design. Keep that voice.
 - Notification text is rendered at dispatch, never inside the job, so a queued payload is a finished string rather than a template plus a locale.
 - Every image position on the public site goes through `image_url()` or `doctor_photo()`, never `media_url()` directly — that is the one place "there is no picture" is answered.
+- **`media_url()` returns uploads host-less** (`/storage/…`). The public disk builds its URLs from `APP_URL`, which pins every upload to one hostname; reached by any other name — `artisan serve` on 127.0.0.1, the LAN address, a staging alias — those images 404 while the root-relative stand-ins carry on working, so only the real photographs vanish. A URL on another host (a CDN) is left absolute.
 - Anything guarded by Site controls is guarded in **both** places: the link is filtered out of the template *and* the route carries `feature:<key>`.
 - `.idea/` is untracked and stays that way.
 

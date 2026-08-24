@@ -89,7 +89,7 @@
                             {{-- A floor of 4% so an empty day is still a target
                                  rather than a hairline nobody can hit. --}}
                             <span class="absolute inset-x-0 bottom-0 origin-bottom rounded-t-lg
-                                         {{ $day['date']->isToday() ? 'bg-gradient-to-t from-teal-700 to-teal-400' : 'bg-gradient-to-t from-navy-800 to-navy-400' }}"
+                                         {{ $day['date']->isToday() ? 'bg-gradient-to-t from-teal-700 to-teal-400' : 'bg-gradient-to-t from-navy-800 dark:from-navy-200 to-navy-400' }}"
                                   style="height: {{ max(4, (int) round($day['count'] / $peak * 100)) }}%;
                                          animation: bar-rise var(--duration-slow) var(--ease-out-expo) both;
                                          animation-delay: {{ $index * 60 }}ms"></span>

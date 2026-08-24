@@ -9,7 +9,7 @@
 </head>
 {{-- Standalone rather than extending the site layout: the header links to areas
      that may themselves be switched off, and this page has exactly one job. --}}
-<body class="grid min-h-screen place-items-center bg-navy-950 px-5 text-white">
+<body class="grid min-h-screen place-items-center bg-navy-950 dark:bg-navy-50 px-5 text-white">
 
 <div aria-hidden="true" class="hero-grid opacity-[0.10]"></div>
 <div aria-hidden="true" class="orb -right-40 -top-40 h-[30rem] w-[30rem] bg-teal-500/20"></div>

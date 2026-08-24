@@ -8,10 +8,10 @@
     $patient = auth('patient')->user();
 @endphp
 
-<header class="sticky top-0 z-30 border-b border-mist-200 bg-white/90 backdrop-blur-xl">
+<header class="sticky top-0 z-30 border-b border-mist-200 bg-white/90 dark:bg-navy-100/90 backdrop-blur-xl">
     <div class="shell flex items-center gap-4 py-4">
         <a href="{{ route('portal.dashboard') }}" class="group flex items-center gap-3">
-            <span class="grid h-9 w-9 place-items-center rounded-xl bg-navy-900 font-display text-xs font-extrabold text-white
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-navy-900 dark:bg-navy-100 font-display text-xs font-extrabold text-white
                          transition duration-300 ease-out group-hover:scale-105 group-hover:bg-teal-600">
                 RBR
             </span>

@@ -20,7 +20,7 @@
         {{-- Filters --}}
         <aside class="lg:col-span-3">
             <form action="{{ route('doctors.index') }}" method="GET"
-                  class="sticky top-24 space-y-6 rounded-[1.25rem] border border-mist-200 bg-white p-6 shadow-soft">
+                  class="sticky top-24 space-y-6 rounded-[1.25rem] border border-mist-200 bg-white dark:bg-navy-100 p-6 shadow-soft">
 
                 <div>
                     <label for="filter-q" class="label">{{ __('doctors.index.search') }}</label>

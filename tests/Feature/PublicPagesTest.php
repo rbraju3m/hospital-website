@@ -104,4 +104,87 @@ class PublicPagesTest extends TestCase
 
         $this->assertDatabaseCount('contact_messages', 0);
     }
+
+    public function test_editorial_prose_renders_its_markup_rather_than_printing_it(): void
+    {
+        // The panel offers a toolbar that writes `## heading`, `- bullet` and
+        // **bold**, and tells staff those work. Four pages used to split on
+        // newlines and print the markers verbatim.
+        $department = \App\Models\Department::firstOrFail();
+
+        $department->forceFill(['description' => "## Our approach\n\n- Angioplasty around the clock\n- A **hybrid** theatre"])->save();
+
+        $this->get(route('departments.show', $department))
+            ->assertOk()
+            ->assertSee('<h2', escape: false)
+            ->assertSee('Our approach')
+            ->assertSee('<strong', escape: false)
+            ->assertDontSee('## Our approach')
+            ->assertDontSee('- Angioplasty');
+    }
+
+    public function test_the_whole_markup_language_renders(): void
+    {
+        $department = \App\Models\Department::firstOrFail();
+
+        $department->forceFill(['description' => implode("\n\n", [
+            '## Heading',
+            '### Subheading',
+            '- First bullet',
+            "1. First step\n2. Second step",
+            '> A quotation',
+            '---',
+            'Text with **bold**, _italic_ and a [link](https://example.com).',
+        ])])->save();
+
+        $response = $this->get(route('departments.show', $department))->assertOk();
+
+        foreach (['<h2', '<h3', '<ul', '<ol', '<blockquote', '<hr', '<strong', '<em', '<a href="https://example.com"'] as $tag) {
+            $response->assertSee($tag, escape: false);
+        }
+
+        // The markers themselves must not survive into the page.
+        $response->assertDontSee('## Heading')->assertDontSee('> A quotation');
+    }
+
+    public function test_a_link_cannot_smuggle_a_script_url(): void
+    {
+        // A scheme allowlist, not a blocklist: anything outside it keeps the
+        // label and loses the link.
+        $department = \App\Models\Department::firstOrFail();
+
+        $department->forceFill(['description' => '[Click me](javascript:alert(1))'])->save();
+
+        $this->get(route('departments.show', $department))
+            ->assertOk()
+            ->assertDontSee('javascript:alert', escape: false)
+            ->assertSee('Click me')
+            // The whole marker goes, brackets included: a URL containing its own
+            // parentheses used to end the match early and leave one behind.
+            ->assertDontSee('Click me)');
+    }
+
+    public function test_snake_case_words_are_not_turned_into_italics(): void
+    {
+        $department = \App\Models\Department::firstOrFail();
+
+        $department->forceFill(['description' => 'The column is called sort_order in the database.'])->save();
+
+        $this->get(route('departments.show', $department))
+            ->assertOk()
+            ->assertSee('sort_order')
+            ->assertDontSee('<em>', escape: false);
+    }
+
+    public function test_prose_markup_is_escaped_before_it_is_re_introduced(): void
+    {
+        $department = \App\Models\Department::firstOrFail();
+
+        $department->forceFill(['description' => '<script>alert(1)</script> **bold**'])->save();
+
+        $this->get(route('departments.show', $department))
+            ->assertOk()
+            ->assertDontSee('<script>alert(1)</script>', escape: false)
+            ->assertSee('&lt;script&gt;', escape: false);
+    }
 }

@@ -18,7 +18,11 @@
         </select>
     </x-admin.list-header>
 
-    <div class="admin-card overflow-hidden">
+    <div class="admin-card overflow-hidden"
+         x-data="adminList({ list: 'posts', sortable: false,
+             labels: { saved: @js(__('admin.lists.saved')), failed: @js(__('admin.lists.failed')) } })">
+        <x-admin.list-status />
+
         @if ($posts->isEmpty())
             <x-admin.empty :message="__('admin.posts.empty')" :action="__('admin.posts.create')"
                            :href="route('admin.posts.create')" icon="newspaper" />
@@ -30,14 +34,13 @@
                             <th class="admin-th">{{ __('admin.fields.title') }}</th>
                             <th class="admin-th">{{ __('admin.fields.category') }}</th>
                             <th class="admin-th">{{ __('admin.fields.published_at') }}</th>
-                            <th class="admin-th">{{ __('admin.form.languages') }}</th>
-                            <th class="admin-th">{{ __('admin.fields.is_active') }}</th>
+                            <th class="admin-th">{{ __('admin.lists.live') }}</th>
                             <th class="admin-th text-end">{{ __('admin.actions.label') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($posts as $post)
-                            <tr class="admin-row">
+                            <tr class="admin-row" data-id="{{ $post->id }}">
                                 <td class="admin-td">
                                     <div class="flex items-center gap-3">
                                         @if ($post->untranslated('image'))
@@ -64,13 +67,11 @@
                                         {{ $post->published_at->translatedFormat('j M Y') }}
                                     @endif
                                 </td>
-                                <td class="admin-td"><x-admin.translation-state :model="$post" /></td>
                                 <td class="admin-td">
-                                    @if ($post->is_active)
-                                        <span class="badge-teal">{{ __('admin.states.active') }}</span>
-                                    @else
-                                        <span class="badge-slate">{{ __('admin.states.hidden') }}</span>
-                                    @endif
+                                    <div class="flex items-center gap-2">
+                                        <x-admin.live-switch :model="$post" />
+                                        <x-admin.translation-state :model="$post" compact />
+                                    </div>
                                 </td>
                                 <td class="admin-td text-end">
                                     <div class="flex items-center justify-end gap-1">

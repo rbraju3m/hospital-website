@@ -18,7 +18,11 @@
         </select>
     </x-admin.list-header>
 
-    <div class="admin-card overflow-hidden">
+    <div class="admin-card overflow-hidden"
+         x-data="adminList({ list: 'diagnostics', sortable: true,
+             labels: { saved: @js(__('admin.lists.saved')), failed: @js(__('admin.lists.failed')) } })">
+        <x-admin.list-status />
+
         @if ($tests->isEmpty())
             <x-admin.empty :message="__('admin.diagnostics.empty')" :action="__('admin.diagnostics.create')"
                            :href="route('admin.diagnostics.create')" icon="microscope" />
@@ -27,18 +31,21 @@
                 <table class="w-full min-w-[50rem]">
                     <thead class="bg-mist-50">
                         <tr>
+                            <th class="admin-th w-8"></th>
                             <th class="admin-th">{{ __('admin.fields.name') }}</th>
                             <th class="admin-th">{{ __('admin.fields.category') }}</th>
                             <th class="admin-th">{{ __('admin.fields.report_time') }}</th>
                             <th class="admin-th">{{ __('admin.fields.price') }}</th>
-                            <th class="admin-th">{{ __('admin.form.languages') }}</th>
-                            <th class="admin-th">{{ __('admin.fields.is_active') }}</th>
+                            <th class="admin-th">{{ __('admin.lists.live') }}</th>
                             <th class="admin-th text-end">{{ __('admin.actions.label') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($tests as $test)
-                            <tr class="admin-row">
+                            <tr class="admin-row" data-id="{{ $test->id }}"
+                                @dragstart="dragStart($event)" @dragover.prevent="dragOver($event)"
+                                @dragend="dragEnd()">
+                                <td class="admin-td w-8 px-2"><x-admin.drag-handle /></td>
                                 <td class="admin-td">
                                     <a href="{{ route('admin.diagnostics.edit', $test) }}"
                                        class="block truncate font-semibold text-navy-900 hover:text-teal-700">
@@ -61,13 +68,11 @@
                                         <span class="ms-1.5 text-xs text-navy-900/40 line-through">৳{{ number_format($test->price) }}</span>
                                     @endif
                                 </td>
-                                <td class="admin-td"><x-admin.translation-state :model="$test" /></td>
                                 <td class="admin-td">
-                                    @if ($test->is_active)
-                                        <span class="badge-teal">{{ __('admin.states.active') }}</span>
-                                    @else
-                                        <span class="badge-slate">{{ __('admin.states.hidden') }}</span>
-                                    @endif
+                                    <div class="flex items-center gap-2">
+                                        <x-admin.live-switch :model="$test" />
+                                        <x-admin.translation-state :model="$test" compact />
+                                    </div>
                                 </td>
                                 <td class="admin-td text-end">
                                     <div class="flex items-center justify-end gap-1">

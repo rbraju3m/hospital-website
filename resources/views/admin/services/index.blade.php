@@ -18,7 +18,11 @@
         </select>
     </x-admin.list-header>
 
-    <div class="admin-card overflow-hidden">
+    <div class="admin-card overflow-hidden"
+         x-data="adminList({ list: 'services', sortable: true,
+             labels: { saved: @js(__('admin.lists.saved')), failed: @js(__('admin.lists.failed')) } })">
+        <x-admin.list-status />
+
         @if ($services->isEmpty())
             <x-admin.empty :message="__('admin.services.empty')" :action="__('admin.services.create')"
                            :href="route('admin.services.create')" icon="activity" />
@@ -27,17 +31,19 @@
                 <table class="w-full min-w-[46rem]">
                     <thead class="bg-mist-50">
                         <tr>
+                            <th class="admin-th w-8"></th>
                             <th class="admin-th">{{ __('admin.fields.name') }}</th>
                             <th class="admin-th">{{ __('admin.fields.category') }}</th>
-                            <th class="admin-th">{{ __('admin.form.languages') }}</th>
-                            <th class="admin-th">{{ __('admin.fields.sort_order') }}</th>
-                            <th class="admin-th">{{ __('admin.fields.is_active') }}</th>
+                            <th class="admin-th">{{ __('admin.lists.live') }}</th>
                             <th class="admin-th text-end">{{ __('admin.actions.label') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($services as $service)
-                            <tr class="admin-row">
+                            <tr class="admin-row" data-id="{{ $service->id }}"
+                                @dragstart="dragStart($event)" @dragover.prevent="dragOver($event)"
+                                @dragend="dragEnd()">
+                                <td class="admin-td w-8 px-2"><x-admin.drag-handle /></td>
                                 <td class="admin-td">
                                     <div class="flex items-center gap-3">
                                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-50 text-teal-700">
@@ -56,14 +62,11 @@
                                     </div>
                                 </td>
                                 <td class="admin-td">{{ __("services.groups.{$service->category}") }}</td>
-                                <td class="admin-td"><x-admin.translation-state :model="$service" /></td>
-                                <td class="admin-td">{{ $service->sort_order }}</td>
                                 <td class="admin-td">
-                                    @if ($service->is_active)
-                                        <span class="badge-teal">{{ __('admin.states.active') }}</span>
-                                    @else
-                                        <span class="badge-slate">{{ __('admin.states.hidden') }}</span>
-                                    @endif
+                                    <div class="flex items-center gap-2">
+                                        <x-admin.live-switch :model="$service" />
+                                        <x-admin.translation-state :model="$service" compact />
+                                    </div>
                                 </td>
                                 <td class="admin-td text-end">
                                     <div class="flex items-center justify-end gap-1">

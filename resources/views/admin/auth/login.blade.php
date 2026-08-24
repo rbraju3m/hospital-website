@@ -7,7 +7,7 @@
     <title>{{ __('admin.auth.sign_in') }} — {{ __('admin.panel') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="relative grid min-h-screen place-items-center overflow-hidden bg-navy-950 px-5 py-12">
+<body class="relative grid min-h-screen place-items-center overflow-hidden bg-navy-950 dark:bg-navy-50 px-5 py-12">
 
 {{-- The panel's sign-in is the one staff-facing screen a patient might also
      see over a shoulder, so it carries the same depth as the public heroes. --}}
@@ -24,7 +24,7 @@
         <span class="font-display text-lg font-bold text-white">{{ setting('site_name', 'RBR Hospital') }}</span>
     </div>
 
-    <div class="anim-scale-in rounded-[1.25rem] bg-white p-8 shadow-lift" style="--anim-delay:120ms">
+    <div class="anim-scale-in rounded-[1.25rem] bg-white dark:bg-navy-100 p-8 shadow-lift" style="--anim-delay:120ms">
         <h1 class="font-display text-xl font-bold text-navy-900">{{ __('admin.auth.sign_in') }}</h1>
         <p class="mt-1.5 text-sm text-navy-900/55">{{ __('admin.auth.intro') }}</p>
 

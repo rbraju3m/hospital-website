@@ -48,7 +48,7 @@
                 <div class="flex flex-wrap gap-2" x-show="! loading">
                     <template x-for="slot in slots" :key="slot.time">
                         <button type="button" @click="time = slot.time"
-                                :class="time === slot.time ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/70 hover:bg-mist-200'"
+                                :class="time === slot.time ? 'bg-navy-900 dark:bg-navy-100 text-white' : 'bg-mist-100 text-navy-900/70 hover:bg-mist-200'"
                                 class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
                                 x-text="slot.label"></button>
                     </template>

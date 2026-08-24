@@ -47,7 +47,7 @@
 
 {{-- Thin utility bar: hotline, emergency and international desk --}}
 @if (feature('chrome_topbar'))
-    <div class="hidden bg-navy-950 text-white lg:block">
+    <div class="hidden bg-navy-950 dark:bg-navy-50 text-white lg:block">
         <div class="shell flex h-11 items-center justify-between gap-6 overflow-hidden text-[13px] whitespace-nowrap">
             <div class="flex min-w-0 items-center gap-6">
                 <span class="flex items-center gap-2 truncate text-white/65 transition duration-200 hover:text-white">
@@ -62,6 +62,8 @@
             </div>
 
             <div class="flex shrink-0 items-center gap-5">
+                <x-theme-toggle />
+
                 @if (feature('chrome_locale_switcher'))
                     <x-locale-switcher />
                 @endif
@@ -96,7 +98,7 @@
 <header data-site-header
         x-data="{ open: false, mega: null }"
         @keydown.escape.window="open = false; mega = null"
-        class="group sticky top-0 z-50 border-b border-transparent bg-white/85 backdrop-blur-xl
+        class="group sticky top-0 z-50 border-b border-transparent bg-white/85 dark:bg-navy-100/85 backdrop-blur-xl
                transition-[background-color,border-color,box-shadow] duration-300 ease-out
                [&.is-scrolled]:border-mist-200 [&.is-scrolled]:bg-white/95 [&.is-scrolled]:shadow-soft">
 
@@ -106,7 +108,7 @@
         {{-- Logo --}}
         <a href="{{ route('home') }}" class="group/logo flex shrink-0 items-center gap-3"
            aria-label="{{ __('common.home_aria', ['name' => setting('site_name')]) }}">
-            <span class="relative grid h-11 w-11 place-items-center rounded-xl bg-navy-900 text-white shadow-soft
+            <span class="relative grid h-11 w-11 place-items-center rounded-xl bg-navy-900 dark:bg-navy-100 text-white shadow-soft
                          transition duration-300 ease-out
                          group-hover/logo:bg-teal-600 group-hover/logo:shadow-lift
                          group-[.is-scrolled]:h-10 group-[.is-scrolled]:w-10">
@@ -174,7 +176,7 @@
                                 </div>
                                 <a href="{{ route('departments.index') }}"
                                    class="group/all mt-1 flex items-center justify-center gap-2 rounded-xl bg-navy-50 px-4 py-3
-                                          text-sm font-semibold text-navy-900 transition duration-200 hover:bg-navy-900 hover:text-white">
+                                          text-sm font-semibold text-navy-900 transition duration-200 hover:bg-navy-900 hover:dark:bg-navy-100 hover:text-white">
                                     {{ __('nav.view_all_departments', ['count' => $navDepartments->count()]) }}
                                     <x-icon name="arrow-right" size="16"
                                             class="transition-transform duration-300 ease-out group-hover/all:translate-x-1" />
@@ -270,7 +272,7 @@
     </div>
 
     {{-- Mobile drawer --}}
-    <div x-show="open" x-cloak x-collapse class="border-t border-mist-200 bg-white lg:hidden">
+    <div x-show="open" x-cloak x-collapse class="border-t border-mist-200 bg-white dark:bg-navy-100 lg:hidden">
         <div class="shell max-h-[72vh] space-y-1 overflow-y-auto py-5">
             @if (feature('area_appointment'))
                 <a href="{{ route('appointment.create') }}" class="btn-accent w-full sm:hidden">
@@ -313,6 +315,8 @@
                 <a href="tel:{{ setting('ambulance_number') }}" class="btn-urgent w-full">
                     <x-icon name="ambulance" size="16" /> {{ __('nav.emergency_ambulance') }}
                 </a>
+
+                <x-theme-toggle variant="drawer" class="mt-1" />
 
                 @if (feature('chrome_locale_switcher'))
                     <x-locale-switcher variant="drawer" class="mt-1" />

@@ -14,7 +14,7 @@
                 <a href="{{ route('locale.switch', $code) }}" lang="{{ $code }}" hreflang="{{ $code }}"
                    @class([
                        'flex-1 rounded-lg px-3 py-2 text-center text-sm font-semibold transition',
-                       'bg-navy-900 text-white' => $code === $current,
+                       'bg-navy-900 dark:bg-navy-100 text-white' => $code === $current,
                        'text-navy-900/70 hover:bg-mist-50' => $code !== $current,
                    ])
                    @if ($code === $current) aria-current="true" @endif>

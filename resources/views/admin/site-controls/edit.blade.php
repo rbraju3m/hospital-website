@@ -51,7 +51,7 @@
             <section class="admin-card overflow-hidden" data-control-group
                      :class="{ 'hidden': ! groupVisible($el) }">
                 <header class="flex flex-wrap items-center gap-3 border-b border-mist-200 bg-mist-50/60 px-5 py-4">
-                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white text-navy-800 shadow-soft">
+                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white dark:bg-navy-100 text-navy-800 shadow-soft">
                         <x-icon :name="$groupIcons[$group] ?? 'sliders'" size="17" />
                     </span>
 

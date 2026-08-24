@@ -35,7 +35,7 @@
                                 :options="collect(config('icons'))->flatten()->mapWithKeys(fn ($i) => [$i => $i])->all()" />
 
                 <x-admin.translatable name="summary" type="textarea" :rows="3" :label="__('admin.fields.summary')" :model="$department" class="sm:col-span-2" />
-                <x-admin.translatable name="description" type="textarea" :rows="8" :label="__('admin.fields.description')" :model="$department"
+                <x-admin.translatable name="description" type="richtext" :rows="8" :label="__('admin.fields.description')" :model="$department"
                                       :help="__('admin.form.markup_help')" class="sm:col-span-2" />
             </div>
         </x-admin.section>

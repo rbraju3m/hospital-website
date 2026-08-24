@@ -53,17 +53,13 @@
 
         <div class="lg:col-span-8">
             <h2 class="h-section">{{ __('departments.show.about_title') }}</h2>
-            <div class="mt-6 space-y-4 text-base leading-relaxed text-navy-900/70">
-                @foreach (preg_split('/\n+/', $department->description) as $paragraph)
-                    <p>{{ $paragraph }}</p>
-                @endforeach
-            </div>
+            <x-article-body :body="$department->description" class="mt-6" />
 
             @if ($department->treatments)
                 <h3 class="mt-14 font-display text-xl font-bold text-navy-900">{{ __('departments.show.treatments_title') }}</h3>
                 <ul class="mt-6 grid gap-3 sm:grid-cols-2">
                     @foreach ($department->treatments as $treatment)
-                        <li class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white p-4">
+                        <li class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white dark:bg-navy-100 p-4">
                             <x-icon name="check" size="16" stroke="2.5" class="mt-0.5 shrink-0 text-teal-600" />
                             <span class="text-sm text-navy-900/75">{{ $treatment }}</span>
                         </li>
@@ -149,7 +145,7 @@
         <div class="mt-10 flex flex-wrap gap-2.5">
             @foreach ($related as $other)
                 <a href="{{ route('departments.show', $other) }}"
-                   class="chip transition hover:bg-navy-900 hover:text-white">
+                   class="chip transition hover:bg-navy-900 hover:dark:bg-navy-100 hover:text-white">
                     <x-icon :name="$other->icon" size="14" />
                     {{ $other->name }}
                 </a>

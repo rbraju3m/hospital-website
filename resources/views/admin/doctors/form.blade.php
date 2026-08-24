@@ -57,7 +57,7 @@
                 <x-admin.translatable name="expertise" type="list" :label="__('admin.fields.expertise')" :model="$doctor" />
                 <x-admin.translatable name="languages" type="list" :label="__('admin.fields.languages')" :model="$doctor" />
                 <x-admin.translatable name="chamber" :label="__('admin.fields.chamber')" :model="$doctor" class="sm:col-span-2" />
-                <x-admin.translatable name="about" type="textarea" :rows="8" :label="__('admin.fields.about')" :model="$doctor"
+                <x-admin.translatable name="about" type="richtext" :rows="8" :label="__('admin.fields.about')" :model="$doctor"
                                       :help="__('admin.form.markup_help')" class="sm:col-span-2" />
             </div>
         </x-admin.section>

@@ -14,15 +14,41 @@ if (! function_exists('setting')) {
 if (! function_exists('inline_markup')) {
     /**
      * Escape editorial text, then re-enable the small set of inline markers we
-     * allow in article bodies (**bold** only). Everything else stays literal.
+     * allow in editorial bodies. Everything else stays literal.
+     *
+     * `**bold**`, `_italic_`, `[label](url)`. Escaping happens first and is
+     * never undone, so the only HTML that reaches a page is HTML this function
+     * wrote — which is the whole reason the panel edits markup rather than
+     * storing what an editor pasted.
      */
     function inline_markup(string $text): string
     {
-        return preg_replace(
-            '/\*\*(.+?)\*\*/',
-            '<strong class="font-semibold text-navy-900">$1</strong>',
-            e($text)
-        );
+        $text = e($text);
+
+        // Links before emphasis, so a bold label inside one still works.
+        // One level of nested parentheses is allowed in the address, or a URL
+        // like `alert(1)` ends the match early and leaves a stray bracket in
+        // the sentence.
+        $text = preg_replace_callback('/\[([^\]]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/', function (array $match) {
+            [, $label, $url] = $match;
+
+            // A scheme allowlist rather than a blocklist. `javascript:` is the
+            // obvious one; the point is that nothing outside this list runs.
+            if (! preg_match('~^(https?://|mailto:|tel:|/|\#)~i', $url)) {
+                return $label;
+            }
+
+            $external = str_starts_with(strtolower($url), 'http');
+
+            return '<a href="'.$url.'" class="font-medium text-teal-700 underline underline-offset-2 hover:text-teal-800"'
+                .($external ? ' target="_blank" rel="noopener"' : '').'>'.$label.'</a>';
+        }, $text);
+
+        $text = preg_replace('/\*\*(.+?)\*\*/', '<strong class="font-semibold text-navy-900">$1</strong>', $text);
+
+        // Underscores only when they stand alone, or every snake_case word in a
+        // sentence would come out italic.
+        return preg_replace('/(?<![\w*])_([^_]+)_(?![\w*])/', '<em>$1</em>', $text);
     }
 }
 
@@ -54,6 +80,15 @@ if (! function_exists('media_url')) {
      * only becomes reachable through the storage:link symlink — so they cannot
      * go through asset(). Absolute URLs and root-relative paths pass straight
      * through, letting a column hold an external image if it ever needs to.
+     *
+     * The disk builds its URLs from APP_URL, which makes every uploaded image
+     * absolute against one hostname. That breaks the moment the site is reached
+     * by any other name — `artisan serve` on 127.0.0.1, the LAN address, a
+     * staging alias — and it breaks silently: the stand-in photography is
+     * root-relative and keeps working, so only the real uploads disappear.
+     * A URL under our own APP_URL is therefore returned host-less, which is
+     * correct everywhere. Anything on another host (a CDN, one day) is left
+     * absolute, because there the hostname is the point.
      */
     function media_url(?string $path): ?string
     {
@@ -65,7 +100,14 @@ if (! function_exists('media_url')) {
             return $path;
         }
 
-        return Storage::disk('public')->url($path);
+        $url = Storage::disk('public')->url($path);
+        $base = rtrim((string) config('app.url'), '/');
+
+        if ($base !== '' && str_starts_with($url, $base)) {
+            return substr($url, strlen($base)) ?: '/';
+        }
+
+        return $url;
     }
 }
 

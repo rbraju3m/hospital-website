@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Admin;
 
 /**
- * Editing one picture that is already in an album: its caption and where it
- * sits. Replacing the file itself is a delete and a fresh upload — a gallery
- * has no URL per photograph for anything to be pointing at.
+ * One photograph's caption, in whichever locale is being typed into. Saved as
+ * it is typed, so this is the smallest write in the panel.
  */
 class GalleryPhotoRequest extends AdminFormRequest
 {
@@ -13,7 +12,6 @@ class GalleryPhotoRequest extends AdminFormRequest
     {
         return array_merge([
             'caption' => ['nullable', 'string', 'max:255'],
-            'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
         ], $this->translationRules(['caption']));
     }
 }

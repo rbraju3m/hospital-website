@@ -32,7 +32,7 @@
                                     ->mapWithKeys(fn ($c) => [$c => category_label('posts', $c)])->all()" />
 
                 <x-admin.translatable name="excerpt" type="textarea" :rows="3" :label="__('admin.fields.excerpt')" :model="$post" class="sm:col-span-2" />
-                <x-admin.translatable name="body" type="textarea" :rows="20" :label="__('admin.fields.body')" :model="$post"
+                <x-admin.translatable name="body" type="richtext" :rows="20" :label="__('admin.fields.body')" :model="$post"
                                       :help="__('admin.posts.body_help')" class="sm:col-span-2" />
             </div>
         </x-admin.section>

@@ -62,8 +62,8 @@
 
                     <input id="file" name="file" type="file" accept=".pdf,.jpg,.jpeg,.png"
                            class="block w-full text-sm text-navy-900/70
-                                  file:me-3 file:rounded-lg file:border-0 file:bg-navy-900 file:px-4 file:py-2
-                                  file:text-sm file:font-semibold file:text-white hover:file:bg-navy-800">
+                                  file:me-3 file:rounded-lg file:border-0 file:bg-navy-900 file:dark:bg-navy-100 file:px-4 file:py-2
+                                  file:text-sm file:font-semibold file:text-white hover:file:bg-navy-800 hover:file:dark:bg-navy-200">
 
                     <p class="mt-1.5 text-xs text-navy-900/45">
                         {{ $editing

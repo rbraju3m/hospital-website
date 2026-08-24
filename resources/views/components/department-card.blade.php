@@ -25,7 +25,7 @@
                  which ties the two halves of the card together without a rule.
                  Pulled rather than absolutely placed, so it cannot be clipped
                  by the image's own overflow. --}}
-            <span class="-mt-12 mb-4 grid h-12 w-12 place-items-center rounded-xl bg-white text-teal-700
+            <span class="-mt-12 mb-4 grid h-12 w-12 place-items-center rounded-xl bg-white dark:bg-navy-100 text-teal-700
                          shadow-lift transition duration-300 ease-out
                          group-hover:-translate-y-1 group-hover:bg-teal-600 group-hover:text-white">
                 <x-icon :name="$department->icon" size="23" />

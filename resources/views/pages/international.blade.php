@@ -63,7 +63,7 @@
                     ),
                 ] as $i => [$title, $body])
                     <li class="flex gap-5">
-                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy-900 font-display text-sm font-bold text-white">
+                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy-900 dark:bg-navy-100 font-display text-sm font-bold text-white">
                             {{ $i + 1 }}
                         </span>
                         <div>

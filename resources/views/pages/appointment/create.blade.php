@@ -70,7 +70,7 @@
                     <header class="flex items-center gap-4">
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold
                                      transition-colors duration-300"
-                              :class="doctorId ? 'bg-teal-600 text-white' : 'bg-navy-900 text-white'">
+                              :class="doctorId ? 'bg-teal-600 text-white' : 'bg-navy-900 dark:bg-navy-100 text-white'">
                             <span x-show="! doctorId">1</span>
                             <span x-show="doctorId" x-cloak x-transition.scale aria-hidden="true">
                                 <x-icon name="check" size="16" stroke="3" />
@@ -125,7 +125,7 @@
                     <header class="flex items-center gap-4">
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold
                                      transition-colors duration-300"
-                              :class="time ? 'bg-teal-600 text-white' : (doctorId ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40')">
+                              :class="time ? 'bg-teal-600 text-white' : (doctorId ? 'bg-navy-900 dark:bg-navy-100 text-white' : 'bg-mist-100 text-navy-900/40')">
                             <span x-show="! time">2</span>
                             <span x-show="time" x-cloak x-transition.scale aria-hidden="true">
                                 <x-icon name="check" size="16" stroke="3" />
@@ -169,7 +169,7 @@
                                                    hover:-translate-y-0.5 active:scale-95"
                                             :class="date === day.date
                                                 ? 'border-teal-600 bg-teal-600 text-white shadow-lift'
-                                                : 'border-mist-200 bg-white text-navy-900 hover:border-teal-300 hover:bg-teal-50'">
+                                                : 'border-mist-200 bg-white dark:bg-navy-100 text-navy-900 hover:border-teal-300 hover:bg-teal-50'">
                                         <span class="block text-[11px] font-medium opacity-70" x-text="day.weekday"></span>
                                         <span class="block font-display text-sm font-bold" x-text="day.label"></span>
                                         <span class="block text-[10px] opacity-70" x-text="slotsOpenLabel(day.slots)"></span>
@@ -200,7 +200,7 @@
                                                    hover:-translate-y-0.5 active:scale-95"
                                             :class="time === slot.time
                                                 ? 'border-teal-600 bg-teal-600 text-white shadow-lift'
-                                                : 'border-mist-200 bg-white text-navy-900 hover:border-teal-300 hover:bg-teal-50'"
+                                                : 'border-mist-200 bg-white dark:bg-navy-100 text-navy-900 hover:border-teal-300 hover:bg-teal-50'"
                                             x-text="slot.label"></button>
                                 </template>
                             </div>
@@ -214,7 +214,7 @@
                     <header class="flex items-center gap-4">
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold
                                      transition-colors duration-300"
-                              :class="time ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40'">3</span>
+                              :class="time ? 'bg-navy-900 dark:bg-navy-100 text-white' : 'bg-mist-100 text-navy-900/40'">3</span>
                         <div>
                             <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_3.title') }}</h2>
                             <p class="text-sm text-navy-900/55">{{ __('appointment.step_3.lede') }}</p>

@@ -11,7 +11,7 @@
 
 @section('content')
 
-<section class="relative overflow-hidden bg-navy-900 text-white">
+<section class="relative overflow-hidden bg-navy-900 dark:bg-navy-100 text-white">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.12]"
          style="background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:64px 64px"></div>
     <div aria-hidden="true" class="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-teal-500/20 blur-3xl"></div>
@@ -90,7 +90,7 @@
                 <h2 class="h-section">
                     {{ __('doctors.show.about_title', ['name' => str($doctor->name)->after('Dr. ')->before(' ') ?: $doctor->name]) }}
                 </h2>
-                <p class="mt-6 text-base leading-relaxed text-navy-900/70">{{ $doctor->about }}</p>
+                <x-article-body :body="$doctor->about" class="mt-6" />
             </div>
 
             @if ($doctor->expertise)
@@ -98,7 +98,7 @@
                     <h2 class="font-display text-xl font-bold text-navy-900">{{ __('doctors.show.expertise_title') }}</h2>
                     <ul class="mt-6 grid gap-3 sm:grid-cols-2">
                         @foreach ($doctor->expertise as $item)
-                            <li class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white p-4">
+                            <li class="flex items-start gap-3 rounded-xl border border-mist-200 bg-white dark:bg-navy-100 p-4">
                                 <x-icon name="check" size="16" stroke="2.5" class="mt-0.5 shrink-0 text-teal-600" />
                                 <span class="text-sm text-navy-900/75">{{ $item }}</span>
                             </li>
@@ -121,7 +121,7 @@
                                     <th scope="col" class="hidden px-5 py-3.5 font-semibold sm:table-cell">{{ __('doctors.show.schedule_location') }}</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-mist-200 bg-white">
+                            <tbody class="divide-y divide-mist-200 bg-white dark:bg-navy-100">
                                 @foreach ($doctor->schedules->groupBy('day_of_week') as $day => $blocks)
                                     <tr>
                                         <th scope="row" class="px-5 py-3.5 font-semibold text-navy-900">

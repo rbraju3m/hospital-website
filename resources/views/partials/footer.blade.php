@@ -1,4 +1,4 @@
-<footer class="mt-20 bg-navy-950 text-white/70">
+<footer class="mt-20 bg-navy-950 dark:bg-navy-50 text-white/70">
 
     {{-- Emergency strip --}}
     <div class="border-b border-white/10 bg-urgent-600 text-white">

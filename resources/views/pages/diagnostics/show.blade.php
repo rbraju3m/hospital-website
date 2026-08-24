@@ -81,7 +81,7 @@
             <ol class="mt-6 space-y-4">
                 @foreach (['how_1', 'how_2', 'how_3'] as $index => $step)
                     <li class="flex items-start gap-4">
-                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-navy-900 text-xs font-bold text-white">
+                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-navy-900 dark:bg-navy-100 text-xs font-bold text-white">
                             {{ $index + 1 }}
                         </span>
                         <p class="text-sm leading-relaxed text-navy-900/70">{{ __("diagnostics.show.{$step}") }}</p>

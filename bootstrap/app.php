@@ -3,9 +3,11 @@
 use App\Http\Middleware\EnsureFeatureEnabled;
 use App\Http\Middleware\MaintenanceGate;
 use App\Http\Middleware\SetLocale;
+use App\Services\MediaLibrary;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,4 +55,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // A POST bigger than `post_max_size` reaches PHP with its body thrown
+        // away — no fields, no files, no CSRF token. Left alone that surfaces
+        // as a bare 413, or as "page expired", neither of which mentions the
+        // upload. Send it back to the form saying what the limit is.
+        $exceptions->render(function (PostTooLargeException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            return back()->withErrors([
+                'photos' => __('admin.form.upload_too_large', [
+                    'size' => round(MediaLibrary::maxKilobytes() / 1024, 1),
+                ]),
+            ]);
+        });
     })->create();

@@ -112,35 +112,69 @@ class AdminGalleryTest extends TestCase
         $this->assertSame(0, $album->photos()->count());
     }
 
-    public function test_a_caption_is_saved_in_both_locales(): void
+    public function test_an_upload_answers_with_the_photograph_it_created(): void
+    {
+        // The screen adds the tile from this payload rather than reloading.
+        Storage::fake('public');
+        $album = $this->album();
+
+        $response = $this->postJson(route('admin.gallery.photos.store', $album), [
+            'photos' => [UploadedFile::fake()->image('cath-lab.jpg')],
+        ])->assertCreated();
+
+        $photo = $album->photos()->firstOrFail();
+
+        $response->assertJsonPath('photos.0.id', $photo->id)
+            ->assertJsonPath('photos.0.uploaded', true)
+            ->assertJsonPath('photos.0.is_cover', false);
+    }
+
+    public function test_a_caption_saves_on_its_own_in_both_locales(): void
     {
         $album = $this->album();
         $photo = $album->photos()->create(['sort_order' => 1]);
 
-        $this->put(route('admin.gallery.photos.update', [$album, $photo]), [
+        $this->patchJson(route('admin.gallery.photos.update', [$album, $photo]), [
             'caption' => 'Cath lab one',
-            'sort_order' => 4,
             'translations' => ['bn' => ['caption' => 'ক্যাথ ল্যাব এক']],
-        ])->assertSessionHasNoErrors();
+        ])->assertOk()->assertJsonPath('photo.captions.bn', 'ক্যাথ ল্যাব এক');
 
         $photo->refresh();
 
         $this->assertSame('Cath lab one', $photo->untranslated('caption'));
         $this->assertSame('ক্যাথ ল্যাব এক', $photo->translation('caption', 'bn'));
-        $this->assertSame(4, $photo->sort_order);
     }
 
-    public function test_a_photograph_cannot_be_edited_through_another_album(): void
+    public function test_dragging_a_photograph_saves_the_new_order(): void
+    {
+        $album = $this->album();
+        $first = $album->photos()->create(['sort_order' => 1]);
+        $second = $album->photos()->create(['sort_order' => 2]);
+
+        $this->postJson(route('admin.gallery.photos.order', $album), ['ids' => [$second->id, $first->id]])
+            ->assertOk();
+
+        $this->assertSame([$second->id, $first->id], $album->photos()->get()->pluck('id')->all());
+    }
+
+    public function test_a_photograph_cannot_be_reached_through_another_album(): void
     {
         $album = $this->album();
         $other = GalleryAlbum::create(['title' => 'Imaging', 'slug' => 'imaging']);
-        $photo = $album->photos()->create(['sort_order' => 1]);
+        $photo = $album->photos()->create(['sort_order' => 1, 'caption' => 'Right album']);
 
-        $this->put(route('admin.gallery.photos.update', [$other, $photo]), ['caption' => 'Wrong album'])
+        $this->patchJson(route('admin.gallery.photos.update', [$other, $photo]), ['caption' => 'Wrong album'])
             ->assertNotFound();
-        $this->delete(route('admin.gallery.photos.destroy', [$other, $photo]))->assertNotFound();
+        $this->postJson(route('admin.gallery.photos.cover', [$other, $photo]))->assertNotFound();
+        $this->deleteJson(route('admin.gallery.photos.destroy', [$other, $photo]))->assertNotFound();
 
-        $this->assertDatabaseHas('gallery_photos', ['id' => $photo->id]);
+        $this->assertSame('Right album', $photo->fresh()->untranslated('caption'));
+
+        // Ordering is scoped rather than guarded: an id from elsewhere is
+        // simply not in the album's set.
+        $this->postJson(route('admin.gallery.photos.order', $other), ['ids' => [$photo->id]])
+            ->assertOk()
+            ->assertJson(['ordered' => 0]);
     }
 
     public function test_removing_a_photograph_takes_its_file_with_it(): void
@@ -148,17 +182,88 @@ class AdminGalleryTest extends TestCase
         Storage::fake('public');
         $album = $this->album();
 
-        $this->post(route('admin.gallery.photos.store', $album), [
+        $this->postJson(route('admin.gallery.photos.store', $album), [
             'photos' => [UploadedFile::fake()->image('cath-lab.jpg')],
         ]);
 
         $photo = $album->photos()->firstOrFail();
         $path = $photo->untranslated('path');
 
-        $this->delete(route('admin.gallery.photos.destroy', [$album, $photo]))->assertRedirect();
+        $this->deleteJson(route('admin.gallery.photos.destroy', [$album, $photo]))->assertOk();
 
         $this->assertDatabaseMissing('gallery_photos', ['id' => $photo->id]);
         Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_a_photograph_can_be_promoted_to_the_album_cover(): void
+    {
+        Storage::fake('public');
+        $album = $this->album();
+
+        $this->postJson(route('admin.gallery.photos.store', $album), [
+            'photos' => [UploadedFile::fake()->image('cath-lab.jpg')],
+        ]);
+
+        $photo = $album->photos()->firstOrFail();
+
+        $this->postJson(route('admin.gallery.photos.cover', [$album, $photo]))->assertOk();
+
+        $this->assertSame($photo->untranslated('path'), $album->fresh()->untranslated('image'));
+    }
+
+    public function test_promoting_a_photograph_does_not_destroy_the_album_own_cover(): void
+    {
+        // A cover somebody uploaded on the album form is a file they chose. One
+        // click on a star must not be able to delete it.
+        Storage::fake('public');
+        $album = $this->album();
+
+        $this->put(route('admin.gallery.update', $album), [
+            'title' => 'Cardiac theatres',
+            'slug' => 'cardiac-theatres',
+            'is_active' => '1',
+            'image' => UploadedFile::fake()->image('chosen-cover.jpg'),
+        ])->assertSessionHasNoErrors();
+
+        $chosen = $album->fresh()->untranslated('image');
+
+        $this->postJson(route('admin.gallery.photos.store', $album), [
+            'photos' => [UploadedFile::fake()->image('inside.jpg')],
+        ]);
+
+        $this->postJson(route('admin.gallery.photos.cover', [$album, $album->photos()->firstOrFail()]))->assertOk();
+
+        Storage::disk('public')->assertExists($chosen);
+    }
+
+    public function test_a_photograph_with_no_file_cannot_become_the_cover(): void
+    {
+        // A stand-in has no path to copy; writing one would freeze today's
+        // placeholder into the row.
+        $album = $this->album();
+        $photo = $album->photos()->create(['sort_order' => 1]);
+
+        $this->postJson(route('admin.gallery.photos.cover', [$album, $photo]))->assertStatus(422);
+
+        $this->assertNull($album->fresh()->untranslated('image'));
+    }
+
+    public function test_deleting_the_photograph_used_as_the_cover_clears_it(): void
+    {
+        Storage::fake('public');
+        $album = $this->album();
+
+        $this->postJson(route('admin.gallery.photos.store', $album), [
+            'photos' => [UploadedFile::fake()->image('cover.jpg')],
+        ]);
+
+        $photo = $album->photos()->firstOrFail();
+
+        $this->postJson(route('admin.gallery.photos.cover', [$album, $photo]));
+        $this->deleteJson(route('admin.gallery.photos.destroy', [$album, $photo]));
+
+        // Otherwise the album points at a file that is no longer there.
+        $this->assertNull($album->fresh()->untranslated('image'));
     }
 
     public function test_deleting_an_album_deletes_its_photographs_and_their_files(): void
@@ -194,6 +299,6 @@ class AdminGalleryTest extends TestCase
         $this->get(route('admin.gallery.edit', $album))
             ->assertOk()
             ->assertSee('Cath lab one')
-            ->assertSee(__('admin.gallery.add_photos'));
+            ->assertSee(__('admin.gallery.drop_here'));
     }
 }

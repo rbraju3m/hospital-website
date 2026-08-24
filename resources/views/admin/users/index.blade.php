@@ -13,7 +13,7 @@
         <ul>
             @foreach ($users as $user)
                 <li class="admin-row flex items-center gap-4 px-5 py-4 first:border-0">
-                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-900 text-xs font-bold text-white">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-900 dark:bg-navy-100 text-xs font-bold text-white">
                         {{ Str::upper(Str::substr($user->name, 0, 2)) }}
                     </span>
 

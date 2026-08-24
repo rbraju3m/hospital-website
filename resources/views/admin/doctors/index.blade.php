@@ -24,7 +24,11 @@
         </select>
     </x-admin.list-header>
 
-    <div class="admin-card overflow-hidden">
+    <div class="admin-card overflow-hidden"
+         x-data="adminList({ list: 'doctors', sortable: true,
+             labels: { saved: @js(__('admin.lists.saved')), failed: @js(__('admin.lists.failed')) } })">
+        <x-admin.list-status />
+
         @if ($doctors->isEmpty())
             <x-admin.empty :message="__('admin.doctors.empty')"
                            :action="__('admin.doctors.create')"
@@ -35,18 +39,21 @@
                 <table class="w-full min-w-[52rem]">
                     <thead class="bg-mist-50">
                         <tr>
+                            <th class="admin-th w-8"></th>
                             <th class="admin-th">{{ __('admin.fields.name') }}</th>
                             <th class="admin-th">{{ __('admin.fields.department_id') }}</th>
                             <th class="admin-th">{{ __('admin.fields.consultation_fee') }}</th>
                             <th class="admin-th">{{ __('admin.doctors.chambers') }}</th>
-                            <th class="admin-th">{{ __('admin.form.languages') }}</th>
-                            <th class="admin-th">{{ __('admin.fields.is_active') }}</th>
+                            <th class="admin-th">{{ __('admin.lists.live') }}</th>
                             <th class="admin-th text-end">{{ __('admin.actions.label') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($doctors as $doctor)
-                            <tr class="admin-row">
+                            <tr class="admin-row" data-id="{{ $doctor->id }}"
+                                @dragstart="dragStart($event)" @dragover.prevent="dragOver($event)"
+                                @dragend="dragEnd()">
+                                <td class="admin-td w-8 px-2"><x-admin.drag-handle /></td>
                                 <td class="admin-td">
                                     <div class="flex items-center gap-3">
                                         <x-doctor-avatar :doctor="$doctor" size="sm" class="!h-10 !w-10 !text-xs" />
@@ -70,13 +77,11 @@
                                         <span class="badge-amber">{{ __('admin.doctors.no_chamber') }}</span>
                                     @endif
                                 </td>
-                                <td class="admin-td"><x-admin.translation-state :model="$doctor" /></td>
                                 <td class="admin-td">
-                                    @if ($doctor->is_active)
-                                        <span class="badge-teal">{{ __('admin.states.active') }}</span>
-                                    @else
-                                        <span class="badge-slate">{{ __('admin.states.hidden') }}</span>
-                                    @endif
+                                    <div class="flex items-center gap-2">
+                                        <x-admin.live-switch :model="$doctor" />
+                                        <x-admin.translation-state :model="$doctor" compact />
+                                    </div>
                                 </td>
                                 <td class="admin-td text-end">
                                     <div class="flex items-center justify-end gap-1">

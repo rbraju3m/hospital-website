@@ -24,6 +24,8 @@ return [
         'close' => 'Close',
         'next' => 'Next photograph',
         'previous' => 'Previous photograph',
+        'fullscreen' => 'Full screen',
+        'exit_fullscreen' => 'Leave full screen',
     ],
 
     // Album cards and the count under a title.
