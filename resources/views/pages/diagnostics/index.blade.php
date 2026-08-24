@@ -63,7 +63,7 @@
         </p>
 
         @if ($tests->isEmpty())
-            <div class="card mt-8 p-14 text-center">
+            <div class="card anim-fade-up mt-8 p-14 text-center">
                 <p class="font-medium text-navy-900">{{ __('diagnostics.index.empty') }}</p>
                 <p class="mt-2 text-sm text-navy-900/55">{{ __('diagnostics.index.empty_hint') }}</p>
                 <a href="tel:{{ setting('hotline') }}" class="btn-outline btn-sm mt-6">
@@ -77,10 +77,11 @@
                         <caption class="sr-only">{{ __('diagnostics.index.title') }}</caption>
                         <tbody>
                             @foreach ($tests as $test)
-                                <tr class="border-t border-mist-200 first:border-0 transition hover:bg-mist-50">
-                                    <td class="px-5 py-4">
+                                <tr class="group border-t border-mist-200 transition duration-200 first:border-0 hover:bg-mist-50">
+                                    <td class="px-5 py-4 shadow-[inset_3px_0_0_-3px_var(--color-teal-500)] transition-shadow
+                                               duration-200 group-hover:shadow-[inset_3px_0_0_0_var(--color-teal-500)]">
                                         <a href="{{ route('diagnostics.show', $test) }}"
-                                           class="font-display text-base font-bold text-navy-900 hover:text-teal-700">
+                                           class="font-display text-base font-bold text-navy-900 transition duration-200 hover:text-teal-700">
                                             {{ $test->name }}
                                         </a>
                                         <p class="mt-1 line-clamp-1 text-sm text-navy-900/55">{{ $test->summary }}</p>

@@ -2,7 +2,8 @@
 
 <article {{ $attributes->merge(['class' => 'card-interactive group relative flex h-full flex-col overflow-hidden']) }}>
     @if ($package->savingsPercent())
-        <span class="absolute right-5 top-5 rounded-full bg-teal-600 px-2.5 py-1 text-[11px] font-bold text-white">
+        <span class="absolute right-5 top-5 z-10 rounded-full bg-teal-600 px-2.5 py-1 text-[11px] font-bold text-white
+                     shadow-soft transition duration-300 ease-out group-hover:scale-105">
             {{ __('packages.show.save', ['percent' => $package->savingsPercent()]) }}
         </span>
     @endif
@@ -45,7 +46,7 @@
                 <p class="mt-1 text-xs text-navy-900/50">{{ $package->duration }}</p>
             </div>
 
-            <span class="relative z-10 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
+            <span class="card-arrow relative z-10 text-sm font-semibold text-teal-700">
                 {{ __('common.details') }} →
             </span>
         </div>

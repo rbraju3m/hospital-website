@@ -7,17 +7,24 @@
     <title>{{ __('admin.auth.sign_in') }} — {{ __('admin.panel') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="grid min-h-screen place-items-center bg-navy-950 px-5 py-12">
+<body class="relative grid min-h-screen place-items-center overflow-hidden bg-navy-950 px-5 py-12">
 
-<div class="w-full max-w-md">
-    <div class="mb-8 flex items-center justify-center gap-3">
-        <span class="grid h-11 w-11 place-items-center rounded-xl bg-teal-500 font-display text-sm font-extrabold text-navy-950">
+{{-- The panel's sign-in is the one staff-facing screen a patient might also
+     see over a shoulder, so it carries the same depth as the public heroes. --}}
+<div aria-hidden="true" class="hero-grid opacity-[0.08]"></div>
+<div aria-hidden="true" class="orb -top-40 left-1/2 h-[26rem] w-[26rem] -translate-x-1/2 bg-teal-500/20"></div>
+<div aria-hidden="true" class="orb -bottom-48 -right-24 h-80 w-80 bg-navy-500/25" style="--anim-delay:-4s"></div>
+
+<div class="relative w-full max-w-md">
+    <div class="anim-fade-up mb-8 flex items-center justify-center gap-3">
+        <span class="grid h-11 w-11 place-items-center rounded-xl bg-teal-500 font-display text-sm font-extrabold text-navy-950
+                     shadow-[0_0_0_6px_rgb(23_166_152/0.14)]">
             RBR
         </span>
         <span class="font-display text-lg font-bold text-white">{{ setting('site_name', 'RBR Hospital') }}</span>
     </div>
 
-    <div class="rounded-[1.25rem] bg-white p-8 shadow-lift">
+    <div class="anim-scale-in rounded-[1.25rem] bg-white p-8 shadow-lift" style="--anim-delay:120ms">
         <h1 class="font-display text-xl font-bold text-navy-900">{{ __('admin.auth.sign_in') }}</h1>
         <p class="mt-1.5 text-sm text-navy-900/55">{{ __('admin.auth.intro') }}</p>
 
@@ -50,12 +57,15 @@
                 {{ __('admin.auth.remember') }}
             </label>
 
-            <button type="submit" class="btn-primary w-full">{{ __('admin.auth.sign_in') }}</button>
+            <button type="submit" class="btn-primary btn-nudge w-full">
+                {{ __('admin.auth.sign_in') }}
+                <x-icon name="arrow-right" size="16" />
+            </button>
         </form>
     </div>
 
-    <p class="mt-6 text-center text-xs text-white/40">
-        <a href="{{ route('home') }}" class="hover:text-white/70">← {{ __('admin.auth.back_to_site') }}</a>
+    <p class="anim-fade-in mt-6 text-center text-xs text-white/40" style="--anim-delay:300ms">
+        <a href="{{ route('home') }}" class="transition duration-200 hover:text-white/70">← {{ __('admin.auth.back_to_site') }}</a>
     </p>
 </div>
 

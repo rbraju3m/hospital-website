@@ -54,6 +54,84 @@
     --shadow-soft: 0 1px 2px rgb(11 44 77 / 0.04), 0 8px 24px -8px rgb(11 44 77 / 0.10);
     --shadow-lift: 0 2px 4px rgb(11 44 77 / 0.05), 0 20px 40px -12px rgb(11 44 77 / 0.18);
     --shadow-ring: 0 0 0 1px rgb(11 44 77 / 0.06);
+    --shadow-glow: 0 0 0 1px rgb(23 166 152 / 0.20), 0 22px 48px -20px rgb(13 134 124 / 0.45);
+
+    /* Motion.
+       One easing curve does most of the work: a long, decelerating expo that
+       reads as "settled" rather than "bouncy" — the right register for a
+       hospital. `--ease-spring` is reserved for affordances that should feel
+       physical (toggles, badges), never for page content. */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.30, 1);
+    --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
+    --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+    --duration-fast: 180ms;
+    --duration-base: 320ms;
+    --duration-slow: 620ms;
+
+    --animate-float: float 9s var(--ease-out-soft) infinite;
+    --animate-float-slow: float 14s var(--ease-out-soft) infinite;
+    --animate-drift: drift 24s linear infinite;
+    --animate-pulse-ring: pulse-ring 2.4s var(--ease-out-soft) infinite;
+    --animate-shimmer: shimmer 1.6s linear infinite;
+    --animate-fade-up: fade-up var(--duration-slow) var(--ease-out-expo) both;
+    --animate-fade-in: fade-in var(--duration-base) var(--ease-out-expo) both;
+    --animate-scale-in: scale-in var(--duration-base) var(--ease-spring) both;
+    --animate-slide-down: slide-down var(--duration-base) var(--ease-out-expo) both;
+    --animate-spin-slow: spin 14s linear infinite;
+}
+
+/* Keyframes live at the root so they are emitted unconditionally — component
+   classes below reference them directly, not only through animate-* utilities. */
+@keyframes fade-up {
+    from { opacity: 0; translate: 0 1.25rem; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+    from { opacity: 0; scale: 0.94; }
+    to   { opacity: 1; scale: 1; }
+}
+
+@keyframes slide-down {
+    from { opacity: 0; translate: 0 -0.5rem; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+@keyframes float {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -1.5rem; }
+}
+
+@keyframes drift {
+    from { background-position: 0 0; }
+    to   { background-position: 72px 72px; }
+}
+
+@keyframes pulse-ring {
+    0%   { opacity: 0.55; scale: 1; }
+    70%  { opacity: 0;    scale: 1.9; }
+    100% { opacity: 0;    scale: 1.9; }
+}
+
+@keyframes shimmer {
+    from { background-position: -180% 0; }
+    to   { background-position: 180% 0; }
+}
+
+@keyframes marquee {
+    from { translate: 0 0; }
+    to   { translate: -50% 0; }
+}
+
+@keyframes bar-grow {
+    from { scale: 0 1; }
+    to   { scale: 1 1; }
 }
 
 @layer base {
@@ -73,9 +151,14 @@
         text-wrap: balance;
     }
 
+    p, li {
+        text-wrap: pretty;
+    }
+
     /* Visible, on-brand focus ring for keyboard users everywhere. */
     :focus-visible {
         @apply outline-2 outline-offset-2 outline-teal-500;
+        border-radius: inherit;
     }
 
     ::selection {
@@ -86,6 +169,43 @@
        never flash open on first paint. */
     [x-cloak] {
         display: none !important;
+    }
+
+    /* A quiet scrollbar keeps long panel tables from looking like a desktop app
+       from 2009. Firefox takes the two-value shorthand; WebKit needs the parts. */
+    * {
+        scrollbar-color: var(--color-mist-200) transparent;
+        scrollbar-width: thin;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: var(--color-mist-200);
+        border: 3px solid transparent;
+        background-clip: content-box;
+        border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-navy-200);
+    }
+
+    /* Images fade in once decoded rather than snapping in band by band. */
+    img[data-fade] {
+        opacity: 0;
+        transition: opacity var(--duration-slow) var(--ease-out-expo);
+    }
+
+    img[data-fade].is-loaded {
+        opacity: 1;
     }
 }
 
@@ -118,22 +238,53 @@
 }
 
 /* Buttons ---------------------------------------------------------------- */
+/* The sheen is a single pseudo-element swept across on hover. It is white at
+   low alpha, so it reads as a highlight on the solid variants and is invisible
+   on the light ones — one rule, no per-variant duplication. */
 @utility btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold
-           transition duration-200 ease-out select-none
+    @apply relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3
+           text-sm font-semibold select-none
            disabled:cursor-not-allowed disabled:opacity-55;
+    transition-property: color, background-color, border-color, box-shadow, translate, scale, opacity;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-out-expo);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(105deg, transparent 32%, rgb(255 255 255 / 0.22) 46%, transparent 62%);
+        translate: -135% 0;
+    }
+
+    &:hover::after {
+        translate: 135% 0;
+        transition: translate 750ms var(--ease-out-expo);
+    }
+
+    &:active:not(:disabled) {
+        scale: 0.97;
+    }
+
+    /* Icons lean into the direction of travel on hover. */
+    & svg {
+        transition: translate var(--duration-base) var(--ease-out-expo);
+    }
 }
 
 @utility btn-primary {
-    @apply btn bg-navy-900 text-white shadow-soft hover:bg-navy-800 hover:shadow-lift active:scale-[0.98];
+    @apply btn bg-navy-900 text-white shadow-soft hover:bg-navy-800 hover:shadow-lift;
+    &:hover { translate: 0 -1px; }
 }
 
 @utility btn-accent {
-    @apply btn bg-teal-600 text-white shadow-soft hover:bg-teal-700 hover:shadow-lift active:scale-[0.98];
+    @apply btn bg-teal-600 text-white shadow-soft hover:bg-teal-700 hover:shadow-lift;
+    &:hover { translate: 0 -1px; }
 }
 
 @utility btn-outline {
-    @apply btn border border-navy-200 bg-white text-navy-900 hover:border-navy-300 hover:bg-navy-50;
+    @apply btn border border-mist-200 bg-white text-navy-900 hover:border-teal-300 hover:bg-teal-50/60 hover:text-teal-800;
 }
 
 @utility btn-ghost {
@@ -141,7 +292,8 @@
 }
 
 @utility btn-urgent {
-    @apply btn bg-urgent-600 text-white shadow-soft hover:bg-urgent-700 active:scale-[0.98];
+    @apply btn bg-urgent-600 text-white shadow-soft hover:bg-urgent-700 hover:shadow-lift;
+    &:hover { translate: 0 -1px; }
 }
 
 @utility btn-lg {
@@ -152,21 +304,96 @@
     @apply px-4 py-2 text-xs;
 }
 
+/* Nudges the trailing icon on hover — used on "learn more" style buttons. */
+@utility btn-nudge {
+    &:hover svg:last-child { translate: 0.2rem 0; }
+}
+
 /* Surfaces --------------------------------------------------------------- */
 @utility card {
     @apply rounded-[1.25rem] border border-mist-200 bg-white shadow-soft;
 }
 
+/* A card that responds to the pointer: it lifts, warms its border, and picks
+   up a soft teal spotlight that tracks the cursor (--mx/--my are written by
+   the pointer handler in app.js; without JS the gradient simply sits centred). */
 @utility card-interactive {
-    @apply card transition duration-300 ease-out hover:-translate-y-1 hover:border-teal-200 hover:shadow-lift;
+    @apply card relative;
+    transition-property: translate, box-shadow, border-color;
+    transition-duration: var(--duration-slow);
+    transition-timing-function: var(--ease-out-expo);
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--duration-base) var(--ease-out-expo);
+        background: radial-gradient(18rem circle at var(--mx, 50%) var(--my, 0%),
+                                    rgb(23 166 152 / 0.09), transparent 62%);
+    }
+
+    &:hover {
+        @apply border-teal-200 shadow-lift;
+        translate: 0 -0.375rem;
+    }
+
+    &:hover::before {
+        opacity: 1;
+    }
+
+    &:hover .card-arrow {
+        translate: 0.25rem 0;
+    }
+
+    /* Headings and links inside the card ease to their hover colour with the
+       card rather than snapping ahead of it. */
+    & a,
+    & h3 {
+        transition: color var(--duration-base) var(--ease-out-expo);
+    }
+}
+
+/* A card that only reacts — no lift, because nothing here is clickable and a
+   lift reads as an invitation to click. */
+@utility card-hover {
+    @apply card;
+    transition: box-shadow var(--duration-base) var(--ease-out-expo),
+                border-color var(--duration-base) var(--ease-out-expo);
+
+    &:hover {
+        @apply border-teal-200 shadow-lift;
+    }
+}
+
+/* Cover images that scale gently inside a clipped card. */
+@utility card-zoom {
+    transition: scale var(--duration-slow) var(--ease-out-expo);
+    .card-interactive:hover & {
+        scale: 1.06;
+    }
+}
+
+@utility card-arrow {
+    @apply inline-block;
+    transition: translate var(--duration-base) var(--ease-out-expo);
 }
 
 @utility chip {
-    @apply inline-flex items-center gap-1.5 rounded-full bg-mist-100 px-3 py-1 text-xs font-medium text-navy-900/70;
+    @apply inline-flex items-center gap-1.5 rounded-full bg-mist-100 px-3 py-1 text-xs font-medium text-navy-900/70
+           transition duration-200;
 }
 
 @utility chip-accent {
     @apply chip bg-teal-50 text-teal-800;
+}
+
+/* Frosted panel used over photography and the navy hero fields. */
+@utility glass {
+    @apply border border-white/15 bg-white/10;
+    backdrop-filter: blur(14px) saturate(140%);
 }
 
 /* Forms ------------------------------------------------------------------ */
@@ -178,6 +405,13 @@
     @apply block w-full rounded-xl border border-mist-200 bg-white px-4 py-3 text-sm text-navy-900
            placeholder:text-navy-900/35
            focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none;
+    transition: border-color var(--duration-fast) var(--ease-out-expo),
+                box-shadow var(--duration-fast) var(--ease-out-expo),
+                background-color var(--duration-fast) var(--ease-out-expo);
+
+    &:hover:not(:focus):not(:disabled) {
+        @apply border-navy-200;
+    }
 }
 
 @utility input-error {
@@ -186,16 +420,167 @@
 
 @utility field-error {
     @apply mt-1.5 text-xs font-medium text-urgent-600;
+    animation: slide-down var(--duration-base) var(--ease-out-expo) both;
+}
+
+/* Links ------------------------------------------------------------------ */
+/* An underline that draws from the leading edge instead of appearing at once. */
+@utility link-underline {
+    @apply relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        bottom: -2px;
+        height: 1.5px;
+        background: currentColor;
+        scale: 0 1;
+        transform-origin: left;
+        transition: scale var(--duration-base) var(--ease-out-expo);
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+        scale: 1 1;
+    }
 }
 
 /* Scroll-reveal ---------------------------------------------------------- */
+/* Elements opt in with class="reveal"; app.js adds .reveal-in on intersection.
+   Direction variants must be declared after .reveal and before .reveal-in —
+   utilities carry equal specificity, so source order is what resolves them. */
+/* The direction variants and the revealed state are nested rather than declared
+   as sibling utilities on purpose. Sibling utilities carry equal specificity, so
+   which one wins depends on the order Tailwind happens to emit them in — and it
+   does not emit them in source order. `.reveal.reveal-in` (0,2,0) beats the base
+   rule whatever the order, which is the difference between content appearing and
+   content staying invisible. They are only ever used together anyway. */
 @utility reveal {
-    @apply translate-y-4 opacity-0;
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    opacity: 0;
+    translate: 0 1.25rem;
+    filter: blur(3px);
+    transition-property: opacity, translate, scale, filter;
+    transition-duration: var(--duration-slow);
+    transition-timing-function: var(--ease-out-expo);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, translate;
+
+    &.reveal-left {
+        translate: -1.5rem 0;
+    }
+
+    &.reveal-right {
+        translate: 1.5rem 0;
+    }
+
+    &.reveal-zoom {
+        translate: 0 0.75rem;
+        scale: 0.96;
+    }
+
+    &.reveal-in {
+        opacity: 1;
+        translate: 0 0;
+        scale: 1;
+        filter: none;
+        will-change: auto;
+    }
 }
 
-@utility reveal-in {
-    @apply translate-y-0 opacity-100;
+/* Staggers direct children without an inline transition-delay per element. */
+@utility stagger {
+    & > * {
+        transition-delay: calc(var(--stagger-step, 70ms) * var(--i, 0));
+    }
+}
+
+/* Motion primitives ------------------------------------------------------ */
+@utility anim-fade-up {
+    animation: fade-up var(--duration-slow) var(--ease-out-expo) both;
+    animation-delay: var(--anim-delay, 0ms);
+}
+
+@utility anim-fade-in {
+    animation: fade-in var(--duration-base) var(--ease-out-expo) both;
+    animation-delay: var(--anim-delay, 0ms);
+}
+
+@utility anim-scale-in {
+    animation: scale-in var(--duration-base) var(--ease-spring) both;
+    animation-delay: var(--anim-delay, 0ms);
+}
+
+/* Decorative hero orbs. Long, low-amplitude drift — it should register as
+   depth, not as something moving on the page. */
+@utility orb {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+    animation: float 12s var(--ease-out-soft) infinite;
+    animation-delay: var(--anim-delay, 0ms);
+}
+
+/* The grid overlay behind the navy heroes, drifting one cell per cycle. */
+@utility hero-grid {
+    @apply pointer-events-none absolute inset-0;
+    background-image: linear-gradient(rgb(255 255 255 / 0.5) 1px, transparent 1px),
+                      linear-gradient(90deg, rgb(255 255 255 / 0.5) 1px, transparent 1px);
+    background-size: 72px 72px;
+    animation: drift 40s linear infinite;
+    mask-image: radial-gradient(120% 100% at 50% 0%, black 20%, transparent 78%);
+}
+
+/* A live dot with an expanding ring — "open now", "24/7", queue counts. */
+@utility pulse-dot {
+    @apply relative inline-grid h-2 w-2 place-items-center rounded-full bg-current;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: currentColor;
+        animation: pulse-ring 2.4s var(--ease-out-soft) infinite;
+    }
+}
+
+/* Placeholder surface while something loads. */
+@utility skeleton {
+    @apply rounded-lg bg-mist-100;
+    background-image: linear-gradient(90deg, transparent 20%, rgb(255 255 255 / 0.85) 50%, transparent 80%);
+    background-size: 180% 100%;
+    animation: shimmer 1.6s linear infinite;
+}
+
+/* Reading-progress rail, fixed at the very top of the viewport. */
+@utility scroll-progress {
+    @apply pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px];
+
+    & > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--color-teal-400), var(--color-teal-600));
+        scale: var(--progress, 0) 1;
+        transform-origin: left;
+    }
+}
+
+/* Back-to-top affordance; sits above the mobile action bar. */
+@utility to-top {
+    @apply pointer-events-none fixed end-5 bottom-24 z-40 grid h-11 w-11 place-items-center rounded-full
+           bg-navy-900 text-white opacity-0 shadow-lift lg:bottom-8;
+    translate: 0 0.75rem;
+    transition: opacity var(--duration-base) var(--ease-out-expo),
+                translate var(--duration-base) var(--ease-out-expo),
+                background-color var(--duration-fast) var(--ease-out-expo);
+
+    &.is-visible {
+        @apply pointer-events-auto opacity-100;
+        translate: 0 0;
+    }
+
+    &:hover {
+        @apply bg-teal-600;
+    }
 }
 
 @layer utilities {
@@ -210,17 +595,38 @@
     .grid-fade {
         mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
     }
+
+    /* Fades the edges of a horizontally scrolling rail. */
+    .edge-fade {
+        mask-image: linear-gradient(to right, transparent, black 2.5rem, black calc(100% - 2.5rem), transparent);
+    }
 }
 
+/* Motion is decoration. Under `prefers-reduced-motion` every reveal, drift,
+   float and sweep is switched off — the content still has to arrive. */
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
     }
 
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
     .reveal {
-        opacity: 1;
-        transform: none;
-        transition: none;
+        opacity: 1 !important;
+        translate: none !important;
+        scale: 1 !important;
+        filter: none !important;
+    }
+
+    .btn::after {
+        display: none;
     }
 }
 
@@ -232,12 +638,42 @@
    --------------------------------------------------------------------------- */
 
 @utility admin-nav-item {
-    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60
-           transition hover:bg-white/10 hover:text-white;
+    @apply relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60
+           transition duration-200 hover:bg-white/10 hover:text-white;
+
+    /* The active marker is always present and scaled to nothing, so moving
+       between pages animates rather than cutting. */
+    &::before {
+        content: '';
+        position: absolute;
+        inset-block: 0.45rem;
+        inset-inline-start: -0.75rem;
+        width: 3px;
+        border-radius: 9999px;
+        background: var(--color-teal-400);
+        scale: 1 0;
+        transition: scale var(--duration-base) var(--ease-out-expo);
+    }
+
+    & svg {
+        transition: translate var(--duration-base) var(--ease-out-expo);
+    }
+
+    &:hover svg {
+        translate: 0.1rem 0;
+    }
 }
 
 @utility admin-nav-item-active {
     @apply admin-nav-item bg-white/12 text-white;
+
+    &::before {
+        scale: 1 1;
+    }
+
+    & svg {
+        @apply text-teal-300;
+    }
 }
 
 @utility admin-nav-heading {
@@ -246,6 +682,20 @@
 
 @utility admin-card {
     @apply rounded-2xl border border-mist-200 bg-white shadow-soft;
+    transition: box-shadow var(--duration-base) var(--ease-out-expo),
+                border-color var(--duration-base) var(--ease-out-expo);
+}
+
+/* A stat tile on the dashboard: lifts a little and warms its border, but stops
+   well short of the public site's spotlight cards. */
+@utility admin-stat {
+    @apply admin-card relative overflow-hidden p-5;
+    transition-property: translate, box-shadow, border-color;
+
+    &:hover {
+        @apply border-teal-200 shadow-lift;
+        translate: 0 -2px;
+    }
 }
 
 @utility admin-th {
@@ -257,7 +707,22 @@
 }
 
 @utility admin-row {
-    @apply border-t border-mist-200 transition hover:bg-mist-50;
+    @apply relative border-t border-mist-200;
+    transition: background-color var(--duration-fast) var(--ease-out-expo);
+
+    &:hover {
+        @apply bg-mist-50;
+    }
+
+    /* Leading rule on hover: cheap row-tracking for a wide table. */
+    & > td:first-child {
+        box-shadow: inset 3px 0 0 -3px var(--color-teal-500);
+        transition: box-shadow var(--duration-fast) var(--ease-out-expo);
+    }
+
+    &:hover > td:first-child {
+        box-shadow: inset 3px 0 0 0 var(--color-teal-500);
+    }
 }
 
 @utility input-sm {
@@ -278,6 +743,7 @@
 
 @utility badge {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+    transition: background-color var(--duration-fast) var(--ease-out-expo);
 }
 
 @utility badge-teal {
@@ -301,9 +767,58 @@
 }
 
 @utility locale-tab {
-    @apply rounded-lg px-3 py-1.5 text-xs font-semibold text-navy-900/55 transition hover:text-navy-900;
+    @apply rounded-lg px-3 py-1.5 text-xs font-semibold text-navy-900/55 transition duration-200 hover:text-navy-900;
 }
 
 @utility locale-tab-active {
     @apply locale-tab bg-white text-navy-900 shadow-soft;
+}
+
+/* Flash messages and inline alerts, in the panel and the portal. */
+@utility alert {
+    @apply flex items-start gap-3 rounded-2xl border px-5 py-4 text-sm;
+    animation: slide-down var(--duration-base) var(--ease-out-expo) both;
+}
+
+@utility alert-success {
+    @apply alert border-teal-200 bg-teal-50 text-teal-900;
+}
+
+@utility alert-warning {
+    @apply alert border-amber-200 bg-amber-50 text-amber-900;
+}
+
+@utility alert-danger {
+    @apply alert border-urgent-100 bg-urgent-50 text-urgent-700;
+}
+
+/* The portal's tab rail: an underline that slides in rather than blinking on. */
+@utility portal-tab {
+    @apply relative flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium text-navy-900/55
+           transition duration-200 hover:text-navy-900;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset-inline: 0.5rem;
+        bottom: -1px;
+        height: 2px;
+        border-radius: 9999px;
+        background: var(--color-teal-600);
+        scale: 0 1;
+        transition: scale var(--duration-base) var(--ease-out-expo);
+    }
+
+    &:hover::after {
+        scale: 0.4 1;
+    }
+}
+
+@utility portal-tab-active {
+    @apply portal-tab text-navy-900;
+
+    &::after,
+    &:hover::after {
+        scale: 1 1;
+    }
 }

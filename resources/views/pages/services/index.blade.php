@@ -23,14 +23,13 @@
             <x-section-heading :eyebrow="__('services.groups.'.$key)"
                                :title="__('services.groups.'.$key.'_blurb')" class="reveal" />
 
-            <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" data-reveal-stagger="70">
                 @foreach ($grouped[$key] as $service)
                     <a href="{{ route('services.show', $service) }}"
-                       class="card-interactive group flex flex-col p-7 reveal"
-                       style="transition-delay: {{ $loop->index * 60 }}ms">
+                       class="card-interactive reveal group flex flex-col p-7">
                         <div class="flex items-center justify-between">
                             <span class="grid h-12 w-12 place-items-center rounded-xl bg-teal-50 text-teal-700
-                                         transition duration-300 group-hover:bg-teal-600 group-hover:text-white">
+                                         transition duration-300 ease-out group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white">
                                 <x-icon :name="$service->icon" size="24" />
                             </span>
                             @if ($service->is_247)
@@ -42,7 +41,7 @@
                             {{ $service->name }}
                         </h3>
                         <p class="mt-2.5 text-sm leading-relaxed text-navy-900/60">{{ $service->summary }}</p>
-                        <span class="mt-auto pt-5 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
+                        <span class="mt-auto pt-5 text-sm font-semibold text-teal-700 card-arrow">
                             {{ __('common.learn_more') }} →
                         </span>
                     </a>

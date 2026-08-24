@@ -33,7 +33,7 @@
         </div>
 
         @if ($doctor->accepts_online_appointment)
-            <span class="relative z-10 text-sm font-semibold text-teal-700 transition group-hover:translate-x-0.5">
+            <span class="card-arrow relative z-10 text-sm font-semibold text-teal-700">
                 {{ __('common.book_now') }} →
             </span>
         @else

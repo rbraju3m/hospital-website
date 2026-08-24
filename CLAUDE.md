@@ -286,7 +286,19 @@ Reusable Blade components are in `resources/views/components/`: `icon` (inline L
 
 Article bodies use a markdown-lite convention (`## heading`, `- bullet`, `**bold**`) rendered by `x-article-body`, which escapes first and re-introduces only bold via the `inline_markup()` helper. Do not render post bodies with raw `{!! !!}`.
 
-Scroll reveals: add `class="reveal"` and an IntersectionObserver in `resources/js/app.js` adds `reveal-in`. Motion is disabled under `prefers-reduced-motion`.
+### Motion
+
+Motion is part of the design system, not decoration bolted onto pages. Tokens live in `@theme`: one easing curve (`--ease-out-expo`) does almost all the work, with `--ease-spring` reserved for affordances that should feel physical. Durations are `--duration-fast|base|slow`. Reach for an existing utility before writing a bespoke transition.
+
+- **Scroll reveals** — add `class="reveal"` and the IntersectionObserver in `resources/js/app.js` adds `reveal-in`. Direction variants: `reveal-left`, `reveal-right`, `reveal-zoom`. **These are nested inside `@utility reveal`, not declared as sibling utilities** — siblings carry equal specificity and Tailwind does not emit custom utilities in source order, so `.reveal.reveal-in` (0,2,0) is what guarantees revealed content actually appears. Do not flatten them.
+- **Staggering** — put `data-reveal-stagger="70"` on the grid rather than an inline `transition-delay` per card; `app.js` writes an increasing `--reveal-delay` on each child, capped at 8 steps so a long list does not end in a two-second wait. **The children still need `class="reveal"` rendered server-side** — JS adds it as a fallback, but an element that paints visible and is then hidden by JS flashes, which is worse than not animating it.
+- **Entrance, not reveal** — `anim-fade-up`, `anim-fade-in`, `anim-scale-in` fire on load with `--anim-delay`. Use these above the fold, where an IntersectionObserver would fire immediately anyway.
+- **Counting figures** — `data-countup` on the element. The tween restores the server-rendered string verbatim at the end, so a formatted or suffixed value can never be mangled, and a non-numeric one is left alone.
+- **Surfaces** — `card-interactive` lifts and tracks a teal spotlight from the pointer (`--mx`/`--my`, written by a delegated handler). Use it only where the card is clickable; `card-hover` is the non-clickable version, because a lift reads as an invitation to click. `card-zoom` scales a cover image inside one, `card-arrow` nudges a trailing arrow.
+- **Buttons** — `.btn` carries the press, the icon transition and a white sheen swept on hover by one `::after`; it is invisible on the light variants, so there is no per-variant duplication. `btn-nudge` moves the trailing icon.
+- **Decoration** — `hero-grid` and `orb` are the drifting grid and glow behind the navy heroes. `pulse-dot` is a live indicator, `skeleton` a loading placeholder.
+
+`prefers-reduced-motion` is honoured in three places and all three matter: a blanket rule zeroing every duration, an `!important` reset on `.reveal` (it has to beat the direction variants), and a live check in `app.js` that reveals everything immediately and re-settles the page if the setting is turned on mid-visit. Anything new must survive the setting being on.
 
 ## Conventions worth keeping
 

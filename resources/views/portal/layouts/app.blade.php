@@ -15,7 +15,7 @@
 
 <main class="shell py-10">
     @if (session('status'))
-        <div class="mb-6 flex items-start gap-3 rounded-2xl border border-teal-200 bg-teal-50 px-5 py-4 text-sm text-teal-900">
+        <div class="alert-success mb-6">
             <x-icon name="check-circle" size="18" class="mt-0.5 shrink-0 text-teal-600" />
             <p>{{ session('status') }}</p>
         </div>

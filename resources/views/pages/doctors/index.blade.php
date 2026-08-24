@@ -107,9 +107,9 @@
                     </div>
                 </div>
             @else
-                <div class="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" data-reveal-stagger="60">
                     @foreach ($doctors as $doctor)
-                        <x-doctor-card :doctor="$doctor" />
+                        <x-doctor-card :doctor="$doctor" class="reveal" />
                     @endforeach
                 </div>
 

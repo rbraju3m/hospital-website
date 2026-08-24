@@ -2,13 +2,13 @@
 
 <section class="relative overflow-hidden bg-navy-900 text-white">
     {{-- Decorative grid + glow; purely presentational --}}
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.15]"
-         style="background-image:linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px);background-size:64px 64px"></div>
-    <div aria-hidden="true" class="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-teal-500/20 blur-3xl"></div>
+    <div aria-hidden="true" class="hero-grid opacity-[0.15]"></div>
+    <div aria-hidden="true" class="orb -right-32 -top-32 h-96 w-96 bg-teal-500/20"></div>
+    <div aria-hidden="true" class="orb -bottom-40 left-1/4 h-72 w-72 bg-navy-400/15" style="--anim-delay:-5s"></div>
 
     <div class="shell relative py-14 sm:py-20">
         @if ($crumbs)
-            <nav aria-label="{{ __('common.breadcrumb') }}" class="mb-6">
+            <nav aria-label="{{ __('common.breadcrumb') }}" class="anim-fade-in mb-6">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-white/55">
                     <li><a href="{{ route('home') }}" class="transition hover:text-white">{{ __('common.home') }}</a></li>
                     @foreach ($crumbs as $label => $url)
@@ -26,20 +26,20 @@
         @endif
 
         @if ($eyebrow)
-            <p class="eyebrow text-teal-300">
+            <p class="eyebrow anim-fade-up text-teal-300" style="--anim-delay:60ms">
                 <span class="h-px w-6 bg-teal-400"></span>
                 {{ $eyebrow }}
             </p>
         @endif
 
-        <h1 class="h-display mt-3 max-w-3xl text-white">{{ $title }}</h1>
+        <h1 class="h-display anim-fade-up mt-3 max-w-3xl text-white" style="--anim-delay:120ms">{{ $title }}</h1>
 
         @if ($lede)
-            <p class="lede mt-5 max-w-2xl text-white/70">{{ $lede }}</p>
+            <p class="lede anim-fade-up mt-5 max-w-2xl text-white/70" style="--anim-delay:200ms">{{ $lede }}</p>
         @endif
 
         @if (trim($slot))
-            <div class="mt-8">{{ $slot }}</div>
+            <div class="anim-fade-up mt-8" style="--anim-delay:280ms">{{ $slot }}</div>
         @endif
     </div>
 </section>

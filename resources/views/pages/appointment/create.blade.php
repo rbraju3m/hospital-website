@@ -17,7 +17,7 @@
         <div class="lg:col-span-8">
 
             @if ($errors->any())
-                <div role="alert" class="mb-8 rounded-2xl border border-urgent-500/30 bg-urgent-50 p-5">
+                <div role="alert" class="alert-danger mb-8 flex-col border-urgent-500/30 p-5">
                     <p class="flex items-center gap-2 font-semibold text-urgent-700">
                         <x-icon name="x" size="18" /> {{ __('appointment.errors_title') }}
                     </p>
@@ -46,9 +46,19 @@
                 <input type="hidden" name="appointment_time" :value="time">
 
                 {{-- ---------- STEP 1: department + doctor ---------- --}}
-                <section class="card p-7 sm:p-8">
+                {{-- The card of the step you are on is ringed; finished steps swap
+                     their number for a tick. Progress you can see without reading. --}}
+                <section class="card p-7 transition-all duration-500 ease-out sm:p-8"
+                         :class="step === 1 ? 'border-teal-200 ring-4 ring-teal-500/10' : ''">
                     <header class="flex items-center gap-4">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-navy-900 font-display text-sm font-bold text-white">1</span>
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold
+                                     transition-colors duration-300"
+                              :class="doctorId ? 'bg-teal-600 text-white' : 'bg-navy-900 text-white'">
+                            <span x-show="! doctorId">1</span>
+                            <span x-show="doctorId" x-cloak x-transition.scale aria-hidden="true">
+                                <x-icon name="check" size="16" stroke="3" />
+                            </span>
+                        </span>
                         <div>
                             <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_1.title') }}</h2>
                             <p class="text-sm text-navy-900/55">{{ __('appointment.step_1.lede') }}</p>
@@ -82,7 +92,8 @@
                     </div>
 
                     <template x-if="selectedDoctor">
-                        <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-mist-50 px-5 py-4 text-sm">
+                        <div x-transition.opacity.duration.300ms
+                             class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-teal-100 bg-teal-50/50 px-5 py-4 text-sm">
                             <span class="font-semibold text-navy-900" x-text="selectedDoctor.name"></span>
                             <span class="text-navy-900/60" x-text="selectedDoctor.designation"></span>
                             <span class="ml-auto font-display font-bold text-navy-900"
@@ -92,10 +103,17 @@
                 </section>
 
                 {{-- ---------- STEP 2: date + slot ---------- --}}
-                <section class="card p-7 sm:p-8" :class="!doctorId && 'opacity-55'">
+                <section class="card p-7 transition-all duration-500 ease-out sm:p-8"
+                         :class="{ 'opacity-55': ! doctorId, 'border-teal-200 ring-4 ring-teal-500/10': step === 2 }">
                     <header class="flex items-center gap-4">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold transition"
-                              :class="doctorId ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40'">2</span>
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold
+                                     transition-colors duration-300"
+                              :class="time ? 'bg-teal-600 text-white' : (doctorId ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40')">
+                            <span x-show="! time">2</span>
+                            <span x-show="time" x-cloak x-transition.scale aria-hidden="true">
+                                <x-icon name="check" size="16" stroke="3" />
+                            </span>
+                        </span>
                         <div>
                             <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_2.title') }}</h2>
                             <p class="text-sm text-navy-900/55">{{ __('appointment.step_2.lede') }}</p>
@@ -109,7 +127,14 @@
                         <div>
                             <p class="label">{{ __('appointment.step_2.dates_label') }}</p>
 
-                            <p x-show="loadingSlots" class="text-sm text-navy-900/45">{{ __('appointment.step_2.checking') }}</p>
+                            {{-- A shaped placeholder rather than a line of text: the chips
+                                 land where the skeleton already was, so nothing jumps. --}}
+                            <div x-show="loadingSlots" class="flex gap-2 overflow-hidden" aria-hidden="true">
+                                @for ($i = 0; $i < 6; $i++)
+                                    <span class="skeleton h-[68px] w-[86px] shrink-0 rounded-xl"></span>
+                                @endfor
+                            </div>
+                            <p x-show="loadingSlots" class="sr-only" role="status">{{ __('appointment.step_2.checking') }}</p>
 
                             <p x-show="!loadingSlots && dates.length === 0" x-cloak
                                class="rounded-xl bg-mist-50 px-5 py-4 text-sm text-navy-900/60">
@@ -118,12 +143,15 @@
                                     {{ setting('appointment_number') }}</a>.
                             </p>
 
-                            <div x-show="!loadingSlots && dates.length" class="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                            <div x-show="!loadingSlots && dates.length" x-transition.opacity.duration.300ms
+                                 class="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
                                 <template x-for="day in dates" :key="day.date">
                                     <button type="button" @click="selectDate(day.date)"
-                                            class="shrink-0 rounded-xl border px-4 py-3 text-center transition"
+                                            :aria-pressed="date === day.date ? 'true' : 'false'"
+                                            class="shrink-0 rounded-xl border px-4 py-3 text-center transition duration-200 ease-out
+                                                   hover:-translate-y-0.5 active:scale-95"
                                             :class="date === day.date
-                                                ? 'border-teal-600 bg-teal-600 text-white shadow-soft'
+                                                ? 'border-teal-600 bg-teal-600 text-white shadow-lift'
                                                 : 'border-mist-200 bg-white text-navy-900 hover:border-teal-300 hover:bg-teal-50'">
                                         <span class="block text-[11px] font-medium opacity-70" x-text="day.weekday"></span>
                                         <span class="block font-display text-sm font-bold" x-text="day.label"></span>
@@ -141,12 +169,20 @@
                                 {{ __('appointment.step_2.no_times') }}
                             </p>
 
-                            <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+                            <div x-show="loadingSlots" class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5" aria-hidden="true">
+                                @for ($i = 0; $i < 10; $i++)
+                                    <span class="skeleton h-[42px] rounded-xl"></span>
+                                @endfor
+                            </div>
+
+                            <div x-show="! loadingSlots" class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
                                 <template x-for="slot in slots" :key="slot.time">
                                     <button type="button" @click="time = slot.time"
-                                            class="rounded-xl border px-3 py-2.5 text-sm font-medium transition"
+                                            :aria-pressed="time === slot.time ? 'true' : 'false'"
+                                            class="rounded-xl border px-3 py-2.5 text-sm font-medium transition duration-200 ease-out
+                                                   hover:-translate-y-0.5 active:scale-95"
                                             :class="time === slot.time
-                                                ? 'border-teal-600 bg-teal-600 text-white shadow-soft'
+                                                ? 'border-teal-600 bg-teal-600 text-white shadow-lift'
                                                 : 'border-mist-200 bg-white text-navy-900 hover:border-teal-300 hover:bg-teal-50'"
                                             x-text="slot.label"></button>
                                 </template>
@@ -156,9 +192,11 @@
                 </section>
 
                 {{-- ---------- STEP 3: patient details ---------- --}}
-                <section class="card p-7 sm:p-8" :class="!time && 'opacity-55'">
+                <section class="card p-7 transition-all duration-500 ease-out sm:p-8"
+                         :class="{ 'opacity-55': ! time, 'border-teal-200 ring-4 ring-teal-500/10': step === 3 }">
                     <header class="flex items-center gap-4">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold transition"
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-sm font-bold
+                                     transition-colors duration-300"
                               :class="time ? 'bg-navy-900 text-white' : 'bg-mist-100 text-navy-900/40'">3</span>
                         <div>
                             <h2 class="font-display text-lg font-bold text-navy-900">{{ __('appointment.step_3.title') }}</h2>
@@ -217,7 +255,8 @@
                                 <div class="flex flex-wrap gap-3">
                                     @foreach (['new' => __('appointment.step_3.visit_new'), 'follow_up' => __('appointment.step_3.visit_follow_up')] as $value => $label)
                                         <label class="flex cursor-pointer items-center gap-2.5 rounded-xl border border-mist-200 px-4 py-2.5 text-sm
-                                                      transition hover:border-teal-300 has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50">
+                                                      transition duration-200 ease-out hover:-translate-y-0.5 hover:border-teal-300
+                                                      has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50 has-[:checked]:shadow-soft">
                                             <input type="radio" name="visit_type" value="{{ $value }}"
                                                    @checked(old('visit_type', 'new') === $value)
                                                    class="h-4 w-4 border-mist-200 text-teal-600 focus:ring-teal-500/30">
@@ -241,7 +280,7 @@
                 <div class="flex flex-col gap-4 rounded-[1.25rem] border border-mist-200 bg-mist-50 p-7 sm:flex-row sm:items-center sm:justify-between">
                     <div class="text-sm text-navy-900/60">
                         <template x-if="selectedDoctor && date && time">
-                            <p>
+                            <p x-transition.opacity.duration.300ms>
                                 <span class="font-semibold text-navy-900" x-text="selectedDoctor.name"></span>
                                 · <span x-text="prettyDate"></span>
                                 {{ __('appointment.summary_at') }}
@@ -254,7 +293,7 @@
                         <p class="mt-1 text-xs text-navy-900/45">{{ __('appointment.no_online_payment') }}</p>
                     </div>
 
-                    <button type="submit" class="btn-accent btn-lg shrink-0" :disabled="!(doctorId && date && time)">
+                    <button type="submit" class="btn-accent btn-lg btn-nudge shrink-0" :disabled="!(doctorId && date && time)">
                         <x-icon name="calendar-check" size="18" />
                         {{ __('appointment.confirm') }}
                     </button>
@@ -329,6 +368,15 @@
 
             get selectedDoctor() {
                 return this.doctors.find((d) => d.id === this.doctorId) || null;
+            },
+
+            /* Which card is "live" — drives the ring on the step being worked on.
+               Derived rather than stored so it cannot fall out of sync with the
+               fields that actually gate the submit button. */
+            get step() {
+                if (! this.doctorId) return 1;
+                if (! this.time) return 2;
+                return 3;
             },
 
             get prettyDate() {

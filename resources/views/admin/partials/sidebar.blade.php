@@ -28,14 +28,16 @@
 @endphp
 
 <div class="flex items-center justify-between px-5 py-6">
-    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-teal-500 font-display text-sm font-extrabold text-navy-950">
+    <a href="{{ route('admin.dashboard') }}" class="group flex items-center gap-3">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-teal-500 font-display text-sm font-extrabold text-navy-950
+                     transition duration-300 ease-out group-hover:scale-105 group-hover:shadow-[0_0_0_4px_rgb(23_166_152/0.2)]">
             RBR
         </span>
         <span class="font-display text-sm font-bold text-white">{{ __('admin.panel') }}</span>
     </a>
 
-    <button type="button" @click="menu = false" class="rounded-lg p-1.5 text-white/60 hover:text-white lg:hidden">
+    <button type="button" @click="menu = false"
+            class="rounded-lg p-1.5 text-white/60 transition duration-200 hover:rotate-90 hover:text-white lg:hidden">
         <span class="sr-only">{{ __('admin.actions.close') }}</span>
         <x-icon name="x" size="20" />
     </button>
@@ -54,7 +56,10 @@
                 <span class="flex-1">{{ $item['label'] }}</span>
 
                 @if (! empty($item['badge']))
-                    <span class="rounded-full bg-teal-500 px-2 py-0.5 text-[11px] font-bold text-navy-950">
+                    {{-- Work waiting on the desk: the ring makes it findable in
+                         peripheral vision without another colour in the sidebar. --}}
+                    <span class="rounded-full bg-teal-500 px-2 py-0.5 text-[11px] font-bold text-navy-950
+                                 shadow-[0_0_0_3px_rgb(23_166_152/0.18)]">
                         {{ $item['badge'] }}
                     </span>
                 @endif
@@ -65,8 +70,9 @@
 
 <div class="border-t border-white/10 px-5 py-4">
     <a href="{{ route('home') }}" target="_blank" rel="noopener"
-       class="flex items-center gap-2 text-xs font-medium text-white/50 transition hover:text-white">
-        <x-icon name="external-link" size="14" />
+       class="group flex items-center gap-2 text-xs font-medium text-white/50 transition duration-200 hover:text-white">
+        <x-icon name="external-link" size="14"
+                class="transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         {{ __('admin.view_site') }}
     </a>
 </div>

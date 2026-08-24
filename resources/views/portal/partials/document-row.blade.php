@@ -1,7 +1,9 @@
 @props(['document'])
 
-<div class="flex flex-wrap items-center gap-4 border-t border-mist-200 px-5 py-4 first:border-0">
-    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-mist-100 text-navy-900/50">
+<div class="group flex flex-wrap items-center gap-4 border-t border-mist-200 px-5 py-4
+            transition duration-200 ease-out first:border-0 hover:bg-mist-50">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-mist-100 text-navy-900/50
+                 transition duration-300 ease-out group-hover:scale-105 group-hover:bg-teal-50 group-hover:text-teal-700">
         <x-icon name="file-text" size="18" />
     </span>
 

@@ -38,6 +38,8 @@ return [
     'home' => 'হোম',
     'rating_aria' => '৫ এর মধ্যে :rating',
     'switch_language' => 'ভাষা পরিবর্তন করুন',
+    'back_to_top' => 'উপরে ফিরুন',
+    'scroll_progress' => 'পড়ার অগ্রগতি',
 
     // Keyed to Carbon::dayOfWeek (0 = Sunday), matching DoctorSchedule::DAYS.
     'days' => [

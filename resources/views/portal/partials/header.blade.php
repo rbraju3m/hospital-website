@@ -8,10 +8,11 @@
     $patient = auth('patient')->user();
 @endphp
 
-<header class="border-b border-mist-200 bg-white">
+<header class="sticky top-0 z-30 border-b border-mist-200 bg-white/90 backdrop-blur-xl">
     <div class="shell flex items-center gap-4 py-4">
-        <a href="{{ route('portal.dashboard') }}" class="flex items-center gap-3">
-            <span class="grid h-9 w-9 place-items-center rounded-xl bg-navy-900 font-display text-xs font-extrabold text-white">
+        <a href="{{ route('portal.dashboard') }}" class="group flex items-center gap-3">
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-navy-900 font-display text-xs font-extrabold text-white
+                         transition duration-300 ease-out group-hover:scale-105 group-hover:bg-teal-600">
                 RBR
             </span>
             <span class="hidden sm:block">
@@ -40,11 +41,8 @@
     <nav class="shell no-scrollbar -mb-px flex gap-1 overflow-x-auto">
         @foreach ($links as [$route, $icon, $label])
             <a href="{{ route($route) }}"
-               @class([
-                   'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition',
-                   'border-teal-600 text-navy-900' => request()->routeIs($route),
-                   'border-transparent text-navy-900/55 hover:text-navy-900' => ! request()->routeIs($route),
-               ])>
+               @if (request()->routeIs($route)) aria-current="page" @endif
+               class="{{ request()->routeIs($route) ? 'portal-tab-active' : 'portal-tab' }}">
                 <x-icon :name="$icon" size="16" />
                 {{ $label }}
             </a>

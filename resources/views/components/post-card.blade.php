@@ -4,8 +4,10 @@
     {{-- Only articles with an uploaded cover get one; the rest keep the plain
          text card the site shipped with. --}}
     @if ($post->untranslated('image'))
-        <img src="{{ media_url($post->untranslated('image')) }}" alt="" loading="lazy"
-             class="aspect-[16/9] w-full object-cover">
+        <div class="overflow-hidden">
+            <img src="{{ media_url($post->untranslated('image')) }}" alt="" loading="lazy" data-fade
+                 class="card-zoom aspect-[16/9] w-full object-cover">
+        </div>
     @endif
 
     <div class="flex flex-1 flex-col p-7">

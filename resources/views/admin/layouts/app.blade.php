@@ -15,20 +15,20 @@
 <div x-data="{ menu: false }" class="lg:flex">
 
     {{-- Off-canvas below lg, permanent from lg up. --}}
-    <div x-show="menu" x-cloak @click="menu = false"
-         class="fixed inset-0 z-30 bg-navy-950/50 lg:hidden"></div>
+    <div x-show="menu" x-cloak @click="menu = false" x-transition.opacity.duration.200ms
+         class="fixed inset-0 z-30 bg-navy-950/50 backdrop-blur-sm lg:hidden"></div>
 
     <aside x-cloak
            :class="menu ? 'translate-x-0' : '-translate-x-full'"
-           class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 transition-transform
-                  duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0">
+           class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 shadow-lift transition-transform
+                  duration-300 ease-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none">
         @include('admin.partials.sidebar')
     </aside>
 
     <div class="flex min-h-screen w-full flex-1 flex-col">
         @include('admin.partials.topbar')
 
-        <main class="flex-1 px-5 py-7 sm:px-8 lg:px-10">
+        <main class="anim-fade-in flex-1 px-5 py-7 sm:px-8 lg:px-10">
             @include('admin.partials.flash')
 
             @yield('content')

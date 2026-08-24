@@ -30,6 +30,10 @@
     {{ __('common.skip_to_content') }}
 </a>
 
+{{-- Reading progress. Decorative and driven entirely by app.js, so it is
+     hidden from assistive tech rather than announced as a live value. --}}
+<div class="scroll-progress" data-scroll-progress aria-hidden="true"><span></span></div>
+
 @include('partials.header')
 
 <main id="main">
@@ -38,6 +42,10 @@
 
 @include('partials.footer')
 @include('partials.mobile-action-bar')
+
+<button type="button" class="to-top" data-to-top aria-label="{{ __('common.back_to_top') }}">
+    <x-icon name="arrow-up" size="18" stroke="2.2" />
+</button>
 
 @stack('scripts')
 </body>

@@ -2,7 +2,7 @@
 
 {{-- The hidden 0 makes an unchecked box post a value; without it "unpublish"
      would silently do nothing, because browsers omit unchecked checkboxes. --}}
-<label {{ $attributes->merge(['class' => 'flex cursor-pointer items-start gap-3 rounded-xl border border-mist-200 px-4 py-3 transition hover:border-navy-200']) }}>
+<label {{ $attributes->merge(['class' => 'flex cursor-pointer items-start gap-3 rounded-xl border border-mist-200 px-4 py-3 transition duration-200 ease-out hover:border-teal-300 hover:bg-mist-50 has-[:checked]:border-teal-300 has-[:checked]:bg-teal-50/50']) }}>
     <input type="hidden" name="{{ $name }}" value="0">
     <input type="checkbox" name="{{ $name }}" value="1" @checked(old($name, $value))
            class="mt-0.5 h-4 w-4 shrink-0 rounded border-mist-200 text-teal-600 focus:ring-teal-500/30">

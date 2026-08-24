@@ -9,7 +9,8 @@
     ][$appointment->status] ?? 'bg-mist-100 text-navy-900/55';
 @endphp
 
-<div class="flex flex-wrap items-center gap-4 border-t border-mist-200 px-5 py-4 first:border-0">
+<div class="group flex flex-wrap items-center gap-4 border-t border-mist-200 px-5 py-4
+            transition duration-200 ease-out first:border-0 hover:bg-mist-50">
     <div class="w-24 shrink-0">
         <p class="font-display text-sm font-bold text-navy-900">
             {{ $appointment->appointment_date->translatedFormat('j M') }}

@@ -14,16 +14,17 @@
         ];
     @endphp
 
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-reveal-stagger="60">
         @foreach ($tiles as $tile)
-            <a href="{{ $tile['href'] }}" class="admin-card group p-5 transition hover:border-teal-200 hover:shadow-lift">
+            <a href="{{ $tile['href'] }}" class="admin-stat reveal group">
                 <div class="flex items-start justify-between gap-3">
                     <p class="text-sm font-medium text-navy-900/55">{{ $tile['label'] }}</p>
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-mist-100 text-navy-900/50 transition group-hover:bg-teal-50 group-hover:text-teal-700">
+                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-mist-100 text-navy-900/50
+                                 transition duration-300 ease-out group-hover:scale-110 group-hover:bg-teal-50 group-hover:text-teal-700">
                         <x-icon :name="$tile['icon']" size="17" />
                     </span>
                 </div>
-                <p class="mt-3 font-display text-3xl font-extrabold text-navy-900">{{ number_format($tile['value']) }}</p>
+                <p class="mt-3 font-display text-3xl font-extrabold text-navy-900" data-countup>{{ number_format($tile['value']) }}</p>
             </a>
         @endforeach
     </div>
@@ -40,7 +41,8 @@
 
             @forelse ($todaysAppointments as $appointment)
                 <a href="{{ route('admin.appointments.show', $appointment) }}"
-                   class="flex items-center gap-4 border-b border-mist-100 px-5 py-3.5 last:border-0 hover:bg-mist-50">
+                   class="flex items-center gap-4 border-b border-mist-100 px-5 py-3.5 transition duration-150 last:border-0
+                          hover:bg-mist-50 hover:ps-6">
                     <span class="w-20 shrink-0 font-display text-sm font-bold text-navy-900">
                         {{ $appointment->formattedTime() }}
                     </span>
@@ -66,10 +68,11 @@
 
                 @forelse ($recentMessages as $message)
                     <a href="{{ route('admin.messages.show', $message) }}"
-                       class="block border-b border-mist-100 px-5 py-3.5 last:border-0 hover:bg-mist-50">
+                       class="block border-b border-mist-100 px-5 py-3.5 transition duration-150 last:border-0
+                              hover:bg-mist-50 hover:ps-6">
                         <span class="flex items-center gap-2">
                             @unless ($message->is_read)
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500"></span>
+                                <span class="pulse-dot shrink-0 text-teal-500"></span>
                             @endunless
                             <span class="truncate text-sm font-semibold text-navy-900">{{ $message->name }}</span>
                             <span class="ms-auto shrink-0 text-[11px] text-navy-900/40">{{ $message->created_at->diffForHumans() }}</span>
