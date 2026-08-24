@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DiagnosticTestController;
 use App\Http\Controllers\Admin\DoctorController;
 use App\Http\Controllers\Admin\DoctorScheduleController;
+use App\Http\Controllers\Admin\GalleryAlbumController;
+use App\Http\Controllers\Admin\GalleryPhotoController;
 use App\Http\Controllers\Admin\HealthPackageController;
 use App\Http\Controllers\Admin\PatientController;
 use App\Http\Controllers\Admin\PatientDocumentController;
@@ -62,6 +64,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('diagnostics', DiagnosticTestController::class)->parameters(['diagnostics' => 'diagnostic']);
         Route::resource('posts', PostController::class);
         Route::resource('testimonials', TestimonialController::class);
+        Route::resource('gallery', GalleryAlbumController::class)->parameters(['gallery' => 'album']);
+
+        // Photographs hang off an album, the way chamber hours hang off a doctor.
+        Route::post('gallery/{album}/photos', [GalleryPhotoController::class, 'store'])
+            ->name('gallery.photos.store');
+        Route::put('gallery/{album}/photos/{photo}', [GalleryPhotoController::class, 'update'])
+            ->name('gallery.photos.update');
+        Route::delete('gallery/{album}/photos/{photo}', [GalleryPhotoController::class, 'destroy'])
+            ->name('gallery.photos.destroy');
 
         // Chamber hours hang off a doctor rather than standing on their own.
         Route::post('doctors/{doctor}/schedules', [DoctorScheduleController::class, 'store'])

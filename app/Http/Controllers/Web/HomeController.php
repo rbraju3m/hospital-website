@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Doctor;
+use App\Models\GalleryPhoto;
 use App\Models\HealthPackage;
 use App\Models\Post;
 use App\Models\Service;
@@ -21,6 +22,7 @@ class HomeController extends Controller
             'packages' => HealthPackage::active()->where('is_featured', true)->ordered()->take(3)->get(),
             'testimonials' => Testimonial::active()->ordered()->take(6)->get(),
             'posts' => Post::published()->latestFirst()->take(3)->get(),
+            'galleryPhotos' => GalleryPhoto::recent(8),
             'departmentOptions' => Department::active()->ordered()->get(),
             // Drives the "Health checks from ৳x" tile, so the figure tracks the data.
             'cheapestPackage' => (int) HealthPackage::active()

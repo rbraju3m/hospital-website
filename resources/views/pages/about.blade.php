@@ -124,6 +124,21 @@
     </div>
 </section>
 
+@if (feature('area_gallery') && $galleryPhotos->isNotEmpty())
+<section class="section">
+    <div class="shell">
+        <x-section-heading
+            :eyebrow="__('pages.about.gallery_eyebrow')"
+            :title="__('pages.about.gallery_title')"
+            :link="route('gallery.index')"
+            :link-label="__('pages.about.gallery_link')"
+            class="reveal" />
+
+        <x-photo-strip :photos="$galleryPhotos" columns="sm:grid-cols-3" class="mt-10" />
+    </div>
+</section>
+@endif
+
 <section class="section">
     <div class="shell">
         <div class="card flex flex-col items-center gap-6 p-10 text-center sm:p-14">

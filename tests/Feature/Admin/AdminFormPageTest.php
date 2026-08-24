@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Department;
 use App\Models\DiagnosticTest;
+use App\Models\GalleryAlbum;
 use App\Models\Doctor;
 use App\Models\HealthPackage;
 use App\Models\PatientDocument;
@@ -47,6 +48,7 @@ class AdminFormPageTest extends TestCase
             'packages' => HealthPackage::create(['name' => 'Executive', 'slug' => 'executive', 'category' => 'executive', 'price' => 5000]),
             'diagnostics' => DiagnosticTest::create(['name' => 'CBC', 'slug' => 'cbc', 'category' => 'pathology', 'price' => 400]),
             'posts' => Post::create(['title' => 'Five signs', 'slug' => 'five-signs', 'category' => 'health-tips', 'body' => 'Body.']),
+            'gallery' => GalleryAlbum::create(['title' => 'Cardiac theatres', 'slug' => 'cardiac-theatres']),
             'testimonials' => Testimonial::create(['patient_name' => 'A Patient', 'quote' => 'Good care.', 'rating' => 5]),
             'documents' => PatientDocument::create([
                 'phone' => '1712345678', 'title' => 'Blood report', 'category' => 'report',
@@ -61,7 +63,7 @@ class AdminFormPageTest extends TestCase
         $this->records();
 
         foreach (['departments', 'doctors', 'services', 'packages', 'diagnostics', 'posts',
-                  'testimonials', 'documents', 'users', 'appointments'] as $area) {
+                  'gallery', 'testimonials', 'documents', 'users', 'appointments'] as $area) {
             $this->get(route("admin.{$area}.create"))->assertOk();
         }
     }

@@ -41,6 +41,9 @@ return [
         'value_3_title' => 'Access without compromise',
         'value_3_body' => 'Generic options are offered alongside branded medicines, and costs are stated up front.',
 
+        'gallery_eyebrow' => 'Gallery',
+        'gallery_title' => 'The building, and the people in it',
+        'gallery_link' => 'See the whole gallery',
         'cta_title' => ':doctors consultants across :departments departments',
         'cta_body' => 'Browse our specialists by department, or book directly with the consultant you need.',
         'cta_browse' => 'Browse departments',

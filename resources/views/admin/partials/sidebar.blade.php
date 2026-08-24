@@ -14,6 +14,7 @@
             ['route' => 'admin.packages.index', 'match' => 'admin.packages.*', 'icon' => 'package', 'label' => __('admin.nav.packages')],
             ['route' => 'admin.diagnostics.index', 'match' => 'admin.diagnostics.*', 'icon' => 'microscope', 'label' => __('admin.nav.diagnostics')],
             ['route' => 'admin.posts.index', 'match' => 'admin.posts.*', 'icon' => 'newspaper', 'label' => __('admin.nav.posts')],
+            ['route' => 'admin.gallery.index', 'match' => 'admin.gallery.*', 'icon' => 'image', 'label' => __('admin.nav.gallery')],
             ['route' => 'admin.testimonials.index', 'match' => 'admin.testimonials.*', 'icon' => 'quote', 'label' => __('admin.nav.testimonials')],
         ],
         'portal' => [

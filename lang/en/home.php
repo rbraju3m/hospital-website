@@ -106,6 +106,13 @@ return [
         'link' => 'All articles',
     ],
 
+    'gallery' => [
+        'eyebrow' => 'Gallery',
+        'title' => 'What the hospital looks like',
+        'lede' => 'Photographs of the wards, theatres and equipment at :name — taken here, not bought in.',
+        'link' => 'Open the gallery',
+    ],
+
     'visit' => [
         'title' => 'Come and see us',
         'lede' => ':address, :city. Outpatient clinics run 8:00 AM to 10:00 PM; the Emergency Department is open every hour of the year.',

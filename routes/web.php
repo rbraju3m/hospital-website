@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\ContactController;
 use App\Http\Controllers\Web\DepartmentController;
 use App\Http\Controllers\Web\DiagnosticController;
 use App\Http\Controllers\Web\DoctorController;
+use App\Http\Controllers\Web\GalleryController;
 use App\Http\Controllers\Web\HealthPackageController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\LocaleController;
@@ -61,6 +62,11 @@ Route::middleware(MaintenanceGate::class)->group(function () {
     Route::middleware('feature:area_posts')->group(function () {
         Route::get('/health-hub', [PostController::class, 'index'])->name('posts.index');
         Route::get('/health-hub/{post}', [PostController::class, 'show'])->name('posts.show');
+    });
+
+    Route::middleware('feature:area_gallery')->group(function () {
+        Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+        Route::get('/gallery/{album}', [GalleryController::class, 'show'])->name('gallery.show');
     });
 
     Route::get('/about', [PageController::class, 'about'])

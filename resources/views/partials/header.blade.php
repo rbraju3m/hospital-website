@@ -32,6 +32,7 @@
 
     $more = $enabled([
         $item('posts.index', __('nav.items.posts'), 'area_posts', 'newspaper'),
+        $item('gallery.index', __('nav.items.gallery'), 'area_gallery', 'image'),
         $item('portal.dashboard', __('nav.items.portal'), 'area_portal', 'user-round'),
         $item('international', __('nav.items.international'), 'area_international', 'globe'),
         $item('about', __('nav.items.about_long'), 'area_about', 'hospital'),

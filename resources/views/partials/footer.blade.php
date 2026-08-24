@@ -134,6 +134,9 @@
                 @if (feature('area_services'))
                     <li><a href="{{ route('services.index') }}" class="transition hover:text-teal-300">{{ __('nav.footer.facilities_link') }}</a></li>
                 @endif
+                @if (feature('area_gallery'))
+                    <li><a href="{{ route('gallery.index') }}" class="transition hover:text-teal-300">{{ __('nav.items.gallery') }}</a></li>
+                @endif
             </ul>
 
             <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">

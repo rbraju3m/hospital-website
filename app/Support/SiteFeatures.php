@@ -42,6 +42,7 @@ class SiteFeatures
                 'area_packages' => true,
                 'area_diagnostics' => true,
                 'area_posts' => true,
+                'area_gallery' => true,
                 'area_portal' => true,
                 'area_about' => true,
                 'area_international' => true,
@@ -62,6 +63,7 @@ class SiteFeatures
                 'home_packages' => true,
                 'home_testimonials' => true,
                 'home_posts' => true,
+                'home_gallery' => true,
                 'home_visit' => true,
             ],
 

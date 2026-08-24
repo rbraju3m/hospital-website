@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Doctor;
+use App\Models\GalleryPhoto;
 use App\Models\Service;
 
 class PageController extends Controller
@@ -14,6 +15,7 @@ class PageController extends Controller
         return view('pages.about', [
             'departmentCount' => Department::active()->count(),
             'doctorCount' => Doctor::active()->count(),
+            'galleryPhotos' => GalleryPhoto::recent(6),
         ]);
     }
 

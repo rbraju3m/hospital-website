@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 is complete: the **staff panel at `/admin`**, booking notifications by SMS and email, the **diagnostics price list**, and the **patient portal at `/portal`**. Every feature the site describes now exists behind it.
 
-Phase 3 is the presentation layer: **Site controls** (what the public site shows, switched from the panel), **stand-in photography** for content nobody has uploaded a picture for, and an image-led redesign of the public pages.
+Phase 3 is the presentation layer: **Site controls** (what the public site shows, switched from the panel), **stand-in photography** for content nobody has uploaded a picture for, an image-led redesign of the public pages, and the **photo gallery** at `/gallery`.
 
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
@@ -61,7 +61,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (293 feature tests)
+# Tests (313 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -74,6 +74,7 @@ vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
 vendor/bin/phpunit --filter 'SiteFeature|SiteControl'  # the site's on/off switches
 vendor/bin/phpunit --filter DemoImage             # stand-in photography
+vendor/bin/phpunit --filter Gallery                # the photo gallery, public and panel
 vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit screen renders
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
@@ -194,6 +195,18 @@ Call sites go through **`image_url($path, $set, $seed, $group)`** (upload first,
 - The counts in `SETS` are **declared, not globbed**, so rendering never touches the filesystem — and a test asserts every declared file exists, because a deleted one would otherwise only surface as a broken image.
 - `x-admin.image-field` previews what the site will actually render and labels it `Stand-in` when it is not an upload, so "no picture" and "a picture nobody chose" are distinguishable in the panel.
 
+### The photo gallery
+
+`/gallery` lists **albums**; `/gallery/<slug>` shows one album's photographs in a grid that opens a lightbox. Two tables: `gallery_albums` (translatable title, summary, description, a cover) and `gallery_photos` (a file, a translatable caption, a sort order), the photos cascading with their album.
+
+- **A photograph's file is nullable, and that is deliberate.** An empty `path` renders stand-in imagery through `GalleryPhoto::url()`, which is what lets the seeded albums ship as a working gallery before anybody has uploaded anything. The panel still requires a file when a photo is added by hand — only the seeder creates rows without one. With `behaviour_demo_images` off, a photo with no upload has nothing to show, so the album page **drops** it rather than rendering an empty frame; an album where every photo drops out reads as empty.
+- **One list drives the grid and the lightbox.** `$slides` is built once in the view, so a tile and the slide it opens cannot drift apart after a filter.
+- **`GalleryPhoto` has no `is_active`.** A photograph has no URL of its own to leave dangling, so hiding one and deleting one are the same act.
+- **`GalleryPhoto::recent()` is shared** by the home band and the About strip, so the two cannot disagree about what "recent" means.
+- Photographs are managed on the album's own page — their own little forms, for the same reason chamber hours are. Captions there are written out per locale by hand rather than through `x-admin.translatable`: that component reads `old()`, and every card on the page posts the same field names, so one rejected caption would repopulate all of them.
+- Uploads take **many files at once** (`photos[]`, capped per submission) and continue the existing sort order rather than restarting at zero.
+- Deleting an album deletes its photographs' **files** in the controller. The rows cascade; the files would not, and an orphan on the public disk is invisible from the panel forever after.
+
 ### The primary navigation is one line
 
 The header menu must never wrap, at any width where it is visible. Two things enforce that and both matter:
@@ -201,7 +214,7 @@ The header menu must never wrap, at any width where it is visible. Two things en
 - **The number of items that can reach the bar is capped in the template** (`partials/header.blade.php`). Departments, four primary links and a **More** overflow menu — six triggers. Everything else lives one click away rather than on a second row. Filtering by Site controls removes items; it never adds them.
 - **Nothing in the bar can grow.** `nav-link` is `whitespace-nowrap` with padding that tightens below `xl`; the logo's tagline and the "Find a doctor" label only appear at `2xl`, because they are the widest parts of the two blocks flanking the nav. Below `lg` the bar becomes the drawer.
 
-Adding a link means putting it in `$more`, not in `$primary`.
+Adding a link means putting it in `$more`, not in `$primary`. The gallery is the worked example: it sits in the overflow menu and the footer, never in the bar.
 
 ### Notifications
 
@@ -268,7 +281,7 @@ Content lives in seeders, not migrations, and every seeder uses `updateOrCreate`
 
 ## Localisation
 
-**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (six one-line templates; see the segment note above before lengthening one), `diagnostics` (the price list), `portal` (the patient portal — patient-facing wording, so it has its own appointment status labels rather than reusing the panel's), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
+**No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `gallery` (the photo gallery), `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (six one-line templates; see the segment note above before lengthening one), `diagnostics` (the price list), `portal` (the patient portal — patient-facing wording, so it has its own appointment status labels rather than reusing the panel's), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
 
 Rule of thumb for where a key goes: used on more than one page → `common`; used on one page → that page's file.
 
@@ -276,7 +289,7 @@ Rule of thumb for where a key goes: used on more than one page → `common`; use
 
 `SetLocale` middleware (appended to the `web` group, so it runs after the session starts) resolves the locale as: session choice → `Accept-Language` → `config('app.locale')`. **Anything outside `available_locales` is discarded** at every step, so a tampered session value or header cannot point the translator at an arbitrary path — there is a test for this.
 
-`lang/en` and `lang/bn` are both complete — 1,140 keys across 16 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
+`lang/en` and `lang/bn` are both complete — 1,340 keys across 17 domains, full parity. Laravel still falls back per key, so a future English-only key renders English rather than a raw key rather than breaking the page.
 
 **All Bangla needs native-speaker review before launch.** It was written without one.
 

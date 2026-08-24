@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Database\Seeders\Translations\DepartmentTranslationSeeder;
 use Database\Seeders\Translations\DiagnosticTestTranslationSeeder;
 use Database\Seeders\Translations\DoctorTranslationSeeder;
+use Database\Seeders\Translations\GalleryAlbumTranslationSeeder;
 use Database\Seeders\Translations\HealthPackageTranslationSeeder;
 use Database\Seeders\Translations\PostTranslationSeeder;
 use Database\Seeders\Translations\ServiceTranslationSeeder;
@@ -26,6 +27,7 @@ class DatabaseSeeder extends Seeder
             TestimonialSeeder::class,
             PostSeeder::class,
             DiagnosticTestSeeder::class,
+            GalleryAlbumSeeder::class,
         ]);
 
         // Bangla content for the records the seeders above create. Kept separate
@@ -40,6 +42,7 @@ class DatabaseSeeder extends Seeder
             TestimonialTranslationSeeder::class,
             PostTranslationSeeder::class,
             DiagnosticTestTranslationSeeder::class,
+            GalleryAlbumTranslationSeeder::class,
         ]);
     }
 }

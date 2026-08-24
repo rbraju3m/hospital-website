@@ -15,6 +15,7 @@ return [
         'packages' => 'Health Packages',
         'diagnostics' => 'Diagnostics',
         'posts' => 'Health Hub',
+        'gallery' => 'Gallery',
         'about' => 'About',
         'about_long' => 'About Us',
         'contact' => 'Contact',
