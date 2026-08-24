@@ -23,7 +23,7 @@
     </div>
 </x-page-hero>
 
-<x-cover-image :path="$service->untranslated('image')" :alt="$service->name" />
+<x-cover-image :path="$service->untranslated('image')" :alt="$service->name" :seed="$service->id" group="service" />
 
 <section class="section">
     <div class="shell grid gap-12 lg:grid-cols-12">

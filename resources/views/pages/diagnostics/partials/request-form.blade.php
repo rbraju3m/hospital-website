@@ -11,6 +11,11 @@
         </div>
     @endif
 
+    @unless (feature('behaviour_test_request'))
+        <p class="mt-5 rounded-xl border border-mist-200 bg-mist-50 px-4 py-3 text-sm text-navy-900/70">
+            {{ __('diagnostics.request.closed', ['phone' => setting('hotline')]) }}
+        </p>
+    @else
     <form method="POST" action="{{ route('diagnostics.request', $test) }}" class="mt-5 space-y-4">
         @csrf
 
@@ -52,4 +57,5 @@
 
         <button type="submit" class="btn-primary w-full">{{ __('diagnostics.request.submit') }}</button>
     </form>
+    @endunless
 </div>

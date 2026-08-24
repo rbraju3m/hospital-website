@@ -59,6 +59,7 @@
                 </p>
             </div>
 
+            @if (feature('chrome_footer_social'))
             <div class="mt-6 flex items-center gap-2">
                 @foreach (['facebook' => 'facebook', 'youtube' => 'youtube', 'linkedin' => 'linkedin', 'instagram' => 'instagram'] as $key => $icon)
                     @if (setting($key))
@@ -70,9 +71,11 @@
                     @endif
                 @endforeach
             </div>
+            @endif
         </div>
 
         {{-- Centres of excellence --}}
+        @if (feature('chrome_footer_departments') && feature('area_departments'))
         <div class="lg:col-span-3">
             <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">{{ __('nav.footer.centres') }}</h3>
             <ul class="mt-5 space-y-2.5 text-sm">
@@ -88,23 +91,28 @@
                 </li>
             </ul>
         </div>
+        @endif
 
         {{-- Patients --}}
         <div class="lg:col-span-2">
             <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">{{ __('nav.footer.for_patients') }}</h3>
             <ul class="mt-5 space-y-2.5 text-sm">
+                {{-- Filtered against Site controls: a footer link to an area
+                     that has been switched off would land on a 404. --}}
                 @foreach ([
-                    ['appointment.create', __('common.book_appointment_short')],
-                    ['doctors.index', __('nav.items.doctors')],
-                    ['packages.index', __('nav.items.packages')],
-                    ['diagnostics.index', __('nav.items.diagnostics')],
-                    ['portal.dashboard', __('nav.items.portal')],
-                    ['services.index', __('nav.items.services')],
-                    ['emergency', __('nav.footer.emergency_care')],
-                    ['international', __('nav.items.international')],
-                    ['posts.index', __('nav.items.posts')],
-                ] as [$route, $label])
-                    <li><a href="{{ route($route) }}" class="transition hover:text-teal-300">{{ $label }}</a></li>
+                    ['appointment.create', __('common.book_appointment_short'), 'area_appointment'],
+                    ['doctors.index', __('nav.items.doctors'), 'area_doctors'],
+                    ['packages.index', __('nav.items.packages'), 'area_packages'],
+                    ['diagnostics.index', __('nav.items.diagnostics'), 'area_diagnostics'],
+                    ['portal.dashboard', __('nav.items.portal'), 'area_portal'],
+                    ['services.index', __('nav.items.services'), 'area_services'],
+                    ['emergency', __('nav.footer.emergency_care'), 'area_emergency'],
+                    ['international', __('nav.items.international'), 'area_international'],
+                    ['posts.index', __('nav.items.posts'), 'area_posts'],
+                ] as [$route, $label, $flag])
+                    @if (feature($flag))
+                        <li><a href="{{ route($route) }}" class="transition hover:text-teal-300">{{ $label }}</a></li>
+                    @endif
                 @endforeach
             </ul>
         </div>
@@ -113,13 +121,19 @@
         <div class="lg:col-span-3">
             <h3 class="font-display text-sm font-bold uppercase tracking-[0.14em] text-white">{{ __('nav.footer.hospital') }}</h3>
             <ul class="mt-5 space-y-2.5 text-sm">
-                <li>
-                    <a href="{{ route('about') }}" class="transition hover:text-teal-300">
-                        {{ __('nav.footer.about_link', ['name' => setting('site_name')]) }}
-                    </a>
-                </li>
-                <li><a href="{{ route('contact') }}" class="transition hover:text-teal-300">{{ __('nav.footer.contact_link') }}</a></li>
-                <li><a href="{{ route('services.index') }}" class="transition hover:text-teal-300">{{ __('nav.footer.facilities_link') }}</a></li>
+                @if (feature('area_about'))
+                    <li>
+                        <a href="{{ route('about') }}" class="transition hover:text-teal-300">
+                            {{ __('nav.footer.about_link', ['name' => setting('site_name')]) }}
+                        </a>
+                    </li>
+                @endif
+                @if (feature('area_contact'))
+                    <li><a href="{{ route('contact') }}" class="transition hover:text-teal-300">{{ __('nav.footer.contact_link') }}</a></li>
+                @endif
+                @if (feature('area_services'))
+                    <li><a href="{{ route('services.index') }}" class="transition hover:text-teal-300">{{ __('nav.footer.facilities_link') }}</a></li>
+                @endif
             </ul>
 
             <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">

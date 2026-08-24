@@ -21,6 +21,7 @@
             ['route' => 'admin.patients.index', 'match' => 'admin.patients.*', 'icon' => 'user-round', 'label' => __('admin.nav.patients')],
         ],
         'system' => [
+            ['route' => 'admin.site.edit', 'match' => 'admin.site.*', 'icon' => 'power', 'label' => __('admin.nav.site_controls')],
             ['route' => 'admin.settings.edit', 'match' => 'admin.settings.*', 'icon' => 'sliders', 'label' => __('admin.nav.settings')],
             ['route' => 'admin.users.index', 'match' => 'admin.users.*', 'icon' => 'users', 'label' => __('admin.nav.users')],
         ],
@@ -69,8 +70,23 @@
 </nav>
 
 <div class="border-t border-white/10 px-5 py-4">
+    {{-- Whether the public site is on air, always in view. A panel that looks
+         identical whether or not visitors can reach the site is how a
+         maintenance switch gets left on over a weekend. --}}
+    <a href="{{ route('admin.site.edit') }}"
+       class="mb-3 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition duration-200
+              {{ feature('behaviour_maintenance') ? 'bg-urgent-600/15 text-urgent-100 hover:bg-urgent-600/25' : 'text-white/50 hover:bg-white/10 hover:text-white' }}">
+        @if (feature('behaviour_maintenance'))
+            <span class="pulse-dot text-urgent-500" aria-hidden="true"></span>
+            {{ __('admin.site_status.maintenance') }}
+        @else
+            <span class="pulse-dot text-teal-400" aria-hidden="true"></span>
+            {{ __('admin.site_status.live') }}
+        @endif
+    </a>
+
     <a href="{{ route('home') }}" target="_blank" rel="noopener"
-       class="group flex items-center gap-2 text-xs font-medium text-white/50 transition duration-200 hover:text-white">
+       class="group flex items-center gap-2 px-2 text-xs font-medium text-white/50 transition duration-200 hover:text-white">
         <x-icon name="external-link" size="14"
                 class="transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         {{ __('admin.view_site') }}

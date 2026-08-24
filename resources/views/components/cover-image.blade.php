@@ -1,10 +1,14 @@
-@props(['path', 'alt' => '', 'aspect' => 'aspect-[21/9]'])
+@props(['path', 'alt' => '', 'aspect' => 'aspect-[21/9]', 'set' => 'cover', 'seed' => null, 'group' => ''])
 
-{{-- Renders nothing until someone uploads one, so a page with no cover keeps
-     the exact layout it had before the panel existed. --}}
-@if ($path)
+@php $src = image_url($path, $set, $seed ?? $alt, $group); @endphp
+
+{{-- Upload first, then stand-in photography. With both switched off the page
+     keeps the exact layout it had before the panel existed. --}}
+@if ($src)
     <div {{ $attributes->merge(['class' => 'shell pt-12 sm:pt-16']) }}>
-        <img src="{{ media_url($path) }}" alt="{{ $alt }}" loading="lazy"
-             class="{{ $aspect }} w-full rounded-[1.25rem] object-cover shadow-soft">
+        <figure class="media-frame reveal reveal-clip shadow-soft">
+            <img src="{{ $src }}" alt="{{ $alt }}" loading="lazy" data-fade
+                 class="{{ $aspect }} w-full object-cover">
+        </figure>
     </div>
 @endif

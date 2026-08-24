@@ -46,7 +46,8 @@
                 <x-admin.translatable name="treatments" type="list" :label="__('admin.fields.treatments')" :model="$department" />
                 <x-admin.input name="phone" :label="__('admin.fields.phone')" :value="$department->untranslated('phone')" />
                 <x-admin.translatable name="location" :label="__('admin.fields.location')" :model="$department" />
-                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$department->untranslated('image')" class="sm:col-span-2" />
+                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$department->untranslated('image')"
+                                     set="cover" :seed="$department->id" group="department" class="sm:col-span-2" />
             </div>
         </x-admin.section>
 

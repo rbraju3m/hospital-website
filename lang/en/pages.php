@@ -157,6 +157,8 @@ return [
     ],
 
     'contact' => [
+        'form_closed_title' => 'Enquiries are closed for now',
+        'form_closed_body' => 'The enquiry form is switched off at the moment. Call :phone or use the numbers on this page and the desk will help you.',
         'meta_title' => 'Contact & Directions',
         'meta_description' => 'Contact :name in Uttara, Dhaka — hotline, appointment desk, ambulance dispatch, international patient desk, address and directions.',
         'eyebrow' => 'Contact',
@@ -194,5 +196,13 @@ return [
         'getting_2' => 'The Emergency Department has a separate ground-floor entrance on Tower A.',
         'getting_3' => 'Wheelchair access and assistance available at both entrances.',
         'getting_4' => 'Wheelchairs and porters can be requested at the main reception.',
+    ],
+
+    'maintenance' => [
+        'title' => 'Back shortly',
+        'heading' => 'We are back shortly',
+        'body' => 'The :name website is closed for a short while. Our wards, emergency department and phone lines are open as usual.',
+        'hotline_label' => 'Hotline',
+        'ambulance_label' => 'Ambulance',
     ],
 ];

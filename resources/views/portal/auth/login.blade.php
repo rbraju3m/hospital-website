@@ -38,10 +38,12 @@
     <button type="submit" class="btn-primary w-full">{{ __('portal.login.submit') }}</button>
 </form>
 
-<p class="mt-6 border-t border-mist-200 pt-5 text-center text-sm text-navy-900/60">
-    {{ __('portal.login.no_account') }}
-    <a href="{{ route('portal.register') }}" class="font-semibold text-teal-700 hover:text-teal-800">
-        {{ __('portal.login.register_link') }}
-    </a>
-</p>
+@if (feature('behaviour_portal_registration'))
+    <p class="mt-6 border-t border-mist-200 pt-5 text-center text-sm text-navy-900/60">
+        {{ __('portal.login.no_account') }}
+        <a href="{{ route('portal.register') }}" class="font-semibold text-teal-700 hover:text-teal-800">
+            {{ __('portal.login.register_link') }}
+        </a>
+    </p>
+@endif
 @endsection

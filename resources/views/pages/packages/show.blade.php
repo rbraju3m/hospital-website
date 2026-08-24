@@ -13,7 +13,7 @@
     :lede="$package->summary"
     :crumbs="[__('packages.index.crumb') => route('packages.index'), $package->name => null]" />
 
-<x-cover-image :path="$package->untranslated('image')" :alt="$package->name" />
+<x-cover-image :path="$package->untranslated('image')" :alt="$package->name" :seed="$package->id" group="package" />
 
 <section class="section">
     <div class="shell grid gap-12 lg:grid-cols-12">

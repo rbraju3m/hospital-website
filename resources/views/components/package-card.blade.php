@@ -1,17 +1,32 @@
 @props(['package'])
 
+@php $cover = image_url($package->untranslated('image'), 'cover', $package->id, 'package'); @endphp
+
 <article {{ $attributes->merge(['class' => 'card-interactive group relative flex h-full flex-col overflow-hidden']) }}>
     @if ($package->savingsPercent())
-        <span class="absolute right-5 top-5 z-10 rounded-full bg-teal-600 px-2.5 py-1 text-[11px] font-bold text-white
+        <span class="absolute end-5 top-5 z-10 rounded-full bg-teal-600 px-2.5 py-1 text-[11px] font-bold text-white
                      shadow-soft transition duration-300 ease-out group-hover:scale-105">
             {{ __('packages.show.save', ['percent' => $package->savingsPercent()]) }}
         </span>
     @endif
 
-    <div class="flex flex-1 flex-col p-7">
-        <p class="eyebrow">{{ category_label('packages', $package->category) }}</p>
+    @if ($cover)
+        <div class="relative aspect-[16/9] overflow-hidden bg-mist-100">
+            <img src="{{ $cover }}" alt="" loading="lazy" data-fade
+                 class="card-zoom h-full w-full object-cover">
+            <div class="media-scrim"></div>
+            <p class="absolute bottom-4 start-6 text-xs font-semibold uppercase tracking-[0.18em] text-teal-200">
+                {{ category_label('packages', $package->category) }}
+            </p>
+        </div>
+    @endif
 
-        <h3 class="mt-3 font-display text-xl font-bold leading-snug text-navy-900">
+    <div class="flex flex-1 flex-col p-7 {{ $cover ? 'pt-6' : '' }}">
+        @unless ($cover)
+            <p class="eyebrow">{{ category_label('packages', $package->category) }}</p>
+        @endunless
+
+        <h3 class="font-display text-xl font-bold leading-snug text-navy-900">
             <a href="{{ route('packages.show', $package) }}" class="after:absolute after:inset-0 group-hover:text-teal-700">
                 {{ $package->name }}
             </a>

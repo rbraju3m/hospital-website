@@ -34,7 +34,7 @@
         </div>
     </x-page-hero>
 
-    <x-cover-image :path="$post->untranslated('image')" :alt="$post->title" aspect="aspect-[16/9]" />
+    <x-cover-image :path="$post->untranslated('image')" :alt="$post->title" :seed="$post->id" group="post" aspect="aspect-[16/9]" />
 
     <section class="section">
         <div class="shell grid gap-12 lg:grid-cols-12">

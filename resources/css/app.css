@@ -124,13 +124,14 @@
     to   { background-position: 180% 0; }
 }
 
-@keyframes marquee {
-    from { translate: 0 0; }
-    to   { translate: -50% 0; }
-}
-
 @keyframes bar-grow {
     from { scale: 0 1; }
+    to   { scale: 1 1; }
+}
+
+/* The vertical twin, for the dashboard's week-ahead columns. */
+@keyframes bar-rise {
+    from { scale: 1 0; }
     to   { scale: 1 1; }
 }
 
@@ -460,7 +461,7 @@
     opacity: 0;
     translate: 0 1.25rem;
     filter: blur(3px);
-    transition-property: opacity, translate, scale, filter;
+    transition-property: opacity, translate, scale, filter, clip-path;
     transition-duration: var(--duration-slow);
     transition-timing-function: var(--ease-out-expo);
     transition-delay: var(--reveal-delay, 0ms);
@@ -477,6 +478,19 @@
     &.reveal-zoom {
         translate: 0 0.75rem;
         scale: 0.96;
+    }
+
+    /* Photography wipes up from its own bottom edge rather than sliding: an
+       image that moves drags the layout's eye with it, a wipe does not. */
+    &.reveal-clip {
+        opacity: 1;
+        translate: 0 0;
+        filter: none;
+        clip-path: inset(0 0 100% 0);
+    }
+
+    &.reveal-clip.reveal-in {
+        clip-path: inset(0 0 0 0);
     }
 
     &.reveal-in {
@@ -603,12 +617,23 @@
 }
 
 /* Motion is decoration. Under `prefers-reduced-motion` every reveal, drift,
-   float and sweep is switched off — the content still has to arrive. */
+   float and sweep is switched off — the content still has to arrive.
+
+   `.no-motion` on <html> is the same switch reached from the staff panel, for
+   a hospital that would rather the site sat still for everybody. The rules are
+   shared rather than duplicated, so a new one can never be added to one and
+   forgotten in the other. */
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
     }
+}
 
+html.no-motion {
+    scroll-behavior: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
@@ -628,6 +653,26 @@
     .btn::after {
         display: none;
     }
+}
+
+.no-motion *,
+.no-motion *::before,
+.no-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+.no-motion .reveal {
+    opacity: 1 !important;
+    translate: none !important;
+    scale: 1 !important;
+    filter: none !important;
+}
+
+.no-motion .btn::after {
+    display: none;
 }
 
 /* ---------------------------------------------------------------------------
@@ -820,5 +865,142 @@
     &::after,
     &:hover::after {
         scale: 1 1;
+    }
+}
+
+/* A physical switch for the Site controls page. The input is visually hidden
+   and sits immediately before the track, so the checked state is expressible
+   in CSS without a peer variant reaching across nesting levels. */
+@utility switch {
+    @apply relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-navy-900/15;
+    transition: background-color var(--duration-base) var(--ease-out-expo);
+
+    & > span {
+        @apply ms-0.5 block h-5 w-5 rounded-full bg-white shadow-soft;
+        transition: translate var(--duration-base) var(--ease-spring);
+    }
+
+    input:checked + & {
+        @apply bg-teal-600;
+    }
+
+    input:checked + & > span {
+        translate: 1.25rem 0;
+    }
+
+    input:focus-visible + & {
+        @apply outline-2 outline-offset-2 outline-teal-500;
+    }
+
+    label:hover & {
+        @apply bg-navy-900/25;
+    }
+
+    label:hover input:checked + & {
+        @apply bg-teal-700;
+    }
+}
+
+/* Primary navigation -------------------------------------------------------
+   The bar is one line at every width it is visible, so these stay compact and
+   never wrap: the label is nowrap, the padding tightens below xl, and the
+   number of items that can reach the bar is capped in the header template.
+   The indicator is always present at zero scale, so hover draws a half rule
+   and the current section holds a full one — the same gesture, two lengths. */
+@utility nav-link {
+    @apply relative flex shrink-0 items-center gap-1 rounded-full px-3 py-2.5 text-sm font-medium
+           whitespace-nowrap text-navy-900/75 xl:px-4;
+    transition: color var(--duration-fast) var(--ease-out-expo),
+                background-color var(--duration-fast) var(--ease-out-expo);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset-inline: 0.85rem;
+        bottom: 0.3rem;
+        height: 2px;
+        border-radius: 9999px;
+        background: var(--color-teal-500);
+        scale: 0 1;
+        transition: scale var(--duration-base) var(--ease-out-expo);
+    }
+
+    &:hover {
+        @apply bg-navy-50 text-navy-900;
+    }
+
+    &:hover::after {
+        scale: 0.45 1;
+    }
+}
+
+@utility nav-link-active {
+    @apply nav-link bg-navy-50 text-navy-900;
+
+    &::after,
+    &:hover::after {
+        scale: 1 1;
+    }
+}
+
+/* Photography ------------------------------------------------------------- */
+/* A very slow push on a hero photograph. Long enough (28s) that it registers
+   as depth rather than as something animating on the page. */
+@utility ken-burns {
+    animation: ken-burns 28s var(--ease-out-soft) infinite alternate;
+}
+
+@keyframes ken-burns {
+    from { scale: 1; translate: 0 0; }
+    to   { scale: 1.08; translate: -1% -1%; }
+}
+
+/* The standard treatment for an image inside a card or a hero column: clipped
+   corners, a hairline that keeps it off a white background, and a scale that
+   only runs while the pointer is over its card. */
+@utility media-frame {
+    @apply relative overflow-hidden rounded-[1.25rem] bg-mist-100;
+
+    & > img {
+        @apply h-full w-full object-cover;
+        transition: scale var(--duration-slow) var(--ease-out-expo);
+    }
+
+    &:hover > img {
+        scale: 1.04;
+    }
+}
+
+/* A caption or badge floating over photography. Dark enough to stay legible on
+   a bright frame without a full scrim over the whole image. */
+@utility media-badge {
+    @apply absolute inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold text-white;
+    background: rgb(6 26 46 / 0.55);
+    backdrop-filter: blur(10px) saturate(140%);
+}
+
+/* Gradient wash over a photograph so white text stays readable at the bottom. */
+@utility media-scrim {
+    @apply pointer-events-none absolute inset-0;
+    background: linear-gradient(to top, rgb(6 26 46 / 0.85) 0%, rgb(6 26 46 / 0.35) 38%, transparent 72%);
+}
+
+/* Numbers that read as a figure rather than as body copy. */
+@utility stat-figure {
+    @apply font-display text-3xl font-extrabold tracking-tight sm:text-4xl;
+    font-variant-numeric: tabular-nums;
+}
+
+/* A bar that grows from its leading edge when revealed — used for the panel's
+   dashboard breakdowns, where a number alone does not show proportion. */
+@utility meter {
+    @apply relative h-2 w-full overflow-hidden rounded-full bg-mist-100;
+
+    & > span {
+        @apply block h-full rounded-full;
+        background: linear-gradient(90deg, var(--color-teal-400), var(--color-teal-600));
+        transform-origin: left;
+        animation: bar-grow var(--duration-slow) var(--ease-out-expo) both;
+        animation-delay: var(--anim-delay, 0ms);
     }
 }

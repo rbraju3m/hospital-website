@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **RBR Hospital** — a public-facing hospital website built on **Laravel 13** with **Blade + Tailwind CSS 4 + Alpine.js**, backed by **MySQL 8**. Phase 1 (complete) is the public site, a working online appointment engine, and a full i18n layer. Phase 2 is complete: the **staff panel at `/admin`**, booking notifications by SMS and email, the **diagnostics price list**, and the **patient portal at `/portal`**. Every feature the site describes now exists behind it.
 
+Phase 3 is the presentation layer: **Site controls** (what the public site shows, switched from the panel), **stand-in photography** for content nobody has uploaded a picture for, and an image-led redesign of the public pages.
+
 Not to be confused with `/var/www/html/c-hospital-website`, a separate older Laravel 11 hospital site using the ftco Bootstrap theme. This project shares nothing with it.
 
 ## Timezone
@@ -59,7 +61,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (244 feature tests)
+# Tests (290 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -70,6 +72,8 @@ vendor/bin/phpunit tests/Feature/Portal          # the patient portal
 vendor/bin/phpunit --filter Diagnostics          # the price list
 vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
+vendor/bin/phpunit --filter 'SiteFeature|SiteControl'  # the site's on/off switches
+vendor/bin/phpunit --filter DemoImage             # stand-in photography
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -160,6 +164,43 @@ Files live on the **private disk** (`storage/app/private`), never the public one
 #### Signed confirmation links
 
 `appointment.confirmed` carries a patient's name, phone, age and gender, and a booking reference is short enough to enumerate. The route now requires a **valid signature**; the link in the confirmation email is generated with `URL::signedRoute()` so it keeps working, and a guessed one gets a 403. Note that route-model binding runs before the signature check, so a made-up reference 404s rather than 403s.
+
+### Site controls — the switches behind the public site
+
+`/admin/site-controls`. Every switch is a `settings` row in the **`features`** group holding `"1"` or `"0"`, read through `feature('key')` (`app/Support/helpers.php`) and declared in **`App\Support\SiteFeatures`**. Four groups: whole *areas* of the site, *home* page bands, header/footer *chrome*, and visitor *behaviour* (booking, forms, payment, stand-in images, motion, maintenance).
+
+Three decisions worth keeping:
+
+- **The registry is the source of truth, not the database.** A key with no row falls back to its declared default, so a fresh database — or a key added after the seeder last ran — behaves as "on" rather than silently blanking a section. `SiteFeatureSeeder` writes the rows with `firstOrCreate`, so re-seeding never re-enables something staff switched off.
+- **Hiding a link and closing its route are one action.** `feature:<key>` (`EnsureFeatureEnabled`, aliased in `bootstrap/app.php`) is on the public route groups in `routes/web.php` and `routes/portal.php`; a switched-off area answers **404**. Hiding the navigation alone would leave the page reachable from a bookmark, a search result or a confirmation email sent last month. Staff signed in on the `web` guard pass through, so a page can be checked before it goes back on air.
+- **The form writes every key, not the ticked ones.** An unchecked checkbox posts nothing, so `SiteFeatures::store()` walks the registry rather than the payload — otherwise switching something off would be a no-op. It also means a crafted payload cannot create a setting that is not on the page.
+
+`behaviour_maintenance` is the one inverted switch (default off). `MaintenanceGate` wraps only the public routes: the panel, the portal and the payment callbacks stay up, because the work that takes the site down is usually being done in the panel. It answers 503 with a `Retry-After` and a notice carrying the hotline and ambulance numbers — the one thing a visitor must never lose.
+
+`behaviour_animations` renders `no-motion` on `<html>`, which shares the `prefers-reduced-motion` rules in `app.css` and is read live by `reducedMotion()` in `app.js`. A visitor whose device asks for less motion gets it regardless of the switch.
+
+Templates guard with `feature()` directly. Anywhere a list of links is built (header, footer, mobile bar, home quick actions) it is **filtered** rather than conditionally rendered per item, and the layout counts what survived — five tiles across six columns leaves a hole.
+
+### Stand-in photography
+
+The public site is image-led — a consultant card, a department header and an article cover all read as broken without a picture — but a hospital rarely has its own photography ready on day one. `App\Support\DemoImages` fills every empty image slot from `public/images/demo/` (8 clinical portraits, 22 ward/theatre/equipment covers, 3 wide banners).
+
+Call sites go through **`image_url($path, $set, $seed, $group)`** (upload first, then stand-in, then nothing) or **`doctor_photo($doctor)`** for consultants. Both return `null` when `behaviour_demo_images` is off, which is what lets each template fall back to its icon or initials treatment without a second condition.
+
+- **Picks are stable and non-repeating.** A *numeric* seed (a row id) walks the set one image at a time; hashing a slug scatters, and scattering means the same face twice in one row of four. `$group` offsets the walk per content type so a department and an article sharing an id do not share a photograph.
+- **Portraits follow `doctors.gender`.** The pools in `PORTRAIT_POOLS` never overlap: a consultant is never shown a photograph of somebody of the other gender, which is the difference between a placeholder and a mistake.
+- **Testimonials are the deliberate exception.** They get an initials tile unless somebody uploads a real photograph — a face that is not theirs, against their name and their words, is a different claim from a stock ward behind a department heading.
+- The counts in `SETS` are **declared, not globbed**, so rendering never touches the filesystem — and a test asserts every declared file exists, because a deleted one would otherwise only surface as a broken image.
+- `x-admin.image-field` previews what the site will actually render and labels it `Stand-in` when it is not an upload, so "no picture" and "a picture nobody chose" are distinguishable in the panel.
+
+### The primary navigation is one line
+
+The header menu must never wrap, at any width where it is visible. Two things enforce that and both matter:
+
+- **The number of items that can reach the bar is capped in the template** (`partials/header.blade.php`). Departments, four primary links and a **More** overflow menu — six triggers. Everything else lives one click away rather than on a second row. Filtering by Site controls removes items; it never adds them.
+- **Nothing in the bar can grow.** `nav-link` is `whitespace-nowrap` with padding that tightens below `xl`; the logo's tagline and the "Find a doctor" label only appear at `2xl`, because they are the widest parts of the two blocks flanking the nav. Below `lg` the bar becomes the drawer.
+
+Adding a link means putting it in `$more`, not in `$primary`.
 
 ### Notifications
 
@@ -296,9 +337,13 @@ Motion is part of the design system, not decoration bolted onto pages. Tokens li
 - **Counting figures** — `data-countup` on the element. The tween restores the server-rendered string verbatim at the end, so a formatted or suffixed value can never be mangled, and a non-numeric one is left alone.
 - **Surfaces** — `card-interactive` lifts and tracks a teal spotlight from the pointer (`--mx`/`--my`, written by a delegated handler). Use it only where the card is clickable; `card-hover` is the non-clickable version, because a lift reads as an invitation to click. `card-zoom` scales a cover image inside one, `card-arrow` nudges a trailing arrow.
 - **Buttons** — `.btn` carries the press, the icon transition and a white sheen swept on hover by one `::after`; it is invisible on the light variants, so there is no per-variant duplication. `btn-nudge` moves the trailing icon.
+- **Photography** — `media-frame` is the standard clipped, hairlined image box (its `<img>` scales on hover); `media-scrim` is the gradient that keeps white text readable over a photograph; `media-badge` is a frosted label floating on one. `ken-burns` is the very slow push on a hero image — 28 seconds, so it reads as depth rather than as something animating. `reveal reveal-clip` wipes an image up from its own bottom edge instead of sliding it, because an image that moves drags the layout's eye with it.
+- **Parallax** — `data-parallax="0.1"` on a decorative layer; `initParallax()` in `app.js` offsets it against the scroll on the shared rAF pass, skips anything off screen, and clears the transform outright when motion is not wanted. Keep the factor low: it should separate the layer from the text over it, not read as an effect.
+- **Proportion** — `meter` is the horizontal bar (a `<span>` inside, width as a percentage, `bar-grow` on reveal); the dashboard's week-ahead columns use the vertical twin, `bar-rise`, with the fill absolutely positioned inside a full-height track so the percentage height is definite.
 - **Decoration** — `hero-grid` and `orb` are the drifting grid and glow behind the navy heroes. `pulse-dot` is a live indicator, `skeleton` a loading placeholder.
+- **Panel affordances** — `nav-link`/`nav-link-active` carry the header's underline indicator (always present at zero scale, so hover draws half a rule and the current section holds a full one). `switch` is the Site controls toggle: the visually hidden input sits **immediately before** the track, which is what lets the checked state be expressed in plain CSS rather than through a peer variant reaching across nesting levels.
 
-`prefers-reduced-motion` is honoured in three places and all three matter: a blanket rule zeroing every duration, an `!important` reset on `.reveal` (it has to beat the direction variants), and a live check in `app.js` that reveals everything immediately and re-settles the page if the setting is turned on mid-visit. Anything new must survive the setting being on.
+`prefers-reduced-motion` is honoured in three places and all three matter: a blanket rule zeroing every duration, an `!important` reset on `.reveal` (it has to beat the direction variants), and a live check in `app.js` that reveals everything immediately and re-settles the page if the setting is turned on mid-visit. Anything new must survive the setting being on — and must survive `.no-motion`, the Site controls switch that shares those rules.
 
 ## Conventions worth keeping
 
@@ -308,6 +353,8 @@ Motion is part of the design system, not decoration bolted onto pages. Tokens li
 - `/admin` sends `noindex, nofollow` and is excluded from the sitemap-ish `hreflang` block, which only the public layout emits.
 - Copy is written plainly and avoids marketing superlatives — claims in seeded content are specific and checkable (response times, staffing ratios) by design. Keep that voice.
 - Notification text is rendered at dispatch, never inside the job, so a queued payload is a finished string rather than a template plus a locale.
+- Every image position on the public site goes through `image_url()` or `doctor_photo()`, never `media_url()` directly — that is the one place "there is no picture" is answered.
+- Anything guarded by Site controls is guarded in **both** places: the link is filtered out of the template *and* the route carries `feature:<key>`.
 - `.idea/` is untracked and stays that way.
 
 ## Not built yet

@@ -52,6 +52,23 @@
                 ]) }}</p>
                 <p>{{ __('pages.about.story_4') }}</p>
             </div>
+
+            {{-- Two photographs under the story: the place the copy is about,
+                 which a page of prose about a building otherwise never shows. --}}
+            @php
+                $storyImages = array_filter([demo_image('about'), demo_image('cover', 12, 'about')]);
+            @endphp
+
+            @if ($storyImages)
+                <div class="mt-10 grid gap-4 sm:grid-cols-2">
+                    @foreach ($storyImages as $index => $image)
+                        <figure class="media-frame reveal reveal-clip {{ $index === 0 ? 'aspect-[4/5]' : 'aspect-[4/5] sm:mt-8' }}"
+                                style="--reveal-delay: {{ $index * 120 }}ms">
+                            <img src="{{ $image }}" alt="" loading="lazy" data-fade>
+                        </figure>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
         <div class="lg:col-span-5">

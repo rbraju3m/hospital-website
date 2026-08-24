@@ -38,7 +38,8 @@
                 <x-admin.translatable name="description" type="textarea" :rows="8" :label="__('admin.fields.description')" :model="$service"
                                       :help="__('admin.form.markup_help')" class="sm:col-span-2" />
                 <x-admin.translatable name="highlights" type="list" :label="__('admin.fields.highlights')" :model="$service" />
-                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$service->untranslated('image')" />
+                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$service->untranslated('image')"
+                                     set="cover" :seed="$service->id" group="service" />
             </div>
         </x-admin.section>
 

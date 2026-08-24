@@ -8,6 +8,7 @@ return [
     'primary' => 'Primary',
 
     'items' => [
+        'more' => 'More',
         'departments' => 'Departments',
         'doctors' => 'Find a Doctor',
         'services' => 'Services',

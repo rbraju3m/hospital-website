@@ -15,7 +15,12 @@ Alpine.start();
    --------------------------------------------------------------------------- */
 
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-const reducedMotion = () => motionQuery.matches;
+
+/* Two ways to end up without motion: the visitor asked their device for less of
+   it, or the hospital switched it off for everybody from Site controls (which
+   renders `no-motion` on <html>). Read live rather than captured — the OS
+   setting can change while the tab is open. */
+const reducedMotion = () => motionQuery.matches || document.documentElement.classList.contains('no-motion');
 
 /* rAF-coalesced scroll subscribers: one listener, one frame, however many
    readers. Each of these handlers reads layout, so batching them matters. */
@@ -207,6 +212,33 @@ const initCardSpotlight = () => {
     );
 };
 
+/* --- Parallax layers -------------------------------------------------------
+   Decorative photography drifts against the page as it scrolls. The factor is
+   read from the element (`data-parallax="0.1"`), kept low on purpose — enough
+   to separate the layer from the text over it, not enough to notice as an
+   effect — and the whole thing is skipped when motion is not wanted. */
+const initParallax = () => {
+    const layers = Array.from(document.querySelectorAll('[data-parallax]'));
+    if (! layers.length) return;
+
+    onScroll(() => {
+        if (reducedMotion()) {
+            layers.forEach((layer) => layer.style.removeProperty('translate'));
+            return;
+        }
+
+        layers.forEach((layer) => {
+            const rect = layer.getBoundingClientRect();
+            // Skip anything off screen: this runs on every scroll frame.
+            if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+
+            const factor = Number(layer.dataset.parallax) || 0.1;
+            const offset = (rect.top + rect.height / 2 - window.innerHeight / 2) * factor;
+            layer.style.translate = `0 ${offset.toFixed(1)}px`;
+        });
+    });
+};
+
 /* --- Image fade-in ---------------------------------------------------------- */
 const initImageFades = (root = document) => {
     root.querySelectorAll('img[data-fade]:not(.is-loaded)').forEach((img) => {
@@ -233,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeader();
     initBackToTop();
     initCardSpotlight();
+    initParallax();
 
     /* Content that appears after boot — an Alpine collapse, a swapped tab —
        gets the same treatment without every component having to ask. Alpine can

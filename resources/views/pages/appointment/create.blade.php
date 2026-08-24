@@ -29,6 +29,23 @@
                 </div>
             @endif
 
+            @unless (feature('behaviour_online_booking'))
+                {{-- Booking closed from Site controls. The page stays up: it is
+                     linked from the header, the footer and the emails already
+                     sent, and a visitor who lands here needs to be told how to
+                     book rather than shown a 404. --}}
+                <div role="status" class="alert-warning mb-8 flex-col p-6">
+                    <p class="flex items-center gap-2 font-semibold text-amber-900">
+                        <x-icon name="info" size="18" /> {{ __('appointment.closed.title') }}
+                    </p>
+                    <p class="mt-2 text-sm text-amber-900/85">{{ __('appointment.closed.body') }}</p>
+                    <a href="tel:{{ setting('appointment_number') }}" class="btn-primary btn-sm mt-4">
+                        <x-icon name="phone-call" size="15" />
+                        {{ setting('appointment_number') }}
+                    </a>
+                </div>
+            @endunless
+
             <form method="POST" action="{{ route('appointment.store') }}"
                   x-data="appointmentBooking({
                       doctorId: {{ old('doctor_id', $doctor?->id) ?: 'null' }},

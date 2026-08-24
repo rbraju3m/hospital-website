@@ -46,7 +46,8 @@
                 <x-admin.translatable name="duration" :label="__('admin.fields.duration')" :model="$package" />
                 <x-admin.translatable name="suitable_for" :label="__('admin.fields.suitable_for')" :model="$package" />
                 <x-admin.translatable name="tests" type="list" :rows="6" :label="__('admin.fields.tests')" :model="$package" class="sm:col-span-2" />
-                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$package->untranslated('image')" class="sm:col-span-2" />
+                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$package->untranslated('image')"
+                                     set="cover" :seed="$package->id" group="package" class="sm:col-span-2" />
             </div>
         </x-admin.section>
 

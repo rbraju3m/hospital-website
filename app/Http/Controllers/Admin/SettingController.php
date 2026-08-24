@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\HandlesTranslatableContent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SettingRequest;
 use App\Models\Setting;
+use App\Support\SiteFeatures;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -23,7 +24,11 @@ class SettingController extends Controller
     public function edit(): View
     {
         return view('admin.settings.edit', [
-            'groups' => Setting::query()->orderBy('group')->orderBy('key')->get()->groupBy('group'),
+            // The `features` group is the Site controls page's business — it is
+            // a set of switches, not text somebody types.
+            'groups' => Setting::query()
+                ->where('group', '!=', SiteFeatures::GROUP)
+                ->orderBy('group')->orderBy('key')->get()->groupBy('group'),
         ]);
     }
 

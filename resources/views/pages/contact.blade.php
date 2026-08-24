@@ -56,6 +56,16 @@
                 </div>
             @endif
 
+            @unless (feature('behaviour_contact_form'))
+                {{-- Enquiries closed: the desk's numbers and address are still
+                     on this page, which is what most visitors came for. --}}
+                <div role="status" class="alert-warning mt-8 flex-col p-6">
+                    <p class="font-semibold text-amber-900">{{ __('pages.contact.form_closed_title') }}</p>
+                    <p class="mt-2 text-sm text-amber-900/85">
+                        {{ __('pages.contact.form_closed_body', ['phone' => setting('hotline')]) }}
+                    </p>
+                </div>
+            @else
             <form method="POST" action="{{ route('contact.store') }}" class="mt-8 grid gap-5 sm:grid-cols-2">
                 @csrf
 
@@ -105,6 +115,7 @@
                     </p>
                 </div>
             </form>
+            @endunless
         </div>
 
         {{-- Visit info --}}

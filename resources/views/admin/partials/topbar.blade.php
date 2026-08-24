@@ -13,6 +13,14 @@
             @endif
         </div>
 
+        <a href="{{ route('home') }}" target="_blank" rel="noopener"
+           class="hidden items-center gap-2 rounded-xl border border-mist-200 px-3 py-2 text-xs font-semibold
+                  text-navy-900/70 transition duration-200 hover:border-teal-300 hover:bg-teal-50/60 hover:text-teal-800 md:inline-flex"
+           title="{{ __('admin.view_site') }}">
+            <x-icon name="external-link" size="15" />
+            {{ __('admin.view_site') }}
+        </a>
+
         <x-locale-switcher variant="drawer" class="hidden sm:flex" />
 
         <div x-data="{ open: false }" class="relative">

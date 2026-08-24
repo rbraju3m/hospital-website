@@ -9,6 +9,7 @@ return [
     'primary' => 'প্রধান',
 
     'items' => [
+        'more' => 'আরও',
         'departments' => 'বিভাগসমূহ',
         'doctors' => 'ডাক্তার খুঁজুন',
         'services' => 'সেবাসমূহ',

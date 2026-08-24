@@ -15,15 +15,19 @@ use Illuminate\Support\Facades\Route;
 | here shares an authentication surface with /admin.
 */
 
-Route::prefix('portal')->name('portal.')->group(function () {
+Route::prefix('portal')->name('portal.')->middleware('feature:area_portal')->group(function () {
     Route::middleware('guest:patient')->group(function () {
         Route::get('login', [SessionController::class, 'create'])->name('login');
         Route::post('login', [SessionController::class, 'store'])
             ->middleware('throttle:10,1')->name('login.store');
 
-        Route::get('register', [RegisterController::class, 'create'])->name('register');
-        Route::post('register', [RegisterController::class, 'store'])
-            ->middleware('throttle:5,1')->name('register.store');
+        // Registration closes on its own switch: an existing patient can still
+        // sign in and read their records while new sign-ups are paused.
+        Route::middleware('feature:behaviour_portal_registration')->group(function () {
+            Route::get('register', [RegisterController::class, 'create'])->name('register');
+            Route::post('register', [RegisterController::class, 'store'])
+                ->middleware('throttle:5,1')->name('register.store');
+        });
 
         Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
         // Tighter than login: each attempt sends a real SMS, which costs money
@@ -44,7 +48,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('documents', [DocumentController::class, 'index'])->name('documents');
         Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
         Route::post('documents/{document}/pay', [PaymentController::class, 'initiate'])
-            ->middleware('throttle:10,1')->name('payments.initiate');
+            ->middleware(['throttle:10,1', 'feature:behaviour_online_payment'])->name('payments.initiate');
 
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');

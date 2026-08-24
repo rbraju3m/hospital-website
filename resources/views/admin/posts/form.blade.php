@@ -35,6 +35,7 @@
                 <x-admin.translatable name="body" type="textarea" :rows="18" :label="__('admin.fields.body')" :model="$post"
                                       :help="__('admin.posts.body_help')" class="sm:col-span-2" />
                 <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$post->untranslated('image')"
+                                     set="cover" :seed="$post->id" group="post"
                                      aspect="aspect-[16/9]" class="sm:col-span-2" />
             </div>
         </x-admin.section>

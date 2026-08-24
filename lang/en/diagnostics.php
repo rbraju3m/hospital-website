@@ -51,6 +51,7 @@ return [
     ],
 
     'request' => [
+        'closed' => 'Test requests through the website are switched off at the moment. Call :phone and the counter will arrange it.',
         'title' => 'Request this test',
         'lede' => 'Leave your number and the diagnostics desk will call you back to arrange it.',
         'name' => 'Your name',

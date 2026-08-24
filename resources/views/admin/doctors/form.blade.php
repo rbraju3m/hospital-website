@@ -60,6 +60,7 @@
                 <x-admin.translatable name="about" type="textarea" :rows="8" :label="__('admin.fields.about')" :model="$doctor"
                                       :help="__('admin.form.markup_help')" class="sm:col-span-2" />
                 <x-admin.image-field name="photo" :label="__('admin.fields.photo')" :value="$doctor->untranslated('photo')"
+                                     :preview="doctor_photo($doctor)"
                                      aspect="aspect-square" :help="__('admin.doctors.photo_help')" class="sm:col-span-2" />
             </div>
         </x-admin.section>

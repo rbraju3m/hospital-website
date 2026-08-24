@@ -103,4 +103,9 @@ return [
 
         'back_home' => '← Back to homepage',
     ],
+
+    'closed' => [
+        'title' => 'Online booking is paused',
+        'body' => 'We are not taking appointments through the website at the moment. Our appointment desk is open and can book you in over the phone.',
+    ],
 ];

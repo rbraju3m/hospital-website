@@ -39,7 +39,7 @@
     </div>
 
     <div class="flex gap-2 shrink-0">
-        @if ($document->category === 'bill' && $document->payment_status === 'unpaid')
+        @if ($document->category === 'bill' && $document->payment_status === 'unpaid' && feature('behaviour_online_payment'))
             <form method="POST" action="{{ route('portal.payments.initiate', $document) }}">
                 @csrf
                 <button type="submit" class="btn btn-primary btn-sm">

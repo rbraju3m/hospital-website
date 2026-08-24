@@ -117,3 +117,80 @@ if (! function_exists('translation_locales')) {
         ));
     }
 }
+
+if (! function_exists('feature')) {
+    /**
+     * Is a site feature switched on? (Site controls, in the staff panel.)
+     *
+     * Reads through the settings cache, so a template may guard on this as
+     * freely as it reads any other setting. Unknown keys are on — see
+     * App\Support\SiteFeatures::enabled().
+     */
+    function feature(string $key): bool
+    {
+        return App\Support\SiteFeatures::enabled($key);
+    }
+}
+
+if (! function_exists('demo_image')) {
+    /**
+     * Stand-in photograph for a content type, stable for the given seed.
+     *
+     * Returns null when staff have switched the demo imagery off, which is what
+     * lets every call site fall back to the icon or initials treatment without
+     * a second condition.
+     */
+    function demo_image(string $set, string|int|null $seed = null, string $group = ''): ?string
+    {
+        if (! feature('behaviour_demo_images')) {
+            return null;
+        }
+
+        return App\Support\DemoImages::pick($set, $seed, $group);
+    }
+}
+
+if (! function_exists('image_url')) {
+    /**
+     * The image to render in a slot: the upload if there is one, otherwise a
+     * demo photograph, otherwise nothing.
+     *
+     * Every image position on the public site goes through this, so "no photo
+     * on file" is answered in exactly one place.
+     */
+    function image_url(?string $path, ?string $set = null, string|int|null $seed = null, string $group = ''): ?string
+    {
+        return media_url($path) ?? ($set ? demo_image($set, $seed, $group) : null);
+    }
+}
+
+if (! function_exists('is_demo_image')) {
+    /** True when a slot is showing stand-in photography rather than an upload. */
+    function is_demo_image(?string $path): bool
+    {
+        return blank($path);
+    }
+}
+
+if (! function_exists('doctor_photo')) {
+    /**
+     * The portrait to show for a consultant.
+     *
+     * Their own photograph if one has been uploaded; otherwise a stand-in that
+     * matches the gender recorded on them, stable for the life of the row.
+     */
+    function doctor_photo(App\Models\Doctor $doctor): ?string
+    {
+        $uploaded = media_url($doctor->untranslated('photo'));
+
+        if ($uploaded) {
+            return $uploaded;
+        }
+
+        if (! feature('behaviour_demo_images')) {
+            return null;
+        }
+
+        return App\Support\DemoImages::portrait($doctor->gender, $doctor->id);
+    }
+}

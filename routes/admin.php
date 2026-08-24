@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PatientDocumentController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SiteControlController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -84,6 +85,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+
+        // What the public site shows, and what visitors are allowed to do.
+        Route::get('site-controls', [SiteControlController::class, 'edit'])->name('site.edit');
+        Route::put('site-controls', [SiteControlController::class, 'update'])->name('site.update');
 
         Route::resource('users', UserController::class)->except(['show']);
     });

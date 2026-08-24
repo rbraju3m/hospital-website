@@ -32,7 +32,7 @@
     </div>
 </x-page-hero>
 
-<x-cover-image :path="$department->untranslated('image')" :alt="$department->name" />
+<x-cover-image :path="$department->untranslated('image')" :alt="$department->name" :seed="$department->id" group="department" />
 
 {{-- Highlights strip --}}
 @if ($department->highlights)

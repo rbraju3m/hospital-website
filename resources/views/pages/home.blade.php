@@ -10,16 +10,33 @@
 @section('content')
 
 {{-- ======================= HERO ======================= --}}
+@php
+    $heroImage = demo_image('hero', 'home');
+    $showBooker = feature('home_booker');
+@endphp
+
 <section class="relative overflow-hidden bg-navy-900">
-    {{-- Decorative depth: a drifting grid and two slow orbs. All of it is
-         switched off under prefers-reduced-motion by the global rule. --}}
+    {{-- Photography carries the hero; the navy wash over it is what keeps the
+         headline legible at every crop. Grid and orbs sit on top for depth.
+         All of it is switched off under prefers-reduced-motion, and by the
+         Site controls motion switch, by the global rule. --}}
+    @if ($heroImage)
+        <div aria-hidden="true" class="absolute inset-0">
+            <img src="{{ $heroImage }}" alt=""
+                 class="ken-burns h-full w-full object-cover object-[62%_center] opacity-[0.55]"
+                 data-parallax="0.10">
+            <div class="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/88 to-navy-950/25"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/10 to-navy-950/60"></div>
+        </div>
+    @endif
+
     <div aria-hidden="true" class="hero-grid opacity-[0.12]"></div>
     <div aria-hidden="true" class="orb -right-40 -top-40 h-[32rem] w-[32rem] bg-teal-500/25"></div>
     <div aria-hidden="true" class="orb -bottom-52 -left-40 h-[28rem] w-[28rem] bg-navy-400/20" style="--anim-delay:-6s"></div>
 
     <div class="shell relative grid items-center gap-14 py-16 lg:grid-cols-12 lg:py-24">
 
-        <div class="lg:col-span-7">
+        <div class="{{ $showBooker ? 'lg:col-span-7' : 'lg:col-span-9' }}">
             <p class="eyebrow anim-fade-up text-teal-300">
                 <span class="h-px w-6 bg-teal-400"></span>
                 {{ setting('accreditation') }}
@@ -41,18 +58,30 @@
             </p>
 
             <div class="anim-fade-up mt-9 flex flex-wrap items-center gap-3" style="--anim-delay:270ms">
-                <a href="{{ route('appointment.create') }}" class="btn-accent btn-lg btn-nudge">
-                    <x-icon name="calendar-check" size="18" />
-                    {{ __('common.book_appointment') }}
-                    <x-icon name="arrow-right" size="18" />
-                </a>
-                <a href="{{ route('doctors.index') }}"
-                   class="btn btn-lg border border-white/25 text-white transition hover:border-white/50 hover:bg-white/10">
-                    <x-icon name="search" size="18" />
-                    {{ __('common.find_a_doctor') }}
+                @if (feature('area_appointment'))
+                    <a href="{{ route('appointment.create') }}" class="btn-accent btn-lg btn-nudge">
+                        <x-icon name="calendar-check" size="18" />
+                        {{ __('common.book_appointment') }}
+                        <x-icon name="arrow-right" size="18" />
+                    </a>
+                @endif
+
+                @if (feature('area_doctors'))
+                    <a href="{{ route('doctors.index') }}"
+                       class="btn btn-lg border border-white/25 text-white transition hover:border-white/50 hover:bg-white/10">
+                        <x-icon name="search" size="18" />
+                        {{ __('common.find_a_doctor') }}
+                    </a>
+                @endif
+
+                <a href="tel:{{ setting('hotline') }}"
+                   class="btn btn-lg text-white/80 transition hover:text-white">
+                    <x-icon name="phone-call" size="18" />
+                    {{ setting('hotline') }}
                 </a>
             </div>
 
+            @if (feature('home_stats'))
             <dl class="anim-fade-up mt-12 grid max-w-lg grid-cols-2 gap-x-8 gap-y-6 border-t border-white/10 pt-8 sm:grid-cols-4"
                 style="--anim-delay:360ms">
                 @foreach ([
@@ -70,9 +99,11 @@
                     </div>
                 @endforeach
             </dl>
+            @endif
         </div>
 
         {{-- Quick appointment launcher --}}
+        @if ($showBooker)
         <div class="lg:col-span-5">
             <div class="card anim-scale-in overflow-hidden p-0 shadow-lift" style="--anim-delay:220ms">
                 <div class="border-b border-mist-200 bg-mist-50 px-7 py-5">
@@ -115,22 +146,33 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </section>
 
 {{-- ======================= QUICK ACTIONS ======================= --}}
+@if (feature('home_quick_actions'))
+@php
+    // Filtered against Site controls, then laid out on the count that survived
+    // — five tiles across six columns would leave a hole in the row.
+    $quickActions = collect([
+        ['emergency', 'ambulance', __('home.quick.emergency'), __('home.quick.emergency_sub'), 'urgent', 'area_emergency'],
+        ['doctors.index', 'user-round', __('home.quick.doctors'), __('home.quick.doctors_sub', ['count' => setting('stat_doctors')]), 'teal', 'area_doctors'],
+        ['appointment.create', 'calendar-check', __('home.quick.appointment'), __('home.quick.appointment_sub'), 'teal', 'area_appointment'],
+        ['departments.index', 'building', __('home.quick.departments'), __('home.quick.departments_sub', ['count' => setting('stat_departments')]), 'navy', 'area_departments'],
+        ['diagnostics.index', 'microscope', __('home.quick.diagnostics'), __('home.quick.diagnostics_sub'), 'navy', 'area_diagnostics'],
+        ['packages.index', 'check-circle', __('home.quick.checks'), __('home.quick.checks_sub', ['price' => number_format($cheapestPackage)]), 'navy', 'area_packages'],
+    ])->filter(fn ($tile) => feature($tile[5]))->values();
+@endphp
+
+@if ($quickActions->isNotEmpty())
 <section class="relative z-10 -mt-8 lg:-mt-10">
     <div class="shell">
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6"
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3
+                    lg:[grid-template-columns:repeat(var(--quick-cols),minmax(0,1fr))]"
+             style="--quick-cols: {{ $quickActions->count() }}"
              data-reveal-stagger="60">
-            @foreach ([
-                ['emergency', 'ambulance', __('home.quick.emergency'), __('home.quick.emergency_sub'), 'urgent'],
-                ['doctors.index', 'user-round', __('home.quick.doctors'), __('home.quick.doctors_sub', ['count' => setting('stat_doctors')]), 'teal'],
-                ['appointment.create', 'calendar-check', __('home.quick.appointment'), __('home.quick.appointment_sub'), 'teal'],
-                ['departments.index', 'building', __('home.quick.departments'), __('home.quick.departments_sub', ['count' => setting('stat_departments')]), 'navy'],
-                ['diagnostics.index', 'microscope', __('home.quick.diagnostics'), __('home.quick.diagnostics_sub'), 'navy'],
-                ['packages.index', 'check-circle', __('home.quick.checks'), __('home.quick.checks_sub', ['price' => number_format($cheapestPackage)]), 'navy'],
-            ] as [$route, $icon, $label, $sub, $tone])
+            @foreach ($quickActions as [$route, $icon, $label, $sub, $tone, $flag])
                 <a href="{{ route($route) }}"
                    class="card-interactive reveal group flex flex-col items-center gap-2 p-5 text-center">
                     <span @class([
@@ -148,8 +190,11 @@
         </div>
     </div>
 </section>
+@endif
+@endif
 
 {{-- ======================= CENTRES OF EXCELLENCE ======================= --}}
+@if (feature('home_departments') && feature('area_departments'))
 <section class="section">
     <div class="shell">
         <x-section-heading
@@ -167,8 +212,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= FIND A DOCTOR ======================= --}}
+@if (feature('home_doctors') && feature('area_doctors'))
 <section class="section bg-mist-50">
     <div class="shell">
         <x-section-heading
@@ -210,8 +257,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= SERVICES ======================= --}}
+@if (feature('home_services') && feature('area_services'))
 <section class="section">
     <div class="shell">
         <x-section-heading
@@ -248,8 +297,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= WHY CHOOSE US ======================= --}}
+@if (feature('home_why'))
 <section class="section bg-navy-900 text-white">
     <div class="shell grid gap-14 lg:grid-cols-12">
         <div class="lg:col-span-5">
@@ -261,11 +312,28 @@
             <p class="lede mt-5 text-white/65">{{ __('home.why.lede') }}</p>
 
             <div class="mt-9 flex flex-wrap gap-3">
-                <a href="{{ route('about') }}" class="btn-accent">{{ __('home.why.about_cta') }}</a>
-                <a href="{{ route('contact') }}" class="btn border border-white/25 text-white hover:bg-white/10">
-                    {{ __('home.why.visit_cta') }}
-                </a>
+                @if (feature('area_about'))
+                    <a href="{{ route('about') }}" class="btn-accent">{{ __('home.why.about_cta') }}</a>
+                @endif
+                @if (feature('area_contact'))
+                    <a href="{{ route('contact') }}" class="btn border border-white/25 text-white hover:bg-white/10">
+                        {{ __('home.why.visit_cta') }}
+                    </a>
+                @endif
             </div>
+
+            @php $whyImage = demo_image('cover', 'why-choose-us'); @endphp
+            @if ($whyImage)
+                {{-- One photograph, low in the column, so the band of reasons is
+                     read against the place rather than against flat navy. --}}
+                <figure class="media-frame reveal reveal-clip mt-10 hidden aspect-[16/10] border border-white/10 lg:block">
+                    <img src="{{ $whyImage }}" alt="" loading="lazy" data-fade>
+                    <figcaption class="media-badge bottom-4 start-4">
+                        <x-icon name="map-pin" size="13" class="text-teal-300" />
+                        {{ setting('address_city') }}
+                    </figcaption>
+                </figure>
+            @endif
         </div>
 
         <div class="lg:col-span-7">
@@ -292,8 +360,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= HEALTH PACKAGES ======================= --}}
+@if (feature('home_packages') && feature('area_packages'))
 <section class="section">
     <div class="shell">
         <x-section-heading
@@ -311,8 +381,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= TESTIMONIALS ======================= --}}
+@if (feature('home_testimonials'))
 <section class="section bg-mist-50">
     <div class="shell">
         <x-section-heading
@@ -324,33 +396,15 @@
 
         <div class="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3" data-reveal-stagger="80">
             @foreach ($testimonials->take(6) as $testimonial)
-                <figure class="card-hover reveal group flex h-full flex-col p-7">
-                    <x-icon name="quote" size="26" stroke="1.4"
-                            class="text-teal-200 transition duration-300 ease-out group-hover:scale-110 group-hover:text-teal-300" />
-
-                    <blockquote class="mt-4 flex-1 text-sm leading-relaxed text-navy-900/75">
-                        “{{ $testimonial->quote }}”
-                    </blockquote>
-
-                    <figcaption class="mt-6 flex items-center gap-3 border-t border-mist-200 pt-5">
-                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy-900 text-xs font-bold text-white">
-                            {{ str($testimonial->patient_name)->substr(0, 1) }}
-                        </span>
-                        <span class="min-w-0">
-                            <span class="block truncate text-sm font-semibold text-navy-900">{{ $testimonial->patient_name }}</span>
-                            <span class="block truncate text-xs text-navy-900/50">
-                                {{ $testimonial->treatment }} · {{ $testimonial->location }}
-                            </span>
-                        </span>
-                        <x-rating :rating="$testimonial->rating" class="ml-auto shrink-0" />
-                    </figcaption>
-                </figure>
+                <x-testimonial-card :testimonial="$testimonial" class="reveal" />
             @endforeach
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= HEALTH HUB ======================= --}}
+@if (feature('home_posts') && feature('area_posts'))
 <section class="section">
     <div class="shell">
         <x-section-heading
@@ -368,8 +422,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ======================= VISIT / CONTACT ======================= --}}
+@if (feature('home_visit'))
 <section class="pb-20">
     <div class="shell">
         <div class="reveal overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-navy-900 to-navy-950 text-white">
@@ -419,5 +475,6 @@
         </div>
     </div>
 </section>
+@endif
 
 @endsection
