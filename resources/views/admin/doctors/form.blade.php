@@ -11,7 +11,7 @@
       action="{{ $editing ? route('admin.doctors.update', $doctor) : route('admin.doctors.store') }}"
       enctype="multipart/form-data"
       x-data="{ tab: '{{ config('app.fallback_locale') }}' }"
-      class="max-w-4xl">
+      class="admin-form">
     @csrf
     @if ($editing) @method('PUT') @endif
 
@@ -22,7 +22,7 @@
         </a>
     </div>
 
-    <div class="space-y-6">
+    <x-admin.form-layout>
         <x-admin.section :title="__('admin.form.basics')">
             <div class="grid gap-5 sm:grid-cols-2">
                 <x-admin.translatable name="name" :label="__('admin.fields.name')" :model="$doctor" required
@@ -59,41 +59,46 @@
                 <x-admin.translatable name="chamber" :label="__('admin.fields.chamber')" :model="$doctor" class="sm:col-span-2" />
                 <x-admin.translatable name="about" type="textarea" :rows="8" :label="__('admin.fields.about')" :model="$doctor"
                                       :help="__('admin.form.markup_help')" class="sm:col-span-2" />
+            </div>
+        </x-admin.section>
+
+        <x-slot:aside>
+            <x-admin.section :title="__('admin.fields.photo')">
                 <x-admin.image-field name="photo" :label="__('admin.fields.photo')" :value="$doctor->untranslated('photo')"
                                      :preview="doctor_photo($doctor)"
-                                     aspect="aspect-square" :help="__('admin.doctors.photo_help')" class="sm:col-span-2" />
-            </div>
-        </x-admin.section>
+                                     aspect="aspect-square" :help="__('admin.doctors.photo_help')" />
+            </x-admin.section>
 
-        <x-admin.section :title="__('admin.doctors.fees')">
-            <div class="grid gap-5 sm:grid-cols-2">
-                <x-admin.input name="consultation_fee" type="number" :label="__('admin.fields.consultation_fee')" required
-                               :value="$doctor->consultation_fee ?? 0" :help="__('admin.form.money_help')" />
-                <x-admin.input name="follow_up_fee" type="number" :label="__('admin.fields.follow_up_fee')"
-                               :value="$doctor->follow_up_fee" :help="__('admin.form.money_help')" />
-            </div>
-        </x-admin.section>
+            <x-admin.section :title="__('admin.doctors.fees')">
+                <div class="grid gap-5">
+                    <x-admin.input name="consultation_fee" type="number" :label="__('admin.fields.consultation_fee')" required
+                                   :value="$doctor->consultation_fee ?? 0" :help="__('admin.form.money_help')" />
+                    <x-admin.input name="follow_up_fee" type="number" :label="__('admin.fields.follow_up_fee')"
+                                   :value="$doctor->follow_up_fee" :help="__('admin.form.money_help')" />
+                </div>
+            </x-admin.section>
 
-        <x-admin.section :title="__('admin.form.visibility')">
-            <div class="grid gap-4 sm:grid-cols-2">
-                <x-admin.toggle name="is_active" :label="__('admin.fields.is_active')" :value="$doctor->is_active"
-                                :help="__('admin.form.is_active_help')" />
-                <x-admin.toggle name="accepts_online_appointment" :label="__('admin.fields.accepts_online_appointment')"
-                                :value="$doctor->accepts_online_appointment"
-                                :help="__('admin.doctors.online_help')" />
-                <x-admin.toggle name="is_featured" :label="__('admin.fields.is_featured')" :value="$doctor->is_featured"
-                                :help="__('admin.doctors.featured_help')" />
-                <x-admin.input name="sort_order" type="number" :label="__('admin.fields.sort_order')"
-                               :value="$doctor->sort_order ?? 0" :help="__('admin.form.sort_help')" />
-            </div>
-        </x-admin.section>
-    </div>
+            <x-admin.section :title="__('admin.form.visibility')">
+                <div class="grid gap-4">
+                    <x-admin.toggle name="is_active" :label="__('admin.fields.is_active')" :value="$doctor->is_active"
+                                    :help="__('admin.form.is_active_help')" />
+                    <x-admin.toggle name="accepts_online_appointment" :label="__('admin.fields.accepts_online_appointment')"
+                                    :value="$doctor->accepts_online_appointment"
+                                    :help="__('admin.doctors.online_help')" />
+                    <x-admin.toggle name="is_featured" :label="__('admin.fields.is_featured')" :value="$doctor->is_featured"
+                                    :help="__('admin.doctors.featured_help')" />
+                    <x-admin.input name="sort_order" type="number" :label="__('admin.fields.sort_order')"
+                                   :value="$doctor->sort_order ?? 0" :help="__('admin.form.sort_help')" />
+                </div>
+            </x-admin.section>
+        </x-slot:aside>
+    </x-admin.form-layout>
 
     <x-admin.form-actions :cancel="route('admin.doctors.index')" />
 </form>
 
 @if ($editing)
-    <div class="mt-8 max-w-4xl">
+    <div class="admin-form mt-8">
         @include('admin.doctors.schedules', ['doctor' => $doctor])
 
         <x-admin.danger-zone :action="route('admin.doctors.destroy', $doctor)"

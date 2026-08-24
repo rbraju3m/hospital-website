@@ -6,7 +6,10 @@
             <x-icon name="menu" size="20" />
         </button>
 
-        <div class="min-w-0 flex-1">
+        {{-- The height is reserved for both lines whether or not this page sets a
+             subheading. Without it the bar is a line shorter on some pages, and
+             the whole layout jumps up and down as staff move through the menu. --}}
+        <div class="flex min-h-11 min-w-0 flex-1 flex-col justify-center">
             <h1 class="truncate font-display text-lg font-bold text-navy-900">@yield('heading', __('admin.panel'))</h1>
             @hasSection('subheading')
                 <p class="truncate text-xs text-navy-900/50">@yield('subheading')</p>

@@ -61,7 +61,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (290 feature tests)
+# Tests (293 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -74,6 +74,7 @@ vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
 vendor/bin/phpunit --filter 'SiteFeature|SiteControl'  # the site's on/off switches
 vendor/bin/phpunit --filter DemoImage             # stand-in photography
+vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit screen renders
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -317,7 +318,16 @@ The look is the product. Deep navy (`navy-*`) + teal accent (`teal-*`) on near-w
 
 **`urgent-*` (red) is reserved exclusively for emergency and ambulance affordances.** Do not use it for generic errors elsewhere in the UI or the emergency signal loses its meaning. The one documented exception is **destructive actions inside `/admin`** (`btn-danger`, the danger zone): the panel carries no emergency affordance for red to compete with, and a delete button is the one place staff genuinely need a stop colour.
 
-Panel utilities (`admin-card`, `admin-nav-item`, `admin-th`, `badge-*`, `locale-tab`, `input-sm`) live at the bottom of `app.css` and follow the same `@utility` rule. Its Blade components are under `resources/views/components/admin/` — `translatable` (one field per locale, all following a single `tab` at form level), `image-field`, `toggle`, `select`, `section`, `list-header`, `translation-state`, `danger-zone`.
+Panel utilities (`admin-card`, `admin-form`, `admin-nav-item`, `admin-th`, `badge-*`, `locale-tab`, `input-sm`) live at the bottom of `app.css` and follow the same `@utility` rule. Its Blade components are under `resources/views/components/admin/` — `translatable` (one field per locale, all following a single `tab` at form level), `form-layout`, `image-field`, `toggle`, `select`, `section`, `list-header`, `translation-state`, `danger-zone`.
+
+**Editing screens are two columns from `xl` up.** `x-admin.form-layout` puts the record itself in the main column and an `aside` slot beside it — the picture, the publish switches, the SEO fields: what decides how the row appears rather than what it says. `admin-form` is the width the form sits in. Two things to know before adding a section to the aside:
+
+- **Its field grid must be single-column.** The aside is about 21rem wide, but `sm:grid-cols-2` still measures the *viewport*, so a section moved across without changing its grid crushes two fields into that column. `x-admin.image-field` is the exception — it is an `@container` and measures its own box.
+- **A mistyped slot name loses the whole column silently.** The page still renders; the switches that publish the record are simply gone. `AdminFormPageTest` renders every create and edit screen and asserts the aside arrived, because nothing else in the suite renders these pages at all.
+
+The topbar reserves the height of both lines whether or not a page sets `@section('subheading')`, and `html.admin-shell` reserves the scrollbar gutter. Both exist so the layout does not jump as staff move through the menu.
+
+**`x-cloak` is `display: none` until Alpine boots, and Alpine boots from a module script — i.e. after the first paint.** Anything cloaked that is *supposed to be visible on load* therefore blinks in on every navigation. The sidebar did exactly that, and shoved the content sideways as it arrived; its off-canvas state is now plain CSS (`admin-drawer`, with Alpine only adding `is-open`), so it paints with the page. Same reason `x-admin.translatable` cloaks only the locale panes that start *closed*: cloaking the open one blanked every field on the form until Alpine caught up. Cloak what should start hidden, never what should start visible.
 
 **Never pass null as the second argument to `@section`.** Blade reads a null there as "capture until `@endsection`" and swallows the rest of the page. `@section('meta_description', $model->summary)` did exactly that the moment the panel made it possible to save a row with no summary; the four public show pages now coalesce.
 

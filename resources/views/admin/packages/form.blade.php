@@ -10,7 +10,7 @@
       action="{{ $editing ? route('admin.packages.update', $package) : route('admin.packages.store') }}"
       enctype="multipart/form-data"
       x-data="{ tab: '{{ config('app.fallback_locale') }}' }"
-      class="max-w-4xl">
+      class="admin-form">
     @csrf
     @if ($editing) @method('PUT') @endif
 
@@ -21,7 +21,7 @@
         </a>
     </div>
 
-    <div class="space-y-6">
+    <x-admin.form-layout>
         <x-admin.section :title="__('admin.form.basics')">
             <div class="grid gap-5 sm:grid-cols-2">
                 <x-admin.translatable name="name" :label="__('admin.fields.name')" :model="$package" required class="sm:col-span-2" />
@@ -46,27 +46,32 @@
                 <x-admin.translatable name="duration" :label="__('admin.fields.duration')" :model="$package" />
                 <x-admin.translatable name="suitable_for" :label="__('admin.fields.suitable_for')" :model="$package" />
                 <x-admin.translatable name="tests" type="list" :rows="6" :label="__('admin.fields.tests')" :model="$package" class="sm:col-span-2" />
-                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$package->untranslated('image')"
-                                     set="cover" :seed="$package->id" group="package" class="sm:col-span-2" />
             </div>
         </x-admin.section>
 
-        <x-admin.section :title="__('admin.form.visibility')">
-            <div class="grid gap-4 sm:grid-cols-2">
-                <x-admin.toggle name="is_active" :label="__('admin.fields.is_active')" :value="$package->is_active"
-                                :help="__('admin.form.is_active_help')" />
-                <x-admin.toggle name="is_featured" :label="__('admin.fields.is_featured')" :value="$package->is_featured" />
-                <x-admin.input name="sort_order" type="number" :label="__('admin.fields.sort_order')"
-                               :value="$package->sort_order ?? 0" :help="__('admin.form.sort_help')" />
-            </div>
-        </x-admin.section>
-    </div>
+        <x-slot:aside>
+            <x-admin.section :title="__('admin.fields.image')">
+                <x-admin.image-field name="image" :label="__('admin.fields.image')" :value="$package->untranslated('image')"
+                                     set="cover" :seed="$package->id" group="package" />
+            </x-admin.section>
+
+            <x-admin.section :title="__('admin.form.visibility')">
+                <div class="grid gap-4">
+                    <x-admin.toggle name="is_active" :label="__('admin.fields.is_active')" :value="$package->is_active"
+                                    :help="__('admin.form.is_active_help')" />
+                    <x-admin.toggle name="is_featured" :label="__('admin.fields.is_featured')" :value="$package->is_featured" />
+                    <x-admin.input name="sort_order" type="number" :label="__('admin.fields.sort_order')"
+                                   :value="$package->sort_order ?? 0" :help="__('admin.form.sort_help')" />
+                </div>
+            </x-admin.section>
+        </x-slot:aside>
+    </x-admin.form-layout>
 
     <x-admin.form-actions :cancel="route('admin.packages.index')" />
 </form>
 
 @if ($editing)
-    <div class="max-w-4xl">
+    <div class="admin-form">
         <x-admin.danger-zone :action="route('admin.packages.destroy', $package)" />
     </div>
 @endif

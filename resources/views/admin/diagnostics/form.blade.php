@@ -9,7 +9,7 @@
 <form method="POST"
       action="{{ $editing ? route('admin.diagnostics.update', $test) : route('admin.diagnostics.store') }}"
       x-data="{ tab: '{{ config('app.fallback_locale') }}' }"
-      class="max-w-4xl">
+      class="admin-form">
     @csrf
     @if ($editing) @method('PUT') @endif
 
@@ -20,7 +20,7 @@
         </a>
     </div>
 
-    <div class="space-y-6">
+    <x-admin.form-layout>
         <x-admin.section :title="__('admin.form.basics')">
             <div class="grid gap-5 sm:grid-cols-2">
                 <x-admin.translatable name="name" :label="__('admin.fields.name')" :model="$test" required class="sm:col-span-2" />
@@ -56,24 +56,26 @@
             </div>
         </x-admin.section>
 
-        <x-admin.section :title="__('admin.form.visibility')">
-            <div class="grid gap-4 sm:grid-cols-2">
-                <x-admin.toggle name="is_active" :label="__('admin.fields.is_active')" :value="$test->is_active"
-                                :help="__('admin.form.is_active_help')" />
-                <x-admin.toggle name="is_home_collection" :label="__('admin.fields.is_home_collection')"
-                                :value="$test->is_home_collection" :help="__('admin.diagnostics.home_collection_help')" />
-                <x-admin.toggle name="is_featured" :label="__('admin.fields.is_featured')" :value="$test->is_featured" />
-                <x-admin.input name="sort_order" type="number" :label="__('admin.fields.sort_order')"
-                               :value="$test->sort_order ?? 0" :help="__('admin.form.sort_help')" />
-            </div>
-        </x-admin.section>
-    </div>
+        <x-slot:aside>
+            <x-admin.section :title="__('admin.form.visibility')">
+                <div class="grid gap-4">
+                    <x-admin.toggle name="is_active" :label="__('admin.fields.is_active')" :value="$test->is_active"
+                                    :help="__('admin.form.is_active_help')" />
+                    <x-admin.toggle name="is_home_collection" :label="__('admin.fields.is_home_collection')"
+                                    :value="$test->is_home_collection" :help="__('admin.diagnostics.home_collection_help')" />
+                    <x-admin.toggle name="is_featured" :label="__('admin.fields.is_featured')" :value="$test->is_featured" />
+                    <x-admin.input name="sort_order" type="number" :label="__('admin.fields.sort_order')"
+                                   :value="$test->sort_order ?? 0" :help="__('admin.form.sort_help')" />
+                </div>
+            </x-admin.section>
+        </x-slot:aside>
+    </x-admin.form-layout>
 
     <x-admin.form-actions :cancel="route('admin.diagnostics.index')" />
 </form>
 
 @if ($editing)
-    <div class="max-w-4xl">
+    <div class="admin-form">
         <x-admin.danger-zone :action="route('admin.diagnostics.destroy', $test)" />
     </div>
 @endif

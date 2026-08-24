@@ -141,6 +141,13 @@
         -webkit-text-size-adjust: 100%;
     }
 
+    /* The panel moves between pages that scroll and pages that do not. Reserving
+       the scrollbar's gutter on every page stops the layout shifting sideways
+       each time staff click something in the menu. */
+    html.admin-shell {
+        scrollbar-gutter: stable;
+    }
+
     body {
         @apply bg-white text-navy-900/85 antialiased;
         font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -721,8 +728,33 @@ html.no-motion {
     }
 }
 
+/* The panel's sidebar: off-canvas below lg, in the flow from lg up.
+   Deliberately CSS rather than `x-cloak` plus a bound translate class. Alpine
+   boots from a module script, so anything cloaked is display:none for the first
+   paint — the sidebar blinked in on every navigation and shoved the content
+   sideways as it arrived. Alpine now only adds `is-open`. */
+@utility admin-drawer {
+    transform: translateX(-100%);
+    transition: transform var(--duration-base) var(--ease-out-expo);
+
+    &.is-open {
+        transform: translateX(0);
+    }
+
+    @variant lg {
+        transform: none;
+    }
+}
+
 @utility admin-nav-heading {
     @apply px-3 pt-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35;
+}
+
+/* The panel's editing width. Wide enough for the two-column form layout to
+   put the record and its publishing switches side by side on a large screen,
+   capped so the fields inside it never stretch past reading width. */
+@utility admin-form {
+    @apply w-full max-w-[100rem];
 }
 
 @utility admin-card {

@@ -6,7 +6,7 @@
 
 @section('content')
 <form method="POST" action="{{ route('admin.settings.update') }}"
-      x-data="{ tab: '{{ config('app.fallback_locale') }}' }" class="max-w-3xl">
+      x-data="{ tab: '{{ config('app.fallback_locale') }}' }" class="admin-form">
     @csrf
     @method('PUT')
 
@@ -15,7 +15,9 @@
         <p class="text-xs text-navy-900/45">{{ __('admin.settings.locale_note') }}</p>
     </div>
 
-    <div class="space-y-6">
+    {{-- Each group is a short list of single-line fields, so they read better
+         side by side than as one tall column with the width unused. --}}
+    <div class="grid items-start gap-6 xl:grid-cols-2 2xl:grid-cols-3">
         @foreach ($groups as $group => $settings)
             <x-admin.section :title="__('admin.settings.groups.'.$group)">
                 <div class="grid gap-5">
@@ -39,7 +41,7 @@
                                         : $setting->translation('value', $code));
                                 @endphp
 
-                                <div x-show="tab === '{{ $code }}'" x-cloak>
+                                <div x-show="tab === '{{ $code }}'" @unless ($isFallback) x-cloak @endunless>
                                     <label for="s-{{ $key }}-{{ $code }}" class="label">
                                         {{ $label }}
                                         @unless ($isFallback)

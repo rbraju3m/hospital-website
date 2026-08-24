@@ -12,7 +12,7 @@
 @endphp
 
 <form method="POST" action="{{ route('admin.site.update') }}"
-      x-data="siteControls()" x-init="sync()" @change="sync()" class="max-w-4xl">
+      x-data="siteControls()" x-init="sync()" @change="sync()" class="admin-form">
     @csrf
     @method('PUT')
 
@@ -43,7 +43,7 @@
         </label>
     </div>
 
-    <div class="space-y-6">
+    <div class="grid items-start gap-6 xl:grid-cols-2">
         @foreach ($groups as $group => $keys)
             {{-- Filtering hides rows rather than showing them: with the panel's
                  JavaScript unavailable the page still lists every switch, which

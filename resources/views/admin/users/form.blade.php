@@ -7,7 +7,7 @@
 
 @section('content')
 <form method="POST" action="{{ $editing ? route('admin.users.update', $user) : route('admin.users.store') }}"
-      class="max-w-xl">
+      class="w-full max-w-3xl">
     @csrf
     @if ($editing) @method('PUT') @endif
 
@@ -18,7 +18,7 @@
     </div>
 
     <x-admin.section :title="__('admin.users.account')">
-        <div class="grid gap-5">
+        <div class="grid gap-5 sm:grid-cols-2">
             <x-admin.input name="name" :label="__('admin.fields.name')" required :value="$user->name" />
             <x-admin.input name="email" type="email" :label="__('admin.fields.email')" required :value="$user->email"
                            autocomplete="username" />

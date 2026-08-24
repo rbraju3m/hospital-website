@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="admin-shell">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,10 +18,9 @@
     <div x-show="menu" x-cloak @click="menu = false" x-transition.opacity.duration.200ms
          class="fixed inset-0 z-30 bg-navy-950/50 backdrop-blur-sm lg:hidden"></div>
 
-    <aside x-cloak
-           :class="menu ? 'translate-x-0' : '-translate-x-full'"
-           class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 shadow-lift transition-transform
-                  duration-300 ease-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none">
+    <aside :class="menu && 'is-open'"
+           class="admin-drawer fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 shadow-lift
+                  lg:sticky lg:top-0 lg:h-screen lg:shadow-none">
         @include('admin.partials.sidebar')
     </aside>
 

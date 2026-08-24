@@ -20,10 +20,13 @@
     $preview = $uploaded ?? $preview;
 @endphp
 
-<div {{ $attributes->merge(['class' => 'min-w-0']) }}>
+<div {{ $attributes->merge(['class' => '@container min-w-0']) }}>
     <span class="label">{{ $label }}</span>
 
-    <div class="flex items-start gap-4">
+    {{-- The field sits in a wide form column on one page and in the ~21rem aside
+         on another, so it measures its own box rather than the viewport: side by
+         side where there is room, stacked where there is not. --}}
+    <div class="flex flex-col gap-3 @xs:flex-row @xs:items-start @xs:gap-4">
         <span class="{{ $aspect }} relative w-28 shrink-0 overflow-hidden rounded-xl border border-mist-200 bg-mist-50">
             @if ($preview)
                 <img src="{{ $preview }}" alt="" class="h-full w-full object-cover">

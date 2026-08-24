@@ -93,7 +93,16 @@ class AppointmentBookingTest extends TestCase
         // before the signature check, so swapping in a reference that does not
         // exist would 404 rather than prove anything.)
         $signed = URL::signedRoute('appointment.confirmed', $appointment);
-        $tampered = preg_replace('/signature=\w/', 'signature=0', $signed, 1);
+
+        // Flip the first character to something it is not. Rewriting it to a
+        // fixed '0' left the URL untouched whenever the signature already began
+        // with one — a one-in-sixteen pass that only showed up as a flake.
+        $tampered = preg_replace_callback(
+            '/signature=(\w)/',
+            fn (array $m) => 'signature='.($m[1] === '0' ? '1' : '0'),
+            $signed,
+            1,
+        );
 
         $this->get($tampered)->assertForbidden();
     }

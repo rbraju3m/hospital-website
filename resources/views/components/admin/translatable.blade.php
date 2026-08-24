@@ -27,7 +27,9 @@
             $id = 'f-'.$name.'-'.$code;
         @endphp
 
-        <div x-show="tab === '{{ $code }}'" x-cloak>
+        {{-- Only the panes that start closed are cloaked: cloaking the open one
+             too would blank every field on the form until Alpine boots. --}}
+        <div x-show="tab === '{{ $code }}'" @unless ($isFallback) x-cloak @endunless>
             <label for="{{ $id }}" class="label">
                 {{ $label }}
                 @if ($required && $isFallback)
