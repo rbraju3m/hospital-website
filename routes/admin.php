@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\GalleryAlbumController;
 use App\Http\Controllers\Admin\GalleryPhotoController;
 use App\Http\Controllers\Admin\HealthPackageController;
 use App\Http\Controllers\Admin\ListController;
+use App\Http\Controllers\Admin\NotificationLogController;
 use App\Http\Controllers\Admin\PatientController;
 use App\Http\Controllers\Admin\PatientDocumentController;
 use App\Http\Controllers\Admin\PostController;
@@ -106,6 +107,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('patients', [PatientController::class, 'index'])->name('patients.index');
         Route::get('patients/{patient}/documents', [PatientController::class, 'documents'])->name('patients.documents');
         Route::patch('patients/{patient}/toggle', [PatientController::class, 'toggle'])->name('patients.toggle');
+
+        // What the system has said to whom. Read-only: see the controller.
+        Route::get('notifications', [NotificationLogController::class, 'index'])->name('notifications.index');
 
         // What the Ctrl+K palette asks once the menu has no answer. Throttled
         // because it is typed into: the palette debounces, but a held key

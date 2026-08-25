@@ -8,6 +8,7 @@ use App\Mail\AppointmentReminder;
 use App\Mail\AppointmentStatusChanged;
 use App\Mail\NewAppointmentAlert;
 use App\Models\Appointment;
+use App\Models\NotificationLog;
 use App\Sms\PhoneNumber;
 use Carbon\CarbonImmutable;
 use Illuminate\Mail\Mailable;
@@ -40,7 +41,7 @@ class AppointmentNotifier
     {
         $locale = $this->localeFor($appointment);
 
-        $this->dispatch($appointment->email, new AppointmentBooked($appointment), $locale);
+        $this->dispatch($appointment->email, new AppointmentBooked($appointment), $locale, 'booked', $appointment);
 
         $this->text($appointment->phone, $appointment, $locale, $appointment->status === 'confirmed'
             ? 'booked_confirmed'
@@ -49,7 +50,7 @@ class AppointmentNotifier
         if ($alertDesk) {
             // The desk reads both languages; the site default is as good a
             // choice as any and keeps alerts consistent with each other.
-            $this->dispatch($this->deskAddress(), new NewAppointmentAlert($appointment), config('app.fallback_locale'));
+            $this->dispatch($this->deskAddress(), new NewAppointmentAlert($appointment), config('app.fallback_locale'), 'desk_alert', $appointment);
 
             $this->text(setting('desk_sms_number'), $appointment, config('app.fallback_locale'), 'desk_alert');
         }
@@ -64,7 +65,7 @@ class AppointmentNotifier
 
         $locale = $this->localeFor($appointment);
 
-        $this->dispatch($appointment->email, new AppointmentStatusChanged($appointment), $locale);
+        $this->dispatch($appointment->email, new AppointmentStatusChanged($appointment), $locale, 'status_'.$appointment->status, $appointment);
         $this->text($appointment->phone, $appointment, $locale, $appointment->status);
     }
 
@@ -78,7 +79,7 @@ class AppointmentNotifier
     {
         $locale = $this->localeFor($appointment);
 
-        $this->dispatch($appointment->email, new AppointmentReminder($appointment), $locale);
+        $this->dispatch($appointment->email, new AppointmentReminder($appointment), $locale, 'reminder', $appointment);
         $this->text($appointment->phone, $appointment, $locale, 'reminder');
     }
 
@@ -103,7 +104,7 @@ class AppointmentNotifier
         return setting('appointment_email') ?: setting('email');
     }
 
-    private function dispatch(?string $to, Mailable $mailable, string $locale): void
+    private function dispatch(?string $to, Mailable $mailable, string $locale, string $type, Appointment $appointment): void
     {
         // Patient email is optional, and the desk address is an editable
         // setting somebody can empty out. Neither is an error.
@@ -111,8 +112,13 @@ class AppointmentNotifier
             return;
         }
 
+        // Written down before it goes, and marked sent by RecordMailDelivery
+        // when the mail server takes it. A row that stays `queued` is the
+        // shape of a queue worker nobody started.
+        $log = NotificationLog::queued('mail', $type, $to, $locale, $appointment);
+
         try {
-            Mail::to($to)->locale($locale)->queue($mailable);
+            Mail::to($to)->locale($locale)->queue($mailable->recordAs($log?->id));
         } catch (\Throwable $e) {
             Log::warning('Could not queue an appointment email.', [
                 'mailable' => $mailable::class,
@@ -137,11 +143,13 @@ class AppointmentNotifier
             return;
         }
 
+        $number = PhoneNumber::forGateway($number);
+        $text = $this->line($appointment, $locale, $template);
+
+        $log = NotificationLog::queued('sms', $template, $number, $locale, $appointment, $text);
+
         try {
-            SendSms::dispatch(
-                PhoneNumber::forGateway($number),
-                $this->line($appointment, $locale, $template),
-            );
+            SendSms::dispatch($number, $text, $log?->id);
         } catch (\Throwable $e) {
             Log::warning('Could not queue an appointment SMS.', [
                 'template' => $template,

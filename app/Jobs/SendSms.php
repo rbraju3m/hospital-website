@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\NotificationLog;
 use App\Sms\Contracts\SmsGateway;
 use App\Sms\SmsText;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,6 +28,11 @@ class SendSms implements ShouldQueue
     public function __construct(
         public readonly string $to,
         public readonly string $text,
+        /* The notification_logs row this message was written down as, so the
+           worker can say whether it actually went. Nullable because a message
+           sent from somewhere that has not been given a log is still a message
+           that should be sent. */
+        public readonly ?int $logId = null,
     ) {}
 
     public function handle(SmsGateway $gateway): void
@@ -44,5 +50,18 @@ class SendSms implements ShouldQueue
         }
 
         $gateway->send($this->to, $this->text);
+
+        NotificationLog::markSent($this->logId);
+    }
+
+    /**
+     * After the last retry. This is the only place in the application that can
+     * say an SMS definitively did not go — the gateway refused it three times
+     * over five minutes — so it is worth writing down rather than leaving in
+     * `failed_jobs` for somebody to find.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        NotificationLog::markFailed($this->logId, $exception?->getMessage() ?? 'unknown');
     }
 }

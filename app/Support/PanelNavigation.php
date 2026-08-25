@@ -37,6 +37,7 @@ class PanelNavigation
                 ['key' => 'dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'icon' => 'layout-dashboard'],
                 ['key' => 'appointments', 'route' => 'admin.appointments.index', 'match' => 'admin.appointments.*', 'icon' => 'calendar-check', 'badge' => 'pending_appointments', 'create' => 'admin.appointments.create'],
                 ['key' => 'messages', 'route' => 'admin.messages.index', 'match' => 'admin.messages.*', 'icon' => 'inbox', 'badge' => 'unread_messages'],
+                ['key' => 'notifications', 'route' => 'admin.notifications.index', 'match' => 'admin.notifications.*', 'icon' => 'zap'],
             ],
         ],
         [

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\RecordsDelivery;
 use App\Models\PatientDocument;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class PaymentReceived extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use RecordsDelivery, Queueable, SerializesModels;
 
     public function __construct(public PatientDocument $document) {}
 

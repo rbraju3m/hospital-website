@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ResetPasswordRequest;
 use App\Jobs\SendSms;
+use App\Models\NotificationLog;
 use App\Models\Patient;
 use App\Services\PasswordResetCodes;
 use App\Sms\PhoneNumber;
@@ -81,13 +82,22 @@ class PasswordResetController extends Controller
     private function text(Patient $patient, string $code): void
     {
         $number = PhoneNumber::forGateway($patient->phone);
+        $locale = $patient->locale ?: config('app.fallback_locale');
+
+        $text = __('sms.password_reset', [
+            'hospital' => setting('site_name', config('app.name')),
+            'code' => $code,
+            'minutes' => PasswordResetCodes::TTL_MINUTES,
+        ], $locale);
+
+        /* Logged like every other message, but without the code: this row is
+           read by staff, and a six-digit code sitting in a panel listing is a
+           way into somebody's medical records. The `body` column is left null
+           and the type says what it was. */
+        $log = NotificationLog::queued('sms', 'password_reset', $number, $locale, $patient);
 
         try {
-            SendSms::dispatch($number, __('sms.password_reset', [
-                'hospital' => setting('site_name', config('app.name')),
-                'code' => $code,
-                'minutes' => PasswordResetCodes::TTL_MINUTES,
-            ], $patient->locale ?: config('app.fallback_locale')));
+            SendSms::dispatch($number, $text, $log?->id);
         } catch (\Throwable $e) {
             Log::warning('Could not queue a portal reset code.', ['exception' => $e->getMessage()]);
         }

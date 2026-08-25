@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (397 feature tests)
+# Tests (408 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -84,6 +84,7 @@ vendor/bin/phpunit --filter PanelNavigation        # the panel's menu registry, 
 vendor/bin/phpunit --filter TranslationGaps        # the menu's count of untranslated content
 vendor/bin/phpunit --filter PanelSearch            # finding a record from the palette
 vendor/bin/phpunit --filter StaffRole              # the three roles, and what each one is refused
+vendor/bin/phpunit --filter NotificationLog        # the record of what was sent to whom
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -104,6 +105,8 @@ The application is complete; the machine it runs on is not set up. Everything be
 | Scheduler cron | `deploy/hospital-scheduler.cron` | **Silent.** The day-before reminder never runs at all. |
 | SMTP credentials | `.env` `MAIL_*` | **Silent-ish.** `MAIL_MAILER=log` writes mail to `storage/logs/laravel.log` instead of sending it. |
 | SMS gateway | `.env` `SMS_*` | **Silent-ish.** `SMS_DRIVER=log` does the same for text messages. |
+
+The queue worker is the one that used to be invisible. It is not any more: `/admin/notifications` records every message when it is dispatched and marks it sent when the transport takes it, so a machine with no worker shows a growing list of messages stuck at **queued** and a band at the top of the page saying so.
 
 Each deploy file carries its install commands in a header comment. They need `sudo`, which this environment does not have without a password, so the user runs them.
 
@@ -349,6 +352,21 @@ The driver is named **`discard`, not `null`** — dotenv reads the literal strin
 
 **Message text is rendered when the job is queued, not when it is sent.** The payload therefore carries a finished string, so a message cannot come out in the wrong language because the worker was in a different locale, and it survives a template being edited in between.
 
+#### The notification log
+
+`/admin/notifications`, and `App\Models\NotificationLog` behind it. Every email and SMS is written down when it is dispatched and updated when the transport actually took it, because until this existed the answer to "was the patient told?" was `reminded_at` and a hope.
+
+- **`queued` vs `sent` is the whole point.** A row is written at dispatch; `sent` means the gateway or the mail server accepted it. On a box whose queue worker was never started, *every* row stays `queued` for ever — which is the silent failure in the deployment table above, finally visible. The listing bands a warning when anything has been waiting more than half an hour.
+- **`sent` is not delivery.** No gateway here reports back, and the screen says so rather than implying a tick means a phone.
+- **Correlation is a header for mail and a constructor argument for SMS.** `SendSms` carries the row id and marks it sent — or `failed`, from the job's `failed()` hook, which is the only place in the application that can say an SMS definitively did not go. A queued mailable has nothing to hold a reference on, so `RecordsDelivery` puts the id in `X-Notification-Log` and `RecordMailDelivery` reads it back off `MessageSent`. Matching on address and subject instead would merge two reminders sent to one patient on one evening.
+- **A mailable that gives up stays `queued`.** Laravel's own job wraps it, and there is nothing to correlate a failure against; that is a known edge rather than a claim of completeness.
+- **The SMS body is stored verbatim; an email's is not.** One is the record of what was said and is 160 characters at worst; the other is a page of HTML nobody would read in a listing, so only the subject is kept — read off the finished message, in the locale it was rendered in.
+- **The portal's reset code is logged without the code.** Staff read this screen, and a six-digit code sitting in a listing is a way into somebody's records. The type says what it was; `body` stays null.
+- **Logging is not allowed to cost a booking.** `NotificationLog::queued()` swallows and reports its own failures, for the same reason the notifier does — there is a test that books an appointment with the table dropped.
+- **Ninety days, pruned at 3am** (`Prunable` + `model:prune` in `routes/console.php`). Long enough to answer "was I told?" about a visit that has happened, short enough that a row per message ever sent does not become the largest table here.
+- Read-only, and no resend button: a record you can edit is not a record, and a second confirmation lands on a patient who already has one. The desk can re-trigger one by moving the status.
+- Front desk and administrators only — it is a list of patients' numbers and what they were told.
+
 #### The day-before reminder
 
 `appointments:remind`, scheduled daily at 18:00 (Dhaka). Evening rather than the small hours on purpose: an overnight SMS is read in the morning at best, and a patient who cannot make it still has the evening to call the desk.
@@ -500,7 +518,7 @@ Nothing the site claims. What is missing is what it has never promised:
 
 - **No lab results system upstream.** Reports reach the portal because a staff member uploads a file, not because an analyser wrote one. That is the honest version of "download reports online", but it is a manual step somebody has to remember.
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
-- **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
+- **No delivery receipts.** The notification log records what was dispatched and what the gateway accepted; what it cannot record is what arrived. No Bangladeshi gateway in `config/sms.php` reports back, and adding one means a callback route per provider — the log has a `status` column with room for it.
 
 ## The one thing to do before launch
 
@@ -515,7 +533,9 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 397 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 408 tests. What follows is the state a new session should know rather than rediscover.
+
+**The notification log landed on 2026-08-25** — `/admin/notifications`, which is also where a missing queue worker stops being invisible. See *The notification log* above.
 
 **Staff roles landed on 2026-08-25** — three of them, cut along the menu's own groups. See *Three roles, cut along the lines the menu already draws* above.
 

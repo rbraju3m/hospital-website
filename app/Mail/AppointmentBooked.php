@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Mail\Concerns\PresentsAppointment;
+use App\Mail\Concerns\RecordsDelivery;
 use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -18,7 +19,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class AppointmentBooked extends Mailable implements ShouldQueue
 {
-    use PresentsAppointment, Queueable, SerializesModels;
+    use RecordsDelivery, PresentsAppointment, Queueable, SerializesModels;
 
     public function __construct(public Appointment $appointment) {}
 

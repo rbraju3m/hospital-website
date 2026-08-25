@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendSms;
 use App\Mail\PaymentReceived;
+use App\Models\NotificationLog;
 use App\Models\PatientDocument;
 use App\Sms\PhoneNumber;
 use Carbon\CarbonImmutable;
@@ -18,7 +19,7 @@ class PaymentNotifier
     {
         $locale = $this->localeFor($document);
 
-        $this->dispatch($document->patient?->email, new PaymentReceived($document), $locale);
+        $this->dispatch($document->patient?->email, new PaymentReceived($document), $locale, $document);
         $this->text($document->phone, $document, $locale);
     }
 
@@ -27,14 +28,16 @@ class PaymentNotifier
         return config('app.fallback_locale');
     }
 
-    private function dispatch(?string $to, Mailable $mailable, string $locale): void
+    private function dispatch(?string $to, Mailable $mailable, string $locale, PatientDocument $document): void
     {
         if (blank($to)) {
             return;
         }
 
+        $log = NotificationLog::queued('mail', 'payment_received', $to, $locale, $document);
+
         try {
-            Mail::to($to)->locale($locale)->queue($mailable);
+            Mail::to($to)->locale($locale)->queue($mailable->recordAs($log?->id));
         } catch (\Throwable $e) {
             Log::warning('Could not queue a payment email.', [
                 'mailable' => $mailable::class,
@@ -49,11 +52,13 @@ class PaymentNotifier
             return;
         }
 
+        $number = PhoneNumber::forGateway($number);
+        $text = $this->line($document, $locale);
+
+        $log = NotificationLog::queued('sms', 'payment_received', $number, $locale, $document, $text);
+
         try {
-            SendSms::dispatch(
-                PhoneNumber::forGateway($number),
-                $this->line($document, $locale),
-            );
+            SendSms::dispatch($number, $text, $log?->id);
         } catch (\Throwable $e) {
             Log::warning('Could not queue a payment SMS.', [
                 'exception' => $e->getMessage(),

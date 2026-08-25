@@ -33,7 +33,7 @@ class StaffRoles
     /** Sections each role may reach. Administrator is handled as a wildcard. */
     private const GRANTS = [
         self::FRONT_DESK => [
-            'dashboard', 'appointments', 'messages', 'documents', 'patients',
+            'dashboard', 'appointments', 'messages', 'notifications', 'documents', 'patients',
         ],
         self::EDITOR => [
             'dashboard', 'departments', 'doctors', 'services', 'packages',
