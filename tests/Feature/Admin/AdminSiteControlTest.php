@@ -95,4 +95,21 @@ class AdminSiteControlTest extends TestCase
 
         $this->assertFalse(SiteFeatures::enabled('area_posts'));
     }
+
+    public function test_the_all_on_and_all_off_buttons_target_their_group(): void
+    {
+        $html = $this->actingAs($this->staff())->get(route('admin.site.edit'))->assertOk()->getContent();
+
+        /* `$el` inside a click handler is the button, not the section around
+           it, so these have to walk up to the group before looking for
+           switches. Bound to `$el` they searched an element containing none
+           and silently did nothing — which is exactly how a broken button
+           looks from the outside. */
+        $this->assertStringContainsString('setGroup($el.closest(\'[data-control-group]\'), true)', $html);
+        $this->assertStringContainsString('setGroup($el.closest(\'[data-control-group]\'), false)', $html);
+        $this->assertStringNotContainsString('setGroup($el,', $html);
+
+        // And the thing they walk up to is really there to be found.
+        $this->assertStringContainsString('data-control-group', $html);
+    }
 }

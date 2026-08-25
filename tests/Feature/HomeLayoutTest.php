@@ -183,4 +183,36 @@ class HomeLayoutTest extends TestCase
         // from on every request afterwards.
         $this->assertSame('slider', HomeLayouts::current());
     }
+
+    public function test_each_layout_looks_different_from_the_others(): void
+    {
+        $this->slide();
+
+        $pages = [];
+
+        foreach (['classic', 'slider', 'compact'] as $layout) {
+            $this->useLayout($layout);
+            $pages[$layout] = $this->get(route('home'))->assertOk()->getContent();
+        }
+
+        // Classic and slider differ at the top of the page.
+        $this->assertStringContainsString('hero-slider', $pages['slider']);
+        $this->assertStringNotContainsString('hero-slider', $pages['classic']);
+
+        /* Compact has its own hero rather than the tall one — a reordering
+           alone is too quiet to read as a different layout, which is what it
+           was on the first attempt. */
+        $this->assertStringNotContainsString('ken-burns', $pages['compact']);
+        $this->assertStringContainsString('ken-burns', $pages['classic']);
+
+        // And its order genuinely differs: packages before the case-making.
+        $this->assertLessThan(
+            strpos($pages['compact'], e(__('home.why.title'))),
+            strpos($pages['compact'], e(__('home.packages.title'))),
+        );
+        $this->assertGreaterThan(
+            strpos($pages['classic'], e(__('home.why.title'))),
+            strpos($pages['classic'], e(__('home.packages.title'))),
+        );
+    }
 }

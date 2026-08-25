@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (432 feature tests)
+# Tests (434 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -231,6 +231,7 @@ Files live on the **private disk** (`storage/app/private`), never the public one
 
 `resources/views/pages/home/` holds `classic`, `slider` and `compact`; `App\Support\HomeLayouts` says which is on air, and the panel picks it at the top of Site controls. `HomeController` renders `HomeLayouts::view()`.
 
+- **Each layout has its own hero.** `compact` shares nothing above the fold with `classic` — a band rather than a stage, a fifth of the height, no photograph and no booking form. It first shipped reordering the bands under the same hero, which was too quiet to read as a different layout at all; a test now asserts the three differ above the fold as well as in their order.
 - **A layout decides the order and the top of the page, never what a band says.** All twelve bands live in `pages/home/bands/` and are `@include`d by all three, so a change to the doctors strip lands on whichever layout is showing. `classic` is the page exactly as it was before the split.
 - **The registry is the source of truth, same rule as `SiteFeatures`.** A `home_layout` setting naming a layout that has been removed — or hand-edited into the table — falls back to `classic` rather than blanking the one page on the site that always has to render. `SiteControlController` also refuses to *write* a value the registry does not know, so the fallback is a safety net rather than a daily occurrence.
 - **Every band still answers to its own switch** in whichever layout is showing, and no layout is a subset — a test asserts all three render every band.
@@ -558,7 +559,7 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 432 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 434 tests. What follows is the state a new session should know rather than rediscover.
 
 **The home page's layouts and the slider landed on 2026-08-25** — the user asked for both, chose whole-page templates over band reordering, and chose the slider as the hero rather than a band lower down. See *The home page has three layouts* above. The live setting is still `classic`, so their home page has not changed until they pick another.
 

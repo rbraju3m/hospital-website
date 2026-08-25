@@ -1,9 +1,10 @@
 {{-- Compact: content first.
 
-     Same hero, but the page gets to the things a visitor came for sooner —
-     departments, doctors and services before the case for the hospital, the
-     editorial and the gallery. For a site whose visitors already know who they
-     are dealing with and are looking for a department and a phone number.
+     Its own hero — a band rather than a stage, a fifth of the height, no
+     photograph and no booking form — and then straight into departments,
+     doctors and services. The case for the hospital, the editorial and the
+     gallery come after. For a site whose visitors already know who they are
+     dealing with and are looking for a department and a phone number.
 
      Nothing is dropped: every band the classic layout renders is here, in a
      different order, and each still answers to its own Site controls switch. --}}
@@ -18,7 +19,7 @@
 
 @section('content')
 
-@include('pages.home.bands.hero')
+@include('pages.home.bands.hero-compact')
 @include('pages.home.bands.quick-actions')
 @include('pages.home.bands.departments')
 @include('pages.home.bands.doctors')

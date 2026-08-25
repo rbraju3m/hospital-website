@@ -103,11 +103,17 @@
                         </p>
                     </div>
 
+                    {{-- `$el` is the button, not the section: these have to
+                         walk up to the group before looking for switches, or
+                         they search an element that contains none and quietly
+                         do nothing. --}}
                     <div class="flex shrink-0 items-center gap-1">
-                        <button type="button" class="btn-ghost btn-sm" @click="setGroup($el, true)">
+                        <button type="button" class="btn-ghost btn-sm"
+                                @click="setGroup($el.closest('[data-control-group]'), true)">
                             {{ __('admin.site_controls.all_on') }}
                         </button>
-                        <button type="button" class="btn-ghost btn-sm" @click="setGroup($el, false)">
+                        <button type="button" class="btn-ghost btn-sm"
+                                @click="setGroup($el.closest('[data-control-group]'), false)">
                             {{ __('admin.site_controls.all_off') }}
                         </button>
                     </div>
