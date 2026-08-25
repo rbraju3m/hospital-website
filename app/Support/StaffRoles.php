@@ -36,7 +36,7 @@ class StaffRoles
             'dashboard', 'appointments', 'messages', 'notifications', 'documents', 'patients',
         ],
         self::EDITOR => [
-            'dashboard', 'departments', 'doctors', 'services', 'packages',
+            'dashboard', 'slides', 'departments', 'doctors', 'services', 'packages',
             'diagnostics', 'posts', 'gallery', 'testimonials',
         ],
     ];

@@ -121,4 +121,11 @@ return [
         'appointments' => 'Appointments',
         'international' => 'International desk',
     ],
+    'slider' => [
+        'label' => 'Featured',
+        'position' => 'Slide :position of :total',
+        'choose' => 'Choose a slide',
+        'previous' => 'Previous slide',
+        'next' => 'Next slide',
+    ],
 ];

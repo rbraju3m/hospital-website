@@ -128,4 +128,11 @@ return [
         'appointments' => 'অ্যাপয়েন্টমেন্ট',
         'international' => 'আন্তর্জাতিক ডেস্ক',
     ],
+    'slider' => [
+        'label' => 'বিশেষ',
+        'position' => ':total টির মধ্যে :position নম্বর স্লাইড',
+        'choose' => 'একটি স্লাইড বাছুন',
+        'previous' => 'আগের স্লাইড',
+        'next' => 'পরের স্লাইড',
+    ],
 ];

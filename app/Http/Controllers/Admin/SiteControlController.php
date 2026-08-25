@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
+use App\Models\Slide;
+use App\Support\HomeLayouts;
 use App\Support\SiteFeatures;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +26,12 @@ class SiteControlController extends Controller
         return view('admin.site-controls.edit', [
             'groups' => SiteFeatures::groups(),
             'state' => SiteFeatures::all(),
+            'layouts' => HomeLayouts::all(),
+            'layout' => HomeLayouts::current(),
+            // Shown against the slider option: choosing a layout with nothing
+            // to put in it is the one way to end up with a worse home page
+            // than the one you started with.
+            'slideCount' => Slide::active()->count(),
         ]);
     }
 
@@ -31,6 +40,16 @@ class SiteControlController extends Controller
         // Checkboxes post nothing when unchecked, so the registry — not the
         // payload — decides which keys get written.
         SiteFeatures::store($request->input('features', []));
+
+        /* Validated against the registry rather than trusted: a setting naming
+           a layout that does not exist would be a blank home page, and
+           HomeLayouts falls back for exactly that reason — but there is no
+           sense writing the bad value down in the first place. */
+        $layout = $request->string('home_layout')->value();
+
+        if (HomeLayouts::exists($layout)) {
+            Setting::updateOrCreate(['key' => HomeLayouts::SETTING], ['value' => $layout]);
+        }
 
         return back()->with('status', __('admin.site_controls.saved'));
     }

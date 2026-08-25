@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (408 feature tests)
+# Tests (432 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -85,6 +85,8 @@ vendor/bin/phpunit --filter TranslationGaps        # the menu's count of untrans
 vendor/bin/phpunit --filter PanelSearch            # finding a record from the palette
 vendor/bin/phpunit --filter StaffRole              # the three roles, and what each one is refused
 vendor/bin/phpunit --filter NotificationLog        # the record of what was sent to whom
+vendor/bin/phpunit --filter HomeLayout             # the three home layouts and the slider
+vendor/bin/phpunit --filter AdminSlide             # managing slides in the panel
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -224,6 +226,28 @@ Files live on the **private disk** (`storage/app/private`), never the public one
 #### Signed confirmation links
 
 `appointment.confirmed` carries a patient's name, phone, age and gender, and a booking reference is short enough to enumerate. The route now requires a **valid signature**; the link in the confirmation email is generated with `URL::signedRoute()` so it keeps working, and a guessed one gets a 403. Note that route-model binding runs before the signature check, so a made-up reference 404s rather than 403s.
+
+### The home page has three layouts
+
+`resources/views/pages/home/` holds `classic`, `slider` and `compact`; `App\Support\HomeLayouts` says which is on air, and the panel picks it at the top of Site controls. `HomeController` renders `HomeLayouts::view()`.
+
+- **A layout decides the order and the top of the page, never what a band says.** All twelve bands live in `pages/home/bands/` and are `@include`d by all three, so a change to the doctors strip lands on whichever layout is showing. `classic` is the page exactly as it was before the split.
+- **The registry is the source of truth, same rule as `SiteFeatures`.** A `home_layout` setting naming a layout that has been removed — or hand-edited into the table — falls back to `classic` rather than blanking the one page on the site that always has to render. `SiteControlController` also refuses to *write* a value the registry does not know, so the fallback is a safety net rather than a daily occurrence.
+- **Every band still answers to its own switch** in whichever layout is showing, and no layout is a subset — a test asserts all three render every band.
+- **`slider` falls back to the classic hero when there are no slides.** Somebody switching the layout before writing the slides is a Tuesday, and an empty band at the top of the home page is worse than the hero they had.
+
+#### The slider
+
+`/admin/slides`. Ordinary translated content — drag to reorder, switch a row live, per-locale words — with an eyebrow, a headline, a sentence and at most two buttons.
+
+- **Two buttons, and only the ones with an address.** A slide is read in about four seconds: one idea, one thing to do about it, and a quieter alternative. A label with no URL is not rendered.
+- **Button links go through `Rules::LINK`** — http(s), `mailto:`, `tel:`, root-relative, anchor. The same allowlist the markup editor applies, and for the same reason: `javascript:` in a field a staff member fills in runs in a visitor's browser.
+- **Slides cross-fade rather than slide.** At full width a strip moving sideways drags the headline out from under the reader's eye; a fade reads as a change of subject.
+- **Content before animation.** Every slide is in the markup and the first is visible before `app.js` runs — `html:not(.js-ready) .hero-slide[data-slide-hidden]` takes the rest out, so a page with no JavaScript is one static hero rather than a column of stacked panels.
+- **Autoplay defers to the visitor**: it stops on hover, on focus, while the tab is hidden, and entirely under `prefers-reduced-motion` or the Site controls motion switch — the controls keep working, so reduced motion means no motion rather than no slider.
+- **`reducedMotion()` is declared at the top of `app.js` now.** Alpine starts components synchronously, and a `const` further down the module is still in its temporal dead zone when `heroSlider.init()` runs.
+- **The listing says when slides are not on the site.** They only reach a visitor while the slider layout is chosen, and staff would otherwise spend an afternoon wondering why.
+- Slides seed with no image and fall back to stand-in hero photography, so the layout is a working slider the moment it is picked.
 
 ### Site controls — the switches behind the public site
 
@@ -533,7 +557,9 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 408 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 432 tests. What follows is the state a new session should know rather than rediscover.
+
+**The home page's layouts and the slider landed on 2026-08-25** — the user asked for both, chose whole-page templates over band reordering, and chose the slider as the hero rather than a band lower down. See *The home page has three layouts* above. The live setting is still `classic`, so their home page has not changed until they pick another.
 
 **The notification log landed on 2026-08-25** — `/admin/notifications`, which is also where a missing queue worker stops being invisible. See *The notification log* above.
 

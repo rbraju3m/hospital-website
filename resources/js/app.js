@@ -9,6 +9,19 @@ document.documentElement.classList.add('js-ready');
 Alpine.plugin(collapse);
 window.Alpine = Alpine;
 
+/* Declared up here rather than with the rest of the interaction layer: Alpine
+   starts components synchronously, so anything an `init()` reaches for has to
+   exist by then. A `const` further down the module is still in its temporal
+   dead zone at that point, and the slider's first frame would throw. */
+const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/* Two ways to end up without motion: the visitor asked their device for less of
+   it, or the hospital switched it off for everybody from Site controls (which
+   renders `no-motion` on <html>). Read live rather than captured — the OS
+   setting can change while the tab is open. */
+const reducedMotion = () => motionQuery.matches || document.documentElement.classList.contains('no-motion');
+
+
 /* ---------------------------------------------------------------------------
    Gallery lightbox.
 
@@ -826,6 +839,82 @@ Alpine.data('richText', () => ({
 const PALETTE_MIN_TERM = 2;
 const PALETTE_DEBOUNCE = 220;
 
+/* ---------------------------------------------------------------------------
+   The home page's slider.
+
+   Cross-fades rather than translates: at this size a strip sliding sideways
+   drags the headline out from under the reader's eye, while a fade reads as a
+   change of subject.
+
+   Everything about it defers to the visitor. Autoplay stops on hover, on
+   focus, while the tab is hidden, and entirely when the device — or the Site
+   controls motion switch — asks for less motion: a carousel that cannot be
+   stopped is the complaint everybody has about carousels. Arrow keys work when
+   the strip has focus, and a swipe works on a phone.
+
+   The slides are in the markup and the first one is visible before this file
+   runs; this only decides which one is current.
+   --------------------------------------------------------------------------- */
+const SLIDER_INTERVAL = 6500;
+
+Alpine.data('heroSlider', (count = 0) => ({
+    index: 0,
+    count,
+    timer: null,
+    touchX: null,
+
+    init() {
+        this.play();
+
+        // A tab nobody is looking at should not be advancing.
+        document.addEventListener('visibilitychange', () => {
+            document.hidden ? this.pause() : this.resume();
+        });
+
+        this.$el.addEventListener('touchstart', (event) => {
+            this.touchX = event.changedTouches[0].clientX;
+        }, { passive: true });
+
+        this.$el.addEventListener('touchend', (event) => {
+            if (this.touchX === null) return;
+
+            const travelled = event.changedTouches[0].clientX - this.touchX;
+            this.touchX = null;
+
+            // Enough to be a swipe rather than a tap that wandered.
+            if (Math.abs(travelled) > 50) this.go(this.index + (travelled < 0 ? 1 : -1));
+        }, { passive: true });
+    },
+
+    go(next) {
+        if (this.count < 2) return;
+
+        this.index = ((next % this.count) + this.count) % this.count;
+        this.play();
+    },
+
+    play() {
+        this.pause();
+
+        // Reduced motion means no motion, not slower motion: the slider stays
+        // on whichever slide the visitor is reading and the controls still work.
+        if (this.count < 2 || reducedMotion()) return;
+
+        this.timer = setInterval(() => {
+            this.index = (this.index + 1) % this.count;
+        }, SLIDER_INTERVAL);
+    },
+
+    pause() {
+        clearInterval(this.timer);
+        this.timer = null;
+    },
+
+    resume() {
+        if (! this.timer && ! document.hidden) this.play();
+    },
+}));
+
 Alpine.data('panelPalette', (entries = [], endpoint = null) => ({
     open: false,
     query: '',
@@ -1002,14 +1091,6 @@ Alpine.start();
    the visitor has asked for less of it — `reducedMotion` is read live rather
    than captured, because the OS setting can change while the tab is open.
    --------------------------------------------------------------------------- */
-
-const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-/* Two ways to end up without motion: the visitor asked their device for less of
-   it, or the hospital switched it off for everybody from Site controls (which
-   renders `no-motion` on <html>). Read live rather than captured — the OS
-   setting can change while the tab is open. */
-const reducedMotion = () => motionQuery.matches || document.documentElement.classList.contains('no-motion');
 
 /* rAF-coalesced scroll subscribers: one listener, one frame, however many
    readers. Each of these handlers reads layout, so batching them matters. */

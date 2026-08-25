@@ -159,8 +159,17 @@ class PanelNavigationTest extends TestCase
     {
         $creates = array_filter(array_column($this->declaredItems(), 'create'));
 
-        // Every section that can be added to, and nothing that cannot.
-        $this->assertCount(11, $creates);
+        /* Every section that can be added to, and nothing that cannot — named
+           rather than counted, so adding a section makes this fail with the
+           name of the one nobody decided about. */
+        $noCreateScreen = ['dashboard', 'messages', 'notifications', 'patients', 'site_controls', 'settings'];
+
+        $this->assertSame(
+            array_values(array_diff(array_column($this->declaredItems(), 'key'), $noCreateScreen)),
+            array_values(array_keys(array_filter(
+                array_column($this->declaredItems(), 'create', 'key'),
+            ))),
+        );
 
         foreach ($creates as $route) {
             $this->assertTrue(Route::has($route), "The palette points at {$route}, which is not a route.");
@@ -179,7 +188,9 @@ class PanelNavigationTest extends TestCase
         $entries = PanelNavigation::palette();
         $labels = array_column($entries, 'label');
 
-        $this->assertCount(count($this->declaredItems()) + 11, $entries);
+        $creates = array_filter(array_column($this->declaredItems(), 'create'));
+
+        $this->assertCount(count($this->declaredItems()) + count($creates), $entries);
 
         $this->assertContains(__('admin.nav.doctors'), $labels);
         $this->assertContains(__('admin.doctors.create'), $labels);

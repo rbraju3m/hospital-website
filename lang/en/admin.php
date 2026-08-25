@@ -32,6 +32,7 @@ return [
         'appointments' => 'Appointments',
         'messages' => 'Messages',
         'notifications' => 'Notification log',
+        'slides' => 'Home slider',
         'departments' => 'Departments',
         'doctors' => 'Doctors',
         'services' => 'Services',
@@ -138,6 +139,12 @@ return [
     ],
 
     'fields' => [
+        'eyebrow' => 'Eyebrow',
+        'subtitle' => 'Subtitle',
+        'cta_label' => 'Button label',
+        'cta_url' => 'Button link',
+        'cta_secondary_label' => 'Second button label',
+        'cta_secondary_url' => 'Second button link',
         'role' => 'Role',
         'name' => 'Name',
         'title' => 'Title',
@@ -740,6 +747,40 @@ return [
     // The menu's count of content nobody has translated yet.
     'translation' => [
         'gap' => '{1} :count item still needs translating|[2,*] :count items still need translating',
+    ],
+
+    // The home page's slider.
+    'slides' => [
+        'count' => '{0} No slides|{1} :count slide|[2,*] :count slides',
+        'create' => 'Add slide',
+        'edit' => 'Edit slide',
+        'search' => 'Search slides',
+        'empty' => 'No slides yet.',
+        'created' => 'The slide was added.',
+        'updated' => 'The slide was saved.',
+        'deleted' => 'The slide was deleted.',
+        'words_help' => 'A visitor reads a slide in about four seconds. One idea each.',
+        'eyebrow_help' => 'The small line above the headline.',
+        'buttons' => 'Buttons',
+        'buttons_help' => 'Two at most, and the second one for the quieter alternative. A button with no address is not shown.',
+        'url_help' => 'A page on this site (/appointment), a full address, tel: or mailto:.',
+        'image_help' => 'Wide and uncluttered — text sits over the left of it. Without one, the site shows a stand-in.',
+        'not_showing' => 'The home page is not showing the slider at the moment.',
+        'not_showing_help' => 'Slides are only on the site while the home layout is set to Slider-led. Everything here is saved either way.',
+    ],
+
+    // The home page's layouts. The registry is App\\Support\\HomeLayouts.
+    'home_layouts' => [
+        'title' => 'Home page layout',
+        'intro' => 'Which arrangement the home page uses. The switches below still apply to whichever is chosen.',
+        'classic' => 'Classic',
+        'classic_help' => 'A photographic hero with the booking form beside it, then the full page in its usual order.',
+        'slider' => 'Slider-led',
+        'slider_help' => 'Your own slides across the top, full width, then the same sections underneath.',
+        'compact' => 'Compact',
+        'compact_help' => 'The same hero, but departments, doctors and services come first — for visitors who know where they are going.',
+        'slide_count' => '{1} :count slide ready|[2,*] :count slides ready',
+        'no_slides' => 'No slides yet — the classic hero is shown until one is added.',
     ],
 
     // The Ctrl+K quick-search palette.

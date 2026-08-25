@@ -19,4 +19,14 @@ class Rules
      * three forms for the SMS gateway.
      */
     public const BD_MOBILE = 'regex:/^(?:\+?88)?01[3-9]\d{8}$/';
+
+    /**
+     * Somewhere a button on the site may point.
+     *
+     * The same allowlist the panel's markup editor applies to `[text](link)`:
+     * http(s), mailto:, tel:, root-relative and an in-page anchor. Anything
+     * else — `javascript:` above all — is not a destination, it is a way to run
+     * something in a visitor's browser from a field a staff member filled in.
+     */
+    public const LINK = 'regex:/^(?:https?:\/\/|mailto:|tel:|\/|#)[^\s<>"]*$/i';
 }

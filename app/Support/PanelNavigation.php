@@ -43,6 +43,7 @@ class PanelNavigation
         [
             'heading' => 'content',
             'items' => [
+                ['key' => 'slides', 'route' => 'admin.slides.index', 'match' => 'admin.slides.*', 'icon' => 'layers', 'create' => 'admin.slides.create'],
                 ['key' => 'departments', 'route' => 'admin.departments.index', 'match' => 'admin.departments.*', 'icon' => 'building', 'create' => 'admin.departments.create'],
                 ['key' => 'doctors', 'route' => 'admin.doctors.index', 'match' => 'admin.doctors.*', 'icon' => 'stethoscope', 'create' => 'admin.doctors.create'],
                 ['key' => 'services', 'route' => 'admin.services.index', 'match' => 'admin.services.*', 'icon' => 'activity', 'create' => 'admin.services.create'],

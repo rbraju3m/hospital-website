@@ -10,6 +10,7 @@ use App\Models\GalleryPhoto;
 use App\Models\HealthPackage;
 use App\Models\Post;
 use App\Models\Service;
+use App\Models\Slide;
 use App\Models\Testimonial;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -48,6 +49,7 @@ class TranslationGaps
      * exist; PanelNavigationTest asserts the two lists agree.
      */
     private const SOURCES = [
+        'slides' => Slide::class,
         'departments' => Department::class,
         'doctors' => Doctor::class,
         'services' => Service::class,

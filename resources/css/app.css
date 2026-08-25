@@ -1194,6 +1194,59 @@ html.no-motion {
     }
 }
 
+/* The home page's slider -----------------------------------------------------
+   Slides are stacked and cross-faded rather than translated: a strip that
+   slides sideways moves the headline out from under the reader's eye, and at
+   this size the fade reads as a change of subject rather than as motion.
+
+   Content first. Every slide is in the markup and the first one is visible
+   before any JavaScript runs — `data-slide-hidden` takes the rest out until
+   the bundle reports in, so a page with no JS is one static hero rather than
+   eleven panels stacked down the page. */
+@utility hero-slider {
+    display: grid;
+    isolation: isolate;
+
+    & > .hero-slide {
+        grid-area: 1 / 1;
+    }
+}
+
+@utility hero-slide {
+    position: relative;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--duration-slow) var(--ease-out-expo),
+                visibility 0s linear var(--duration-slow);
+
+    &.is-current {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity var(--duration-slow) var(--ease-out-expo);
+        z-index: 1;
+    }
+}
+
+/* Before the bundle reports in: slide one, and only slide one. */
+html:not(.js-ready) .hero-slide {
+    opacity: 1;
+    visibility: visible;
+}
+
+html:not(.js-ready) .hero-slide[data-slide-hidden] {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-slide {
+        transition-duration: 1ms !important;
+    }
+}
+
+.no-motion .hero-slide {
+    transition-duration: 1ms !important;
+}
+
 /* Photography ------------------------------------------------------------- */
 /* A very slow push on a hero photograph. Long enough (28s) that it registers
    as depth rather than as something animating on the page. */

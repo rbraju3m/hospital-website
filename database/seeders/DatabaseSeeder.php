@@ -10,6 +10,7 @@ use Database\Seeders\Translations\HealthPackageTranslationSeeder;
 use Database\Seeders\Translations\PostTranslationSeeder;
 use Database\Seeders\Translations\ServiceTranslationSeeder;
 use Database\Seeders\Translations\SettingTranslationSeeder;
+use Database\Seeders\Translations\SlideTranslationSeeder;
 use Database\Seeders\Translations\TestimonialTranslationSeeder;
 use Illuminate\Database\Seeder;
 
@@ -20,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SettingSeeder::class,
             SiteFeatureSeeder::class,
+            SlideSeeder::class,
             DepartmentSeeder::class,
             DoctorSeeder::class,
             ServiceSeeder::class,
@@ -35,6 +37,7 @@ class DatabaseSeeder extends Seeder
         // touching the base seeders.
         $this->call([
             SettingTranslationSeeder::class,
+            SlideTranslationSeeder::class,
             DepartmentTranslationSeeder::class,
             DoctorTranslationSeeder::class,
             ServiceTranslationSeeder::class,

@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SlideController;
 use App\Http\Controllers\Admin\SiteControlController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\UserController;
@@ -72,6 +73,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('diagnostics', DiagnosticTestController::class)->parameters(['diagnostics' => 'diagnostic']);
         Route::resource('posts', PostController::class);
         Route::resource('testimonials', TestimonialController::class);
+        Route::resource('slides', SlideController::class);
         Route::resource('gallery', GalleryAlbumController::class)->parameters(['gallery' => 'album']);
 
         // Photographs hang off an album, the way chamber hours hang off a doctor.

@@ -13,6 +13,7 @@ use App\Models\Patient;
 use App\Models\PatientDocument;
 use App\Models\Post;
 use App\Models\Service;
+use App\Models\Slide;
 use App\Models\Testimonial;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PanelSearch
 {
-    /** Rows per section. Twelve sections, so the whole answer stays readable. */
+    /** Rows per section. Thirteen sections, so the whole answer stays readable. */
     public const PER_SOURCE = 4;
 
     private const MIN_TERM = 2;
@@ -55,6 +56,7 @@ class PanelSearch
         ['key' => 'documents', 'model' => PatientDocument::class, 'columns' => ['title', 'phone'], 'route' => 'admin.documents.edit', 'label' => 'title'],
         ['key' => 'messages', 'model' => ContactMessage::class, 'columns' => ['name', 'phone', 'subject'], 'route' => 'admin.messages.show', 'label' => 'name'],
         ['key' => 'doctors', 'model' => Doctor::class, 'columns' => ['name', 'speciality', 'designation', 'qualifications'], 'route' => 'admin.doctors.edit', 'label' => 'name'],
+        ['key' => 'slides', 'model' => Slide::class, 'columns' => ['title', 'subtitle'], 'route' => 'admin.slides.edit', 'label' => 'title'],
         ['key' => 'departments', 'model' => Department::class, 'columns' => ['name', 'tagline'], 'route' => 'admin.departments.edit', 'label' => 'name'],
         ['key' => 'services', 'model' => Service::class, 'columns' => ['name', 'summary'], 'route' => 'admin.services.edit', 'label' => 'name'],
         ['key' => 'packages', 'model' => HealthPackage::class, 'columns' => ['name', 'summary'], 'route' => 'admin.packages.edit', 'label' => 'name'],

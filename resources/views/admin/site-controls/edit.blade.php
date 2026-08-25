@@ -43,6 +43,45 @@
         </label>
     </div>
 
+    {{-- The home page's layout: one of several rather than on or off, so it is
+         a setting rather than a switch and sits above the switches instead of
+         among them. The bands below still apply to whichever is chosen — a
+         layout decides the order and the top of the page, not what a section
+         says. --}}
+    <section class="admin-card mb-6 overflow-hidden">
+        <header class="flex flex-wrap items-center gap-3 border-b border-mist-200 bg-mist-50/60 px-5 py-4">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white dark:bg-navy-100 text-navy-800 shadow-soft">
+                <x-icon name="layout-dashboard" size="17" />
+            </span>
+
+            <div class="min-w-0 flex-1">
+                <h2 class="font-display text-base font-bold text-navy-900">{{ __('admin.home_layouts.title') }}</h2>
+                <p class="mt-0.5 text-xs text-navy-900/50">{{ __('admin.home_layouts.intro') }}</p>
+            </div>
+        </header>
+
+        <div class="grid gap-3 p-4 sm:grid-cols-3">
+            @foreach ($layouts as $key)
+                <label class="group relative flex cursor-pointer flex-col gap-1 rounded-xl border p-4 transition duration-200
+                              {{ $layout === $key ? 'border-teal-400 bg-teal-50/60' : 'border-mist-200 hover:border-teal-300 hover:bg-mist-50' }}">
+                    <input type="radio" name="home_layout" value="{{ $key }}" @checked($layout === $key)
+                           class="absolute end-3 top-3 h-4 w-4 accent-teal-600">
+
+                    <span class="pe-6 text-sm font-semibold text-navy-900">{{ __("admin.home_layouts.{$key}") }}</span>
+                    <span class="text-xs text-navy-900/55">{{ __("admin.home_layouts.{$key}_help") }}</span>
+
+                    @if ($key === 'slider')
+                        <span class="mt-1 text-[11px] font-semibold {{ $slideCount ? 'text-teal-700' : 'text-amber-700' }}">
+                            {{ $slideCount
+                                ? trans_choice('admin.home_layouts.slide_count', $slideCount, ['count' => $slideCount])
+                                : __('admin.home_layouts.no_slides') }}
+                        </span>
+                    @endif
+                </label>
+            @endforeach
+        </div>
+    </section>
+
     <div class="grid items-start gap-6 xl:grid-cols-2">
         @foreach ($groups as $group => $keys)
             {{-- Filtering hides rows rather than showing them: with the panel's
