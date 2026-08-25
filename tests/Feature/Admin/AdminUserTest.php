@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\User;
+use App\Support\StaffRoles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -28,6 +29,7 @@ class AdminUserTest extends TestCase
             'email' => 'nusrat@example.test',
             'password' => 'front-desk-2026',
             'password_confirmation' => 'front-desk-2026',
+            'role' => StaffRoles::FRONT_DESK,
         ])->assertSessionHasNoErrors();
 
         $user = User::firstWhere('email', 'nusrat@example.test');
@@ -35,6 +37,7 @@ class AdminUserTest extends TestCase
         $this->assertNotNull($user);
         // Hashed by the model's cast, never stored in the clear.
         $this->assertTrue(Hash::check('front-desk-2026', $user->password));
+        $this->assertSame(StaffRoles::FRONT_DESK, $user->role);
     }
 
     public function test_a_mismatched_confirmation_is_rejected(): void

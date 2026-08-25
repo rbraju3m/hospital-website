@@ -29,6 +29,9 @@ use Illuminate\Database\Eloquent\Model;
  * it links to are all declared here, so "search anything" cannot become a way
  * to read a column nobody meant to publish.
  *
+ * Sections the signed-in role cannot reach are not searched at all — the
+ * palette must not be a way around the menu it sits above.
+ *
  * Everything is capped at `PER_SOURCE` rows. A palette is a way to reach one
  * record, not a report — somebody who wants all of them wants the listing, and
  * its own filters.
@@ -72,9 +75,18 @@ class PanelSearch
             return [];
         }
 
+        $user = auth('web')->user();
         $results = [];
 
         foreach (self::SOURCES as $source) {
+            /* The same permission the menu and the routes use. Without it the
+               palette is a way around every one of them: an editor typing a
+               mobile number would be handed the patient, their bookings and
+               the documents published to them, from a box on every screen. */
+            if (! $user?->canReach($source['key'])) {
+                continue;
+            }
+
             foreach (self::query($source, $term) as $record) {
                 $results[] = [
                     'kind' => 'record',

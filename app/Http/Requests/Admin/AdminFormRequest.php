@@ -2,19 +2,26 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\StaffRoles;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Shared base for the panel's write requests.
  *
- * Authorisation is simply "signed in": there is one staff role, and the routes
- * already sit behind `auth`. Introduce a Gate here if roles ever land.
+ * Signed in, and holding a role that includes the section being written to.
+ * The `staff` middleware already answers the second half on the way in, so
+ * this is deliberately the same question asked twice — a write is the half of
+ * the panel that cannot be undone by navigating away, and a route added
+ * outside the guarded group would otherwise be authorised by nothing at all.
  */
 abstract class AdminFormRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        $section = StaffRoles::sectionForRoute($this->route()?->getName());
+
+        return auth()->check()
+            && ($section === null || auth()->user()->canReach($section));
     }
 
     /**

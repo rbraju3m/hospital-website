@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
  * The two things every listing in the panel can do without opening a record:
  * drag it into place, and switch it on or off.
  *
+ * One route serves eight listings, so the role check cannot live on the route
+ * the way it does everywhere else in the panel: it is made here, against the
+ * list that was asked for. `ManagedLists` names its lists the way
+ * `PanelNavigation` names its sections, which is what lets that be one line.
+ *
  * Both answer JSON and are driven from the table itself. Neither is the only
  * way to do the job — `sort_order` and the visibility toggle are still on the
  * edit form — so a browser without JavaScript loses a convenience, not a
@@ -21,6 +26,7 @@ class ListController extends Controller
     public function reorder(Request $request, string $list): JsonResponse
     {
         abort_unless(ManagedLists::has($list) && ManagedLists::sortable($list), 404);
+        abort_unless($request->user('web')?->canReach($list), 403);
 
         $ids = collect($request->validate([
             'ids' => ['required', 'array', 'max:200'],
@@ -50,6 +56,7 @@ class ListController extends Controller
     public function toggle(Request $request, string $list, int $id): JsonResponse
     {
         abort_unless(ManagedLists::has($list), 404);
+        abort_unless($request->user('web')?->canReach($list), 403);
 
         $model = ManagedLists::query($list)->findOrFail($id);
 

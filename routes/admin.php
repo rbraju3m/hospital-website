@@ -36,9 +36,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('login.store');
     });
 
-    // `auth:web`, not bare `auth`: the guard is stated rather than inherited
-    // from config, so a patient session can never satisfy it.
-    Route::middleware('auth:web')->group(function () {
+    /* `auth:web`, not bare `auth`: the guard is stated rather than inherited
+       from config, so a patient session can never satisfy it.
+
+       `staff` then checks the signed-in account's role against the section the
+       route belongs to, which it reads off the route name — applied here, once,
+       rather than per route, so a resource added below is closed to everyone
+       but an administrator until somebody grants it deliberately. */
+    Route::middleware(['auth:web', 'staff'])->group(function () {
         Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
 
         Route::get('/', DashboardController::class)->name('dashboard');

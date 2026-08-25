@@ -14,6 +14,7 @@ use App\Models\Service;
 use App\Models\Testimonial;
 use App\Support\SiteFeatures;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -33,44 +34,58 @@ class DashboardController extends Controller
         'testimonials' => Testimonial::class,
     ];
 
-    public function __invoke(): View
+    /**
+     * One page, assembled from whichever of its three halves the signed-in role
+     * can see: the desk's day, the inbox, and the state of the content.
+     *
+     * Gated in the controller rather than only in the template, so an editor's
+     * home page does not run a query over every patient booked in today before
+     * deciding not to show them.
+     */
+    public function __invoke(Request $request): View
     {
         $today = Carbon::today();
+        $user = $request->user();
+
+        $desk = $user->canReach('appointments');
+        $inbox = $user->canReach('messages');
+        $content = $user->canReach('departments');
+        $system = $user->canReach('site_controls');
 
         return view('admin.dashboard.index', [
-            'stats' => [
-                'today' => Appointment::whereDate('appointment_date', $today)
-                    ->whereNot('status', 'cancelled')->count(),
-                'pending' => Appointment::where('status', 'pending')
-                    ->whereDate('appointment_date', '>=', $today)->count(),
-                'week' => Appointment::whereBetween('appointment_date', [$today, $today->copy()->addDays(6)])
-                    ->whereNot('status', 'cancelled')->count(),
-                'unread' => ContactMessage::where('is_read', false)->count(),
-            ],
-            'todaysAppointments' => Appointment::with('doctor')
+            'stats' => array_filter([
+                'today' => $desk ? Appointment::whereDate('appointment_date', $today)
+                    ->whereNot('status', 'cancelled')->count() : null,
+                'pending' => $desk ? Appointment::where('status', 'pending')
+                    ->whereDate('appointment_date', '>=', $today)->count() : null,
+                'week' => $desk ? Appointment::whereBetween('appointment_date', [$today, $today->copy()->addDays(6)])
+                    ->whereNot('status', 'cancelled')->count() : null,
+                'unread' => $inbox ? ContactMessage::where('is_read', false)->count() : null,
+            ], fn ($value) => $value !== null),
+            'todaysAppointments' => $desk ? Appointment::with('doctor')
                 ->whereDate('appointment_date', $today)
                 ->whereNot('status', 'cancelled')
                 ->orderBy('appointment_time')
-                ->get(),
-            'recentMessages' => ContactMessage::latest()->take(5)->get(),
-            'catalogue' => [
+                ->get() : null,
+            'recentMessages' => $inbox ? ContactMessage::latest()->take(5)->get() : null,
+            'catalogue' => $content ? [
                 'departments' => Department::count(),
                 'doctors' => Doctor::where('is_active', true)->count(),
                 'services' => Service::count(),
                 'packages' => HealthPackage::count(),
                 'diagnostics' => DiagnosticTest::active()->count(),
                 'posts' => Post::published()->count(),
-            ],
-            'translationGaps' => $this->translationGaps(),
-            'weekTrend' => $this->weekTrend($today),
-            'statusBreakdown' => $this->statusBreakdown($today),
+            ] : null,
+            'translationGaps' => $content ? $this->translationGaps() : [],
+            'weekTrend' => $desk ? $this->weekTrend($today) : [],
+            'statusBreakdown' => $desk ? $this->statusBreakdown($today) : [],
             // What the site is currently hiding, so nobody spends an afternoon
             // wondering why a page 404s that somebody switched off last week.
-            'featuresOff' => collect(SiteFeatures::all())
-                ->except('behaviour_maintenance')
-                ->reject()
-                ->keys(),
-            'maintenance' => SiteFeatures::enabled('behaviour_maintenance'),
+            // Only an administrator can act on it, and only they can see it.
+            'featuresOff' => $system
+                ? collect(SiteFeatures::all())->except('behaviour_maintenance')->reject()->keys()
+                : collect(),
+            'maintenance' => $system && SiteFeatures::enabled('behaviour_maintenance'),
         ]);
     }
 

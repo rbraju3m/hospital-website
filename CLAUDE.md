@@ -47,7 +47,8 @@ php8.3 artisan db:seed --class=DoctorSeeder
 
 # Staff panel
 php8.3 artisan admin:create                        # prompts for name / email / password
-php8.3 artisan admin:create --name=… --email=… --password=…
+php8.3 artisan admin:create --name=… --email=… --password=… --role=front_desk
+                                                   # --role: administrator (default), front_desk, editor
 php8.3 artisan storage:link                        # required once, or uploads 404
 
 # Reminders
@@ -62,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (365 feature tests)
+# Tests (397 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -82,6 +83,7 @@ vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit scr
 vendor/bin/phpunit --filter PanelNavigation        # the panel's menu registry, its icon rail and the Ctrl+K palette
 vendor/bin/phpunit --filter TranslationGaps        # the menu's count of untranslated content
 vendor/bin/phpunit --filter PanelSearch            # finding a record from the palette
+vendor/bin/phpunit --filter StaffRole              # the three roles, and what each one is refused
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -148,6 +150,19 @@ Auth is hand-rolled and minimal: login, logout, no registration and no password-
 - The **`?untranslated=<locale>` filter runs in PHP**, not SQL. `missingTranslations()` skips fields that are blank in the source too, and a `JSON_EXTRACT` query cannot tell those apart from a real gap. `paginateContent()` keeps ordinary listings paginating in the database.
 
 Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder per content type, with the disk-relative path in the existing `image`/`photo` column. **Render them with `media_url()`, never `asset()`** — the disk is only reachable through the `storage:link` symlink. Replacing or removing an image deletes the old file; so does deleting the row.
+
+#### Three roles, cut along the lines the menu already draws
+
+`users.role` holds `administrator`, `front_desk` or `editor`, and `App\Support\StaffRoles` says what each one reaches: the desk gets appointments, the inbox, portal accounts and patient documents; the editor gets the content; site controls, site settings and staff accounts are administrator-only. An editor has no business reading a patient's mobile number, and a receptionist has no business taking the public site down.
+
+- **Administrator is a wildcard; everyone else is a list.** A section added next year is reachable by an administrator the moment it exists, and denied to the other two until somebody grants it deliberately. Forgetting to grant something is a support request; forgetting to deny it is a medical record in front of the wrong person.
+- **The check is on the group, not per route.** `staff` middleware wraps the whole `/admin` group and reads the section off the *route name* (`admin.doctors.store` → `doctors`, with `site` aliased to `site_controls`), so a resource added without a thought for roles is closed rather than open. Compare `feature:<key>`, which is declared per route — that one is guarding a page from the public, and being wrong shows a visitor a page.
+- **It answers 403, not 404.** The section exists and their colleague uses it every day; pretending otherwise would have them reporting a bug instead of asking for access.
+- **The same question is asked in five places, all through `User::canReach()`**: the route middleware, `AdminFormRequest::authorize()`, the menu, the palette's list, and `PanelSearch`. A hole in any one makes the other four decoration — the palette is the one to watch, because an editor typing a mobile number into a box that sits on every screen would otherwise be handed the patient, their bookings and their documents.
+- **`ListController` is the exception that proves the shape.** One route serves eight listings, so its check is made in the controller against the list it was given. `ManagedLists` names its lists the way `PanelNavigation` names its sections and `StaffRoles` names its grants — one vocabulary, and a test asserts the three line up.
+- **The dashboard is assembled from the halves the role can see**, gated in the controller rather than only the template, so an editor's home page does not query every patient booked in today before deciding not to show them.
+- **Three refusals, all about not locking the panel**: you cannot delete yourself, delete the last account, or delete the last administrator — and you cannot change *your own* role. That last looks like a nuisance and is not: an administrator who demotes themselves loses the staff screen in the same request, and the way back is a database client. The field is left off your own form, and the controller ignores it in the payload too.
+- Existing accounts became administrators in the migration; `admin:create` still defaults to administrator, because the first account has nowhere else to create the second one from.
 
 #### The menu is a registry, and it collapses
 
@@ -486,7 +501,6 @@ Nothing the site claims. What is missing is what it has never promised:
 - **No lab results system upstream.** Reports reach the portal because a staff member uploads a file, not because an analyser wrote one. That is the honest version of "download reports online", but it is a manual step somebody has to remember.
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
 - **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
-- **One staff role.** Everyone who can sign in to the panel can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
 
 ## The one thing to do before launch
 
@@ -501,7 +515,9 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 365 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 397 tests. What follows is the state a new session should know rather than rediscover.
+
+**Staff roles landed on 2026-08-25** — three of them, cut along the menu's own groups. See *Three roles, cut along the lines the menu already draws* above.
 
 **The panel menu redesign is done** — the registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette, the account block and the untranslated-content badges. Ctrl+K then grew a second half: `App\Support\PanelSearch` finds the records themselves. See *The menu is a registry, and it collapses* above.
 

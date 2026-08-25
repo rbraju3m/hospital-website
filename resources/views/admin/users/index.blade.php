@@ -27,6 +27,10 @@
                         <span class="block truncate text-xs text-navy-900/50">{{ $user->email }}</span>
                     </span>
 
+                    <span class="hidden shrink-0 sm:block">
+                        <span class="{{ $user->isAdministrator() ? 'badge-navy' : 'badge-slate' }}">{{ $user->roleLabel() }}</span>
+                    </span>
+
                     <a href="{{ route('admin.users.edit', $user) }}" class="btn-outline btn-sm">{{ __('admin.actions.edit') }}</a>
 
                     @unless ($user->is(auth()->user()))

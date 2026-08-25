@@ -86,12 +86,37 @@ class PanelNavigation
     {
         $badges = self::badges();
         $gaps = TranslationGaps::counts();
+        // auth() rather than request()->user(): the palette's list is also
+        // built outside a request cycle, in tests and by anything that renders
+        // the menu without one.
+        $user = auth('web')->user();
 
-        return array_map(fn (array $group) => [
-            'heading' => $group['heading'],
-            'label' => $group['heading'] ? __("admin.nav.group_{$group['heading']}") : null,
-            'items' => array_map(fn (array $item) => self::resolve($item, $badges, $gaps), $group['items']),
-        ], self::GROUPS);
+        $groups = [];
+
+        foreach (self::GROUPS as $group) {
+            /* Filtered against the signed-in role, and filtered here rather
+               than in the template: the palette and the sidebar both read this,
+               and a menu that hides a link the route still answers is a lock on
+               the front door and a window left open. The routes carry the same
+               check as `staff` middleware. */
+            $items = array_values(array_filter(
+                $group['items'],
+                fn (array $item) => $user?->canReach($item['key']) ?? false,
+            ));
+
+            // A group whose every item went is not a heading over nothing.
+            if ($items === []) {
+                continue;
+            }
+
+            $groups[] = [
+                'heading' => $group['heading'],
+                'label' => $group['heading'] ? __("admin.nav.group_{$group['heading']}") : null,
+                'items' => array_map(fn (array $item) => self::resolve($item, $badges, $gaps), $items),
+            ];
+        }
+
+        return $groups;
     }
 
     /** The same menu flattened — what a search box wants. */

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureFeatureEnabled;
+use App\Http\Middleware\EnsureStaffSection;
 use App\Http\Middleware\MaintenanceGate;
 use App\Http\Middleware\SetLocale;
 use App\Services\MediaLibrary;
@@ -31,7 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // `feature:<key>` closes a route whose Site-controls switch is off, so
         // hiding an area from the navigation also stops its URL working.
-        $middleware->alias(['feature' => EnsureFeatureEnabled::class]);
+        $middleware->alias([
+            'feature' => EnsureFeatureEnabled::class,
+            'staff' => EnsureStaffSection::class,
+        ]);
 
         // SSLCommerz redirect back from the payment gateway: the browser returns
         // after payment, and SSLCommerz posts the result without a CSRF token.

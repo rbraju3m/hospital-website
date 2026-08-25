@@ -6,12 +6,19 @@
 
 @section('content')
     @php
-        $tiles = [
-            ['label' => __('admin.dashboard.today'), 'value' => $stats['today'], 'icon' => 'calendar-check', 'href' => route('admin.appointments.index', ['date' => now()->toDateString()])],
-            ['label' => __('admin.dashboard.pending'), 'value' => $stats['pending'], 'icon' => 'clock', 'href' => route('admin.appointments.index', ['status' => 'pending'])],
-            ['label' => __('admin.dashboard.next_seven'), 'value' => $stats['week'], 'icon' => 'calendar', 'href' => route('admin.appointments.index')],
-            ['label' => __('admin.dashboard.unread'), 'value' => $stats['unread'], 'icon' => 'inbox', 'href' => route('admin.messages.index', ['unread' => 1])],
-        ];
+        // Built from the stats that arrived. An editor's role reaches neither
+        // the bookings nor the inbox, so their dashboard opens on the content.
+        $tiles = collect([
+            'today' => ['label' => __('admin.dashboard.today'), 'icon' => 'calendar-check', 'href' => route('admin.appointments.index', ['date' => now()->toDateString()])],
+            'pending' => ['label' => __('admin.dashboard.pending'), 'icon' => 'clock', 'href' => route('admin.appointments.index', ['status' => 'pending'])],
+            'week' => ['label' => __('admin.dashboard.next_seven'), 'icon' => 'calendar', 'href' => route('admin.appointments.index')],
+            'unread' => ['label' => __('admin.dashboard.unread'), 'icon' => 'inbox', 'href' => route('admin.messages.index', ['unread' => 1])],
+        ])->only(array_keys($stats))
+          ->map(fn ($tile, $key) => $tile + ['value' => $stats[$key]]);
+
+        $schedule = $todaysAppointments !== null;
+        $inbox = $recentMessages !== null;
+        $hasCatalogue = $catalogue !== null;
     @endphp
 
     {{-- Site status. Nothing here is news on a normal day; the day something
@@ -44,6 +51,7 @@
         </div>
     @endif
 
+    @if ($tiles->isNotEmpty())
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-reveal-stagger="60">
         @foreach ($tiles as $tile)
             <a href="{{ $tile['href'] }}" class="admin-stat reveal group">
@@ -58,9 +66,11 @@
             </a>
         @endforeach
     </div>
+    @endif
 
     {{-- The week ahead. A column per day, scaled against the busiest one, so a
          quiet Friday and a full Sunday are visible without reading a number. --}}
+    @if ($schedule)
     @php $peak = max(1, collect($weekTrend)->max('count')); @endphp
 
     <div class="mt-6 grid gap-6 xl:grid-cols-3">
@@ -127,8 +137,14 @@
             </dl>
         </section>
     </div>
+    @endif
 
-    <div class="mt-6 grid gap-6 xl:grid-cols-3">
+    {{-- Three cards that not every role sees. With the schedule present they
+         sit beside it; without it the rest becomes the page, so the wrapper
+         goes `contents` and its children join the grid directly rather than
+         huddling in a third of the width. --}}
+    <div class="mt-6 grid gap-6 {{ $schedule ? 'xl:grid-cols-3' : 'md:grid-cols-2' }}">
+        @if ($schedule)
         {{-- Today's list is the reason a receptionist opens this page at all. --}}
         <section class="admin-card xl:col-span-2">
             <header class="flex items-center justify-between gap-3 border-b border-mist-200 px-5 py-4">
@@ -155,8 +171,10 @@
                 <p class="px-5 py-10 text-center text-sm text-navy-900/45">{{ __('admin.dashboard.no_appointments_today') }}</p>
             @endforelse
         </section>
+        @endif
 
-        <div class="space-y-6">
+        <div class="{{ $schedule ? 'space-y-6' : 'contents' }}">
+            @if ($inbox)
             <section class="admin-card">
                 <header class="flex items-center justify-between gap-3 border-b border-mist-200 px-5 py-4">
                     <h2 class="font-display text-base font-bold text-navy-900">{{ __('admin.dashboard.recent_messages') }}</h2>
@@ -182,7 +200,9 @@
                     <p class="px-5 py-10 text-center text-sm text-navy-900/45">{{ __('admin.dashboard.no_messages') }}</p>
                 @endforelse
             </section>
+            @endif
 
+            @if ($hasCatalogue)
             <section class="admin-card p-5">
                 <h2 class="font-display text-base font-bold text-navy-900">{{ __('admin.dashboard.catalogue') }}</h2>
                 <dl class="mt-4 space-y-2.5">
@@ -219,6 +239,7 @@
                         </ul>
                     @endforeach
                 </section>
+            @endif
             @endif
         </div>
     </div>

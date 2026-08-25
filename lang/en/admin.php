@@ -137,6 +137,7 @@ return [
     ],
 
     'fields' => [
+        'role' => 'Role',
         'name' => 'Name',
         'title' => 'Title',
         'slug' => 'URL slug',
@@ -539,7 +540,7 @@ return [
     ],
 
     'users' => [
-        'intro' => 'Everyone listed here can sign in and manage the whole panel.',
+        'intro' => 'Who can sign in to the panel, and how much of it each of them sees.',
         'create' => 'Add staff account',
         'edit' => 'Edit account',
         'account' => 'Account',
@@ -552,6 +553,10 @@ return [
         'created' => 'Account created for :name.',
         'updated' => ':name’s account was saved.',
         'deleted' => 'The account was deleted.',
+        'cannot_delete_last_administrator' => 'This is the last administrator — deleting it would leave nobody able to manage staff accounts or the site settings.',
+        'role' => 'What they can reach',
+        'role_help' => 'Roles cover whole sections of the panel. Anything not listed for a role answers "not for this account".',
+        'role_self' => 'You are an :role. Your own role is not editable here — ask another administrator to change it, or the panel could be locked to everyone.',
     ],
 
     'site_controls' => [
@@ -683,6 +688,17 @@ return [
     'site_status' => [
         'live' => 'Website is live',
         'maintenance' => 'Website is in maintenance mode',
+    ],
+
+    // Staff roles. The section lists themselves live in App\\Support\\StaffRoles.
+    'roles' => [
+        'administrator' => 'Administrator',
+        'administrator_help' => 'The whole panel, including site controls, site settings and staff accounts.',
+        'front_desk' => 'Front desk',
+        'front_desk_help' => 'Appointments, the inbox, portal accounts and patient documents.',
+        'editor' => 'Editor',
+        'editor_help' => 'Departments, doctors, services, packages, diagnostics, articles, the gallery and testimonials.',
+        'denied' => 'This part of the panel is not open to your account.',
     ],
 
     // The menu's count of content nobody has translated yet.
