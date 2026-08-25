@@ -1220,6 +1220,83 @@ const initUploadShrinking = (root = document) => {
     });
 };
 
+/* ---------------------------------------------------------------------------
+   The staff panel's collapsible icon rail.
+
+   The state is a class on <html>, put there by the inline script in the head
+   before the first paint; this only flips it and remembers the choice. Plain
+   JS rather than Alpine for that reason — Alpine boots from a module script,
+   i.e. after the first paint, and a menu that resizes itself once the page is
+   already up is the thing the head script exists to avoid.
+
+   Collapsed, a link's label is `sr-only` and named by a tooltip instead. That
+   tooltip is one fixed node in the layout rather than something drawn inside
+   the link: the nav scrolls, and an overflow container clips its own children.
+   --------------------------------------------------------------------------- */
+const RAIL_KEY = 'panel-rail';
+
+const initPanelRail = () => {
+    const toggle = document.querySelector('[data-panel-rail-toggle]');
+    if (! toggle) return;
+
+    const railed = () => document.documentElement.classList.contains(RAIL_KEY);
+
+    toggle.setAttribute('aria-pressed', railed() ? 'true' : 'false');
+
+    toggle.addEventListener('click', () => {
+        const next = ! railed();
+        document.documentElement.classList.toggle(RAIL_KEY, next);
+        toggle.setAttribute('aria-pressed', next ? 'true' : 'false');
+        hideTip();
+
+        try {
+            localStorage.setItem(RAIL_KEY, next ? '1' : '0');
+        } catch (error) {
+            // Storage blocked: the menu still collapses, it just forgets.
+        }
+    });
+};
+
+const tipBox = () => document.querySelector('[data-panel-tip-box]');
+
+const hideTip = () => {
+    const tip = tipBox();
+    if (tip) tip.hidden = true;
+};
+
+const showTip = (target) => {
+    const tip = tipBox();
+    const label = target.getAttribute('data-panel-tip');
+    if (! tip || ! label) return;
+
+    tip.textContent = label;
+    tip.hidden = false;
+
+    const box = target.getBoundingClientRect();
+    tip.style.top = `${box.top + box.height / 2}px`;
+    tip.style.left = `${box.right + 10}px`;
+};
+
+const initPanelTips = () => {
+    if (! tipBox()) return;
+
+    const handle = (event) => {
+        // Only while collapsed: expanded, the label is already on the screen.
+        if (! document.documentElement.classList.contains(RAIL_KEY)) return hideTip();
+
+        const target = event.target.closest?.('[data-panel-tip]');
+        target ? showTip(target) : hideTip();
+    };
+
+    document.addEventListener('mouseover', handle);
+    document.addEventListener('focusin', handle);
+
+    // A tooltip pinned to the viewport goes stale the moment anything moves.
+    document.addEventListener('mouseleave', hideTip);
+    window.addEventListener('resize', hideTip);
+    window.addEventListener('scroll', hideTip, true);
+};
+
 const enhance = (root = document) => {
     observeReveals(root);
     observeCounters(root);
@@ -1236,6 +1313,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackToTop();
     initCardSpotlight();
     initParallax();
+    initPanelRail();
+    initPanelTips();
 
     /* Content that appears after boot — an Alpine collapse, a swapped tab —
        gets the same treatment without every component having to ask. Alpine can

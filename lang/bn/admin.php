@@ -685,4 +685,10 @@ return [
         'live' => 'ওয়েবসাইট চালু আছে',
         'maintenance' => 'ওয়েবসাইট রক্ষণাবেক্ষণ মোডে',
     ],
+
+    // The sidebar's collapsed icon rail.
+    'rail' => [
+        'collapse' => 'মেনু ছোট করুন',
+        'expand' => 'মেনু বড় করুন',
+    ],
 ];

@@ -684,4 +684,10 @@ return [
         'live' => 'Website is live',
         'maintenance' => 'Website is in maintenance mode',
     ],
+
+    // The sidebar's collapsed icon rail.
+    'rail' => [
+        'collapse' => 'Collapse menu',
+        'expand' => 'Expand menu',
+    ],
 ];

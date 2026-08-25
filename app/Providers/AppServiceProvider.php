@@ -2,12 +2,11 @@
 
 namespace App\Providers;
 
-use App\Models\Appointment;
-use App\Models\ContactMessage;
 use App\Models\Department;
 use App\Payments\SslcommerzGateway;
 use App\Sms\Contracts\SmsGateway;
 use App\Sms\SmsManager;
+use App\Support\PanelNavigation;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -36,15 +35,12 @@ class AppServiceProvider extends ServiceProvider
             $view->with('navDepartments', Department::active()->ordered()->get());
         });
 
-        // The staff sidebar carries counts for the two things that go stale if
-        // nobody looks at them: unanswered bookings and an unread inbox.
-        View::composer('admin.partials.sidebar', function ($view) {
-            $view->with([
-                'pendingAppointments' => Appointment::where('status', 'pending')
-                    ->whereDate('appointment_date', '>=', today())
-                    ->count(),
-                'unreadMessages' => ContactMessage::where('is_read', false)->count(),
-            ]);
+        // The panel's menu, resolved once per request. Bound to the layout
+        // rather than to the sidebar because the partials it includes inherit
+        // its data — so the sidebar and anything else that renders the menu
+        // share one copy, and the badge counts are queried once.
+        View::composer('admin.layouts.app', function ($view) {
+            $view->with('panelGroups', PanelNavigation::groups());
         });
     }
 }

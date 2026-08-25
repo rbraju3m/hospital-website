@@ -833,6 +833,80 @@ html.no-motion {
     }
 }
 
+/* The sidebar's width, and everything the collapsed rail does to what is in it.
+   Kept in one block on purpose: the markers in the Blade partial (`rail-hide`,
+   `rail-center`, `rail-label`) say nothing on their own, and reading the rail's
+   behaviour in fifteen places is how one of them gets missed.
+
+   Rail rules are confined to `lg` because below it the sidebar is the
+   off-canvas drawer, where 4.5rem of icons would be a menu nobody can read on
+   the device with the least room to guess. The state itself is a class on
+   <html>, written by the inline head script before the first paint — a sidebar
+   that starts wide and snaps narrow is worse than one that never collapses. */
+@utility admin-sidebar {
+    @apply w-72;
+
+    @variant lg {
+        transition: width var(--duration-base) var(--ease-out-expo);
+
+        html.panel-rail & {
+            width: 4.5rem;
+        }
+
+        /* Text with nowhere to go at 4.5rem. */
+        html.panel-rail & .rail-hide {
+            display: none;
+        }
+
+        /* A nav label is *not* hidden — it stays in the link's accessible name,
+           and app.js draws it as a tooltip on hover. */
+        html.panel-rail & .rail-label {
+            @apply sr-only;
+        }
+
+        html.panel-rail & .rail-center,
+        html.panel-rail & .admin-nav-item,
+        html.panel-rail & .admin-nav-item-active {
+            @apply justify-center px-0;
+        }
+
+        html.panel-rail & .rail-narrow {
+            @apply px-2;
+        }
+
+        /* A group heading becomes the rule it was already implying. */
+        html.panel-rail & .admin-nav-heading {
+            @apply mx-2 my-3 h-px bg-white/10 p-0;
+        }
+
+        /* The count has no room to be a number, but "there is something here"
+           is most of what it was saying. */
+        html.panel-rail & .rail-badge {
+            position: absolute;
+            top: 0.3rem;
+            inset-inline-end: 0.55rem;
+            width: 0.5rem;
+            height: 0.5rem;
+            padding: 0;
+            font-size: 0;
+            line-height: 0;
+        }
+
+        html.panel-rail & .rail-flip {
+            transform: scaleX(-1);
+        }
+    }
+}
+
+/* The rail's tooltip: one fixed node in the layout, positioned by app.js.
+   Fixed rather than drawn inside the link because the nav scrolls, and an
+   overflow container clips anything reaching past its own 4.5rem. */
+@utility panel-tip {
+    @apply pointer-events-none fixed z-50 whitespace-nowrap rounded-lg bg-navy-900 dark:bg-navy-100
+           px-2.5 py-1.5 text-xs font-medium text-white shadow-lift;
+    translate: 0 -50%;
+}
+
 /* The listing switch: the Site controls toggle at table scale. Same rule about
    the input sitting immediately before the track. */
 @utility switch-sm {

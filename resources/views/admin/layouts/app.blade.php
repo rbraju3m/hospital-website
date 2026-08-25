@@ -22,6 +22,11 @@
             setTimeout(function () {
                 if (! document.documentElement.classList.contains('js-ready')) {
                     document.documentElement.classList.remove('has-js');
+
+                    // A collapsed menu names its items in a tooltip the bundle
+                    // draws. Without the bundle that is fifteen unlabelled
+                    // icons, so put the labels back rather than the animation.
+                    document.documentElement.classList.remove('panel-rail');
                 }
             }, 1500);
 
@@ -30,6 +35,12 @@
                 var dark = stored ? stored === 'dark'
                     : window.matchMedia('(prefers-color-scheme: dark)').matches;
                 document.documentElement.classList.toggle('dark', dark);
+
+                // The sidebar's collapsed state, for the same reason: settled
+                // here or the menu is 18rem wide for one frame and snaps.
+                if (localStorage.getItem('panel-rail') === '1') {
+                    document.documentElement.classList.add('panel-rail');
+                }
             } catch (error) {}
         })();
     </script>
@@ -45,7 +56,7 @@
          class="fixed inset-0 z-30 bg-navy-950/50 dark:bg-navy-50/50 backdrop-blur-sm lg:hidden"></div>
 
     <aside :class="menu && 'is-open'"
-           class="admin-drawer fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-navy-950 dark:bg-navy-50 shadow-lift
+           class="admin-drawer admin-sidebar fixed inset-y-0 left-0 z-40 flex flex-col bg-navy-950 dark:bg-navy-50 shadow-lift
                   lg:sticky lg:top-0 lg:h-screen lg:shadow-none">
         @include('admin.partials.sidebar')
     </aside>
@@ -64,6 +75,11 @@
         </footer>
     </div>
 </div>
+
+{{-- The collapsed rail's tooltip. One node, moved and filled by app.js: the
+     sidebar's nav scrolls, and anything drawn inside it would be clipped by
+     that overflow the moment it reached past 4.5rem. --}}
+<div class="panel-tip" data-panel-tip-box hidden></div>
 
 @stack('scripts')
 </body>

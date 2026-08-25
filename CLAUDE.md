@@ -62,7 +62,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (335 feature tests)
+# Tests (343 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -79,6 +79,7 @@ vendor/bin/phpunit --filter Gallery                # the photo gallery, public a
 vendor/bin/phpunit --filter AdminListControl       # drag-to-reorder and the live switches
 vendor/bin/phpunit --filter PublicPages            # every public page, and the editorial markup language
 vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit screen renders
+vendor/bin/phpunit --filter PanelNavigation        # the panel's menu registry and its icon rail
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -145,6 +146,16 @@ Auth is hand-rolled and minimal: login, logout, no registration and no password-
 - The **`?untranslated=<locale>` filter runs in PHP**, not SQL. `missingTranslations()` skips fields that are blank in the source too, and a `JSON_EXTRACT` query cannot tell those apart from a real gap. `paginateContent()` keeps ordinary listings paginating in the database.
 
 Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder per content type, with the disk-relative path in the existing `image`/`photo` column. **Render them with `media_url()`, never `asset()`** — the disk is only reachable through the `storage:link` symlink. Replacing or removing an image deletes the old file; so does deleting the row.
+
+#### The menu is a registry, and it collapses
+
+`App\Support\PanelNavigation` holds the fifteen items in four groups, and nothing else decides what is in the menu. The sidebar renders it; the quick-search palette will search it. Two lists would drift the moment somebody adds a section to one of them — and a link that exists but cannot be found is worse than one that does not exist at all.
+
+- **An item's `key` is its label key.** `admin.nav.<key>`, and a group's heading is `admin.nav.group_<heading>`, so a section cannot ship with a label in one locale and a raw key in the other. `PanelNavigationTest` reads the registry and asserts the route exists, both locales name it, the icon is one the icon component actually draws, and the page answers — the icon check parses the component's own list rather than rendering it, because `x-icon` falls back to `activity` for a name it does not know and a typo would otherwise look like a plausible icon.
+- **The badge counts are queried once.** The composer is bound to `admin.layouts.app` rather than to the sidebar: an `@include` inherits the parent view's data, so every partial that renders the menu shares one resolved copy.
+- **The collapsed rail is CSS, and its state is settled before the first paint.** `panel-rail` on `<html>` is written by the inline head script from `localStorage`, for exactly the reason the sidebar's off-canvas state is plain CSS: Alpine boots after the first paint, and a menu that starts 18rem wide and snaps to 4.5rem is worse than one that never collapses. The rules live in one block (`admin-sidebar` in `app.css`) and are confined to `lg` — below it the sidebar is the drawer, where a strip of unlabelled icons would be a menu nobody can read on the device with the least room to guess.
+- **A collapsed label is `sr-only`, not `display: none`.** It stays in the link's accessible name and is drawn as a tooltip on hover. That tooltip is **one fixed node in the layout**, not something rendered inside the link: the nav scrolls, and an overflow container clips its own children the moment they reach past 4.5rem.
+- **The watchdog un-rails.** The 1.5s check that drops `has-js` when the bundle never reports in drops `panel-rail` too — the tooltips are the bundle's job, and without them a collapsed menu is fifteen unlabelled icons.
 
 Chamber hours are edited on the doctor's page as their own little forms (`DoctorScheduleController`), because HTML forbids nesting a form inside another. Overlapping windows on the same weekday are rejected: two windows over the same minutes would generate a slot twice, and the unique index would then bounce the second booking with nothing a patient could act on.
 
@@ -450,7 +461,7 @@ Nothing the site claims. What is missing is what it has never promised:
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
 - **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
 - **One staff role.** Everyone who can sign in to the panel can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
-- **No panel quick-search, and the menu does not collapse.** The sidebar is a flat list of fifteen items that scrolls on a short screen. A collapsible icon rail, a Ctrl+K palette over `PanelNavigation`, an account block at the foot of the menu and badges for untranslated content are designed and agreed but not built — see the handoff note below.
+- **No panel quick-search.** The menu now collapses to an icon rail and reads from `PanelNavigation`, which is what a palette would search. A Ctrl+K palette over that registry, an account block at the foot of the menu and badges for untranslated content are designed and agreed but not built.
 
 ## The one thing to do before launch
 
@@ -463,11 +474,15 @@ Two places carry a consequence beyond the editorial:
 
 Everything else in Bangla is worth reviewing; those two are worth reviewing first.
 
-## Where this stopped (2026-08-24)
+## Where this stopped (2026-08-25)
 
-Everything described above is built, tested and pushed — tip `520b4b7`, 335 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 343 tests. What follows is the state a new session should know rather than rediscover.
 
-**Agreed but not started: the panel menu redesign.** The user chose a *collapsible icon rail* — the sidebar shrinks to a ~4rem strip of icons with tooltips and remembers the choice — plus three extras they asked for: a Ctrl+K quick-search palette, an account block at the foot of the menu, and badges on more items than the two that have them now. A first cut of the shared registry (`App\Support\PanelNavigation`, feeding both the sidebar and the palette from one list so the two cannot drift) was written and then reverted unfinished, to leave the tree clean. Start there.
+**The panel menu redesign, half done.** The registry (`App\Support\PanelNavigation`) and the collapsible icon rail are built — see *The menu is a registry, and it collapses* above. Three pieces the user asked for are still outstanding, and the registry is what the first of them was for:
+
+- **The Ctrl+K quick-search palette.** `PanelNavigation::items()` is the flat list it searches, and already carries label, URL, icon and badge per item. Nothing else is needed from the model side.
+- **An account block at the foot of the menu.** The name, email, *My account* and *Sign out* currently live only in the topbar dropdown. Note the sidebar foot is now three rows deep (site status, view site, the rail switch) and each of them collapses to a centred icon — an account block has to do the same.
+- **Badges on more items than the two that have them.** Untranslated content is the obvious one; `missingTranslations()` already answers it per model, but it runs in PHP rather than SQL, so counting it for every listing on every page load is the thing to watch.
 
 **Two things waiting on the user, not on code:**
 
