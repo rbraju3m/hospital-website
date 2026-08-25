@@ -40,10 +40,16 @@
                         <p class="eyebrow anim-fade-up text-teal-300">{{ $slide->eyebrow }}</p>
                     @endif
 
-                    <h1 class="anim-fade-up mt-3 font-display text-4xl font-extrabold leading-[1.05] text-white sm:text-5xl lg:text-6xl"
+                    {{-- One h1 on the page, on the slide that is showing when it
+                         loads. The rest are paragraphs wearing the same size:
+                         they are alternates of the same heading, not sections
+                         of the document, and three h1s would say the page is
+                         about three things. --}}
+                    <{{ $position === 0 ? 'h1' : 'p' }}
+                        class="anim-fade-up mt-3 font-display text-4xl font-extrabold leading-[1.05] text-white sm:text-5xl lg:text-6xl"
                         style="--anim-delay:70ms">
                         {{ $slide->title }}
-                    </h1>
+                    </{{ $position === 0 ? 'h1' : 'p' }}>
 
                     @if ($slide->subtitle)
                         <p class="anim-fade-up mt-5 max-w-xl text-lg leading-relaxed text-white/75" style="--anim-delay:140ms">
