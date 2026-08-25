@@ -222,6 +222,28 @@ class PanelNavigationTest extends TestCase
         $this->assertStringContainsString(e(__('admin.doctors.create'), false), $html);
     }
 
+    public function test_the_account_block_is_at_the_foot_of_the_menu_and_nowhere_else(): void
+    {
+        $user = User::factory()->create(['name' => 'Nasrin Sultana', 'email' => 'nasrin@rbr.test']);
+
+        $html = $this->actingAs($user)->get(route('admin.dashboard'))->getContent();
+
+        $this->assertStringContainsString('nasrin@rbr.test', $html);
+        $this->assertStringContainsString(__('admin.nav.my_account'), $html);
+        $this->assertStringContainsString(__('admin.auth.sign_out'), $html);
+
+        // One copy. The topbar dropdown it replaced offered the same two links
+        // on the same screen, and a second Sign out is a second thing to keep
+        // in step rather than a convenience.
+        $this->assertSame(1, substr_count($html, __('admin.auth.sign_out')));
+        $this->assertSame(1, substr_count($html, route('admin.logout')));
+
+        // Collapsed it is an avatar, so the person is named where the name is
+        // not on the screen: the tooltip, and the button's accessible name.
+        $this->assertStringContainsString('data-panel-tip="Nasrin Sultana"', $html);
+        $this->assertStringContainsString('aria-label="Nasrin Sultana"', $html);
+    }
+
     public function test_the_menu_collapses_and_remembers_the_choice(): void
     {
         $html = $this->get(route('admin.dashboard'))->getContent();

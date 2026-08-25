@@ -62,7 +62,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (347 feature tests)
+# Tests (348 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -162,6 +162,8 @@ Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder 
 - **A `create` route's name is also its label key.** `admin.doctors.create` names the screen *and* the words already on the button that opens it — "Add doctor", "Write article", "Book for a patient". No second set of strings to write or translate, and `PanelNavigationTest` asserts both halves so a row cannot ship reading `admin.doctors.create`.
 - **The hotkey yields to the markup editor.** Ctrl/Cmd+K is already "insert link" in the prose editor, which `preventDefault`s from a handler on the textarea — so it has run by the time the palette's window handler does, and the palette checks `event.defaultPrevented` rather than special-casing the editor. Widen one and the other still holds.
 - **Rows are real links.** Middle-click opens a section in a tab, like anything else on the page; Enter follows the highlighted one.
+
+**The account block sits at the foot of the menu**, and is the only copy: it replaced the topbar dropdown rather than joining it, because the same two links twice on one screen is a second thing to keep in step rather than a convenience. It opens upwards, is wider than the collapsed rail (nothing in the sidebar clips it), and collapsed it is an avatar — so the person is named by the button's `aria-label` and the rail tooltip, where the name itself is off the screen.
 - **Matching is words, not fuzz.** Every word typed has to appear in the row, ranked by whether the label starts with the first word or merely contains it. Staff type the name of the thing they want, and a fuzzy matcher's second guess arriving first is worse than no second guess.
 
 Chamber hours are edited on the doctor's page as their own little forms (`DoctorScheduleController`), because HTML forbids nesting a form inside another. Overlapping windows on the same weekday are rejected: two windows over the same minutes would generate a slot twice, and the unique index would then bounce the second booking with nothing a patient could act on.
@@ -468,7 +470,7 @@ Nothing the site claims. What is missing is what it has never promised:
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
 - **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
 - **One staff role.** Everyone who can sign in to the panel can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
-- **No account block at the foot of the menu, and no badges for untranslated content.** The menu collapses, reads from `PanelNavigation` and is searchable with Ctrl+K; what is left of the redesign is the account block (the name, email, *My account* and *Sign out* still live only in the topbar dropdown) and badges on more items than the two that have them. Both are agreed but not built.
+- **No badges for untranslated content.** The menu collapses, reads from `PanelNavigation`, is searchable with Ctrl+K and carries the account block; what is left of the redesign is badges on more items than the two that have them. Agreed but not built.
 
 ## The one thing to do before launch
 
@@ -483,11 +485,10 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 347 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 348 tests. What follows is the state a new session should know rather than rediscover.
 
-**The panel menu redesign, mostly done.** The registry (`App\Support\PanelNavigation`), the collapsible icon rail and the Ctrl+K palette are built — see *The menu is a registry, and it collapses* above. Two pieces the user asked for are still outstanding:
+**The panel menu redesign, all but one piece.** The registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette and the account block are built — see *The menu is a registry, and it collapses* above. One piece the user asked for is still outstanding:
 
-- **An account block at the foot of the menu.** The name, email, *My account* and *Sign out* currently live only in the topbar dropdown. Note the sidebar foot is now three rows deep (site status, view site, the rail switch) and each of them collapses to a centred icon — an account block has to do the same.
 - **Badges on more items than the two that have them.** Untranslated content is the obvious one; `missingTranslations()` already answers it per model, but it runs in PHP rather than SQL, so counting it for every listing on every page load is the thing to watch.
 
 **Two things waiting on the user, not on code:**
