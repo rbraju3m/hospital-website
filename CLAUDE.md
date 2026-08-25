@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (452 feature tests)
+# Tests (459 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -207,6 +207,12 @@ Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder 
 Chamber hours are edited on the doctor's page as their own little forms (`DoctorScheduleController`), because HTML forbids nesting a form inside another. Overlapping windows on the same weekday are rejected: two windows over the same minutes would generate a slot twice, and the unique index would then bounce the second booking with nothing a patient could act on.
 
 Front-desk bookings are deliberately **laxer than the public form** — no 30-day window, no 60-minute lead time, any time accepted rather than only the published grid. Those constraints exist to protect an unattended web form; staff can see the consultant's actual day. The unique index still applies, so the desk cannot double-book a minute.
+
+The desk can also **edit a booking** — move it, change the consultant, correct what was written down — on those same lax rules. Three things about it:
+
+- **Status is not on the edit form.** The show screen's buttons are the way to change it, and they are what tells the patient; a second path here would move a booking to `cancelled` and never say so. The form request marks the field `prohibited` when a booking is being edited rather than trusting the template.
+- **The patient is told only when the visit itself moved** — a different date, time or consultant. Correcting a spelling or adding a note is not something to text somebody about, and every message costs a segment and some of their attention.
+- **Changing the consultant re-denormalises `department_id`**, the same as when the booking was made.
 
 Deletes that would take data with them are refused rather than cascaded: a department with doctors, a doctor with appointments, your own account, the last account.
 
@@ -387,6 +393,8 @@ Two channels, both queued, both routed through `App\Services\AppointmentNotifier
 | A booking is created (site or desk) | the patient, if they gave an address | the patient — always |
 | A booking arrives from the website | `setting('appointment_email')` → `setting('email')` | `setting('desk_sms_number')`, if it is a mobile |
 | The desk confirms or cancels | the patient | the patient |
+| The desk moves a booking | the patient | the patient |
+| A patient moves or cancels their own | — | — |
 | 6pm the day before | the patient | the patient |
 
 **The two channels are not equivalent.** Email is optional on the booking form; phone is required. SMS is therefore the only channel that reaches every patient, and the one that matters if only one works.
@@ -591,7 +599,7 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 452 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 459 tests. What follows is the state a new session should know rather than rediscover.
 
 **Patients can move and cancel their own bookings from the portal (2026-08-25)** — see *Changing a booking from the portal* above. `behaviour_portal_changes` turns it off.
 

@@ -56,7 +56,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('appointments/export', [AppointmentController::class, 'export'])->name('appointments.export');
         Route::patch('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])
             ->name('appointments.status');
-        Route::resource('appointments', AppointmentController::class)->except(['edit', 'update']);
+        Route::resource('appointments', AppointmentController::class);
 
         Route::patch('messages/{message}/read', [ContactMessageController::class, 'toggleRead'])->name('messages.read');
         Route::resource('messages', ContactMessageController::class)->only(['index', 'show', 'destroy'])

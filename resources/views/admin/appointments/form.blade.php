@@ -1,20 +1,33 @@
 @extends('admin.layouts.app')
 
-@section('title', __('admin.appointments.create'))
-@section('heading', __('admin.appointments.create'))
-@section('subheading', __('admin.appointments.create_help'))
+@php
+    // One form for both. An existing booking keeps its reference and its
+    // status — the status buttons on the show screen are the way to change
+    // that, because they are what tells the patient.
+    $appointment ??= null;
+    $editing = (bool) $appointment;
+@endphp
+
+@section('title', $editing ? __('admin.appointments.edit') : __('admin.appointments.create'))
+@section('heading', $editing ? $appointment->reference : __('admin.appointments.create'))
+@section('subheading', $editing ? __('admin.appointments.edit_help') : __('admin.appointments.create_help'))
 
 @section('content')
-<form method="POST" action="{{ route('admin.appointments.store') }}" class="admin-form"
+<form method="POST"
+      action="{{ $editing ? route('admin.appointments.update', $appointment) : route('admin.appointments.store') }}"
+      class="admin-form"
       x-data="frontDeskBooking({
           slotsUrl: '{{ route('appointment.slots') }}',
           doctorId: '{{ old('doctor_id', $selectedDoctor) }}',
           date: '{{ old('appointment_date', $date) }}',
+          time: '{{ old('appointment_time', $appointment ? substr($appointment->appointment_time, 0, 5) : '') }}',
       })">
     @csrf
+    @if ($editing) @method('PUT') @endif
 
     <div class="mb-5">
-        <a href="{{ route('admin.appointments.index') }}" class="text-sm font-medium text-navy-900/50 hover:text-navy-900">
+        <a href="{{ $editing ? route('admin.appointments.show', $appointment) : route('admin.appointments.index') }}"
+           class="text-sm font-medium text-navy-900/50 hover:text-navy-900">
             ← {{ __('admin.actions.back') }}
         </a>
     </div>
@@ -34,7 +47,7 @@
                                :value="$date" x-model="date" @change="loadSlots" />
 
                 <x-admin.input name="appointment_time" type="time" :label="__('admin.fields.appointment_time')" required
-                               :value="old('appointment_time')" x-model="time"
+                               :value="old('appointment_time', $appointment ? substr($appointment->appointment_time, 0, 5) : null)" x-model="time"
                                :help="__('admin.appointments.time_help')" />
             </div>
 
@@ -63,15 +76,15 @@
         <x-admin.section :title="__('admin.appointments.patient')">
             <div class="grid gap-5 sm:grid-cols-2">
                 <x-admin.input name="patient_name" :label="__('admin.fields.patient_name')" required
-                               :value="old('patient_name')" class="sm:col-span-2" />
-                <x-admin.input name="phone" :label="__('admin.fields.phone')" required :value="old('phone')"
+                               :value="old('patient_name', $appointment?->patient_name)" class="sm:col-span-2" />
+                <x-admin.input name="phone" :label="__('admin.fields.phone')" required :value="old('phone', $appointment?->phone)"
                                placeholder="01XXXXXXXXX" />
-                <x-admin.input name="email" type="email" :label="__('admin.fields.email')" :value="old('email')" />
-                <x-admin.select name="gender" :label="__('admin.fields.gender')" :value="old('gender')"
+                <x-admin.input name="email" type="email" :label="__('admin.fields.email')" :value="old('email', $appointment?->email)" />
+                <x-admin.select name="gender" :label="__('admin.fields.gender')" :value="old('gender', $appointment?->gender)"
                                 :placeholder="__('admin.states.unspecified')"
                                 :options="['male' => __('admin.gender.male'), 'female' => __('admin.gender.female'), 'other' => __('admin.gender.other')]" />
-                <x-admin.input name="age" type="number" :label="__('admin.fields.age')" :value="old('age')" />
-                <x-admin.textarea name="notes" :rows="3" :label="__('admin.fields.notes')" :value="old('notes')"
+                <x-admin.input name="age" type="number" :label="__('admin.fields.age')" :value="old('age', $appointment?->age)" />
+                <x-admin.textarea name="notes" :rows="3" :label="__('admin.fields.notes')" :value="old('notes', $appointment?->notes)"
                                   :help="__('admin.appointments.notes_help')" class="sm:col-span-2" />
             </div>
         </x-admin.section>
@@ -82,17 +95,19 @@
             <x-admin.section :title="__('admin.appointments.detail')">
                 <div class="grid gap-5">
                     <x-admin.select name="visit_type" :label="__('admin.fields.visit_type')" required
-                                    :value="old('visit_type', 'new')"
+                                    :value="old('visit_type', $appointment?->visit_type ?? 'new')"
                                     :options="['new' => __('admin.visit.new'), 'follow_up' => __('admin.visit.follow_up')]" />
 
-                    <x-admin.select name="status" :label="__('admin.fields.status')" required
-                                    :value="old('status', 'confirmed')"
-                                    :help="__('admin.appointments.status_help')"
-                                    :options="collect(['pending', 'confirmed', 'completed'])
-                                        ->mapWithKeys(fn ($s) => [$s => __('admin.appointments.status.'.$s)])->all()" />
+                    @unless ($editing)
+                        <x-admin.select name="status" :label="__('admin.fields.status')" required
+                                        :value="old('status', 'confirmed')"
+                                        :help="__('admin.appointments.status_help')"
+                                        :options="collect(['pending', 'confirmed', 'completed'])
+                                            ->mapWithKeys(fn ($s) => [$s => __('admin.appointments.status.'.$s)])->all()" />
+                    @endunless
 
                     <x-admin.select name="locale" :label="__('admin.fields.locale')" required
-                                    :value="old('locale', app()->getLocale())"
+                                    :value="old('locale', $appointment?->locale ?? app()->getLocale())"
                                     :help="__('admin.appointments.locale_help')"
                                     :options="collect(config('app.available_locales'))->map(fn ($meta) => $meta['native'])->all()" />
                 </div>
@@ -100,7 +115,8 @@
         </x-slot:aside>
     </x-admin.form-layout>
 
-    <x-admin.form-actions :cancel="route('admin.appointments.index')" :submit="__('admin.appointments.book')" />
+    <x-admin.form-actions :cancel="$editing ? route('admin.appointments.show', $appointment) : route('admin.appointments.index')"
+                          :submit="$editing ? __('admin.actions.save') : __('admin.appointments.book')" />
 </form>
 @endsection
 
@@ -110,7 +126,7 @@
         Alpine.data('frontDeskBooking', (config) => ({
             doctorId: config.doctorId || '',
             date: config.date || '',
-            time: '',
+            time: config.time || '',
             slots: [],
             loading: false,
 

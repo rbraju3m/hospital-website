@@ -102,6 +102,13 @@
                 </div>
             </x-admin.section>
 
+            <x-admin.section :title="__('admin.appointments.edit')" :description="__('admin.appointments.edit_help')">
+                <a href="{{ route('admin.appointments.edit', $appointment) }}" class="btn-outline btn-sm w-full">
+                    <x-icon name="pencil" size="15" />
+                    {{ __('admin.appointments.edit') }}
+                </a>
+            </x-admin.section>
+
             <x-admin.section :title="__('admin.appointments.contact_patient')">
                 <div class="grid gap-2">
                     <a href="tel:{{ $appointment->phone }}" class="btn-accent btn-sm">

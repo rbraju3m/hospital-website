@@ -27,7 +27,14 @@ class AppointmentRequest extends AdminFormRequest
             'appointment_date' => ['required', 'date_format:Y-m-d'],
             'appointment_time' => ['required', 'date_format:H:i'],
             'visit_type' => ['required', Rule::in(['new', 'follow_up'])],
-            'status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled', 'completed'])],
+            /* Only when the booking is being made. An existing one keeps the
+               status it has: the show screen's buttons are the way to change
+               it, and they are what tells the patient — a second path here
+               would move a booking to `cancelled` and never say so. */
+            'status' => [
+                $this->route('appointment') ? 'prohibited' : 'required',
+                Rule::in(['pending', 'confirmed', 'cancelled', 'completed']),
+            ],
             'notes' => ['nullable', 'string', 'max:2000'],
             // Which language to email this patient in, now and whenever the
             // desk confirms or cancels later.

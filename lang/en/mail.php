@@ -84,4 +84,12 @@ return [
         'intro_moved' => ':patient moved this from the patient portal. The details below are the new booking.',
         'moved_from' => 'It was previously :previous.',
     ],
+    'patient_moved' => [
+        'subject' => 'Your appointment :reference has been moved',
+        'preheader' => 'It is now :date at :time.',
+        'heading' => 'Your appointment has moved',
+        'intro' => 'Your appointment with :doctor is now on :date at :time. Everything else about it is unchanged, including your reference.',
+        'was' => 'It was previously :previous.',
+        'body' => 'If the new time does not suit you, call :number and we will find another.',
+    ],
 ];

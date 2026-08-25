@@ -74,6 +74,74 @@ class AppointmentController extends Controller
             ->with('status', __('admin.appointments.created', ['reference' => $appointment->reference]));
     }
 
+    public function edit(Appointment $appointment): View
+    {
+        return view('admin.appointments.form', [
+            'appointment' => $appointment,
+            'doctors' => Doctor::with('department')->ordered()->get(),
+            'selectedDoctor' => $appointment->doctor_id,
+            'date' => $appointment->appointment_date->toDateString(),
+        ]);
+    }
+
+    /**
+     * Move a booking, or correct what was written down about it.
+     *
+     * The desk's rules, not the website's: any date, any minute, any
+     * consultant — they can see the day and the patient is often standing in
+     * front of them. The unique index still applies, because two bookings for
+     * one doctor and one minute is not a judgement call.
+     */
+    public function update(AppointmentRequest $request, Appointment $appointment): RedirectResponse
+    {
+        $data = $request->validated();
+        $doctor = Doctor::findOrFail($data['doctor_id']);
+
+        $was = [
+            'doctor_id' => $appointment->doctor_id,
+            'date' => $appointment->appointment_date->toDateString(),
+            'time' => $appointment->appointment_time,
+        ];
+        $previous = $this->describe($appointment);
+
+        try {
+            $appointment->fill([
+                ...$data,
+                // Denormalised from the doctor at write time, the same as when
+                // the booking was made — changing consultant changes it.
+                'department_id' => $doctor->department_id,
+                'appointment_time' => $data['appointment_time'].':00',
+            ])->save();
+        } catch (QueryException $e) {
+            if ($this->slots->isDuplicateSlotError($e)) {
+                return back()->withInput()->withErrors(['appointment_time' => __('admin.appointments.slot_taken')]);
+            }
+
+            throw $e;
+        }
+
+        /* Only when the visit itself moved. Correcting a spelling or adding a
+           note is not something to text somebody about, and every message
+           costs a segment and some of their attention. */
+        $moved = $was['doctor_id'] !== $appointment->doctor_id
+            || $was['date'] !== $appointment->appointment_date->toDateString()
+            || $was['time'] !== $appointment->appointment_time;
+
+        if ($moved) {
+            $this->notifier->movedByDesk($appointment, $previous);
+        }
+
+        return redirect()->route('admin.appointments.show', $appointment)
+            ->with('status', $moved
+                ? __('admin.appointments.moved', ['reference' => $appointment->reference])
+                : __('admin.appointments.updated', ['reference' => $appointment->reference]));
+    }
+
+    private function describe(Appointment $appointment): string
+    {
+        return $appointment->appointment_date->translatedFormat('j M Y').', '.$appointment->formattedTime();
+    }
+
     public function show(Appointment $appointment): View
     {
         $appointment->load(['doctor.department', 'department']);

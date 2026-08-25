@@ -23,6 +23,7 @@ return [
     'booked_confirmed' => ':hospital: :reference confirmed. :doctor, :date :time. Please arrive 15 min early. Call :phone to change.',
     'confirmed' => ':hospital: :reference confirmed. :doctor, :date :time. Please arrive 15 min early.',
     'reminder' => ':hospital: :reference is tomorrow, :date :time, :doctor. Please arrive 15 min early. Call :phone to change.',
+    'moved' => ':hospital: :reference moved to :date :time with :doctor. Call :phone if that does not suit.',
     'cancelled' => ':hospital: booking :reference on :date is cancelled. Call :phone to book another time.',
     'password_reset' => ':hospital portal code: :code. It expires in :minutes minutes. If you did not ask for it, ignore this message.',
     'desk_alert' => 'New booking :reference. :patient, :contact. :doctor, :date :time.',

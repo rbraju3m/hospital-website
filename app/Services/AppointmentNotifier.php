@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\SendSms;
 use App\Mail\AppointmentBooked;
 use App\Mail\AppointmentChangedAlert;
+use App\Mail\AppointmentMoved;
 use App\Mail\AppointmentReminder;
 use App\Mail\AppointmentStatusChanged;
 use App\Mail\NewAppointmentAlert;
@@ -82,6 +83,22 @@ class AppointmentNotifier
 
         $this->dispatch($appointment->email, new AppointmentReminder($appointment), $locale, 'reminder', $appointment);
         $this->text($appointment->phone, $appointment, $locale, 'reminder');
+    }
+
+    /**
+     * The desk moved a booking, and the patient is not in the room.
+     *
+     * Both channels: the SMS is what they will actually see today, and the
+     * email carries the whole booking again for the diary. Only sent when the
+     * visit itself moved — correcting a spelling is not something to text
+     * somebody about.
+     */
+    public function movedByDesk(Appointment $appointment, string $previous): void
+    {
+        $locale = $this->localeFor($appointment);
+
+        $this->dispatch($appointment->email, new AppointmentMoved($appointment, $previous), $locale, 'moved', $appointment);
+        $this->text($appointment->phone, $appointment, $locale, 'moved');
     }
 
     /**
