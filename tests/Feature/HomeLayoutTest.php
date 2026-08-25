@@ -154,7 +154,12 @@ class HomeLayoutTest extends TestCase
     public function test_a_band_switched_off_stays_off_in_every_layout(): void
     {
         $this->useLayout('compact');
-        \App\Support\SiteFeatures::store(['home_doctors' => false]);
+        // Everything as it is, minus one: store() walks the registry rather
+        // than the payload, so a one-key call switches off the whole site.
+        \App\Support\SiteFeatures::store(array_replace(
+            \App\Support\SiteFeatures::all(),
+            ['home_doctors' => false],
+        ));
 
         $this->get(route('home'))->assertOk()->assertDontSee(e(__('home.doctors.title')), false);
     }

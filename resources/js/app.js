@@ -857,6 +857,53 @@ const PALETTE_DEBOUNCE = 220;
    --------------------------------------------------------------------------- */
 const SLIDER_INTERVAL = 6500;
 
+/* ---------------------------------------------------------------------------
+   The portal's reschedule picker.
+
+   Small on purpose: the days a consultant sits are rendered by the server, so
+   a patient with no JavaScript still sees which dates exist. Only the times
+   for one day arrive over the wire, because shipping three weeks of a grid to
+   find out about one afternoon is the thing worth avoiding.
+   --------------------------------------------------------------------------- */
+Alpine.data('portalReschedule', (endpoint, initial = '') => ({
+    endpoint,
+    date: initial || '',
+    time: '',
+    slots: [],
+    loading: false,
+
+    init() {
+        if (this.date) this.load();
+    },
+
+    async load() {
+        // Picking a different day invalidates whichever time was chosen: the
+        // slot belonged to the old one.
+        this.time = '';
+        this.slots = [];
+
+        if (! this.date) return;
+
+        this.loading = true;
+
+        try {
+            const response = await fetch(`${this.endpoint}?date=${encodeURIComponent(this.date)}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            if (! response.ok) throw new Error(response.status);
+
+            this.slots = (await response.json()).slots ?? [];
+        } catch (error) {
+            // Nothing to offer rather than a wrong offer: the page says so,
+            // and the desk's number is on every portal screen.
+            this.slots = [];
+        } finally {
+            this.loading = false;
+        }
+    },
+}));
+
 Alpine.data('heroSlider', (count = 0) => ({
     index: 0,
     count,

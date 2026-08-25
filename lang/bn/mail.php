@@ -73,4 +73,15 @@ return [
         'notes' => 'রোগীর নোট',
         'booked_at' => 'বুক হয়েছে',
     ],
+    'patient_change' => [
+        'subject_cancelled' => ':patient বুকিং :reference বাতিল করেছেন',
+        'subject_moved' => ':patient বুকিং :reference সরিয়েছেন',
+        'heading_cancelled' => 'একজন রোগী তাঁর অ্যাপয়েন্টমেন্ট বাতিল করেছেন',
+        'heading_moved' => 'একজন রোগী তাঁর অ্যাপয়েন্টমেন্ট সরিয়েছেন',
+        'preheader_cancelled' => ':patient :date তারিখে :time সময়ে আসছেন না।',
+        'preheader_moved' => ':patient এখন :date তারিখে :time সময়ে বুক করেছেন।',
+        'intro_cancelled' => ':patient রোগী পোর্টাল থেকে এটি বাতিল করেছেন। সময়টি আবার খালি হয়ে গেছে।',
+        'intro_moved' => ':patient রোগী পোর্টাল থেকে এটি সরিয়েছেন। নিচের তথ্যই নতুন বুকিং।',
+        'moved_from' => 'আগে এটি ছিল :previous।',
+    ],
 ];

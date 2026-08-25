@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (434 feature tests)
+# Tests (452 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -71,6 +71,7 @@ vendor/bin/phpunit tests/Feature/Admin           # the staff panel
 vendor/bin/phpunit --filter AppointmentNotificationTest # the emails
 vendor/bin/phpunit --filter 'Sms|Reminder'       # SMS and the day-before reminder
 vendor/bin/phpunit tests/Feature/Portal          # the patient portal
+vendor/bin/phpunit --filter PortalAppointmentChange # a patient moving or cancelling their own booking
 vendor/bin/phpunit --filter Diagnostics          # the price list
 vendor/bin/phpunit --filter LocalisationTest      # UI strings
 vendor/bin/phpunit --filter ContentTranslationTest # database content
@@ -216,6 +217,38 @@ Deletes that would take data with them are refused rather than cascaded: a depar
 **The mobile number is the identity**, as the service page always said. It is stored on `patients` in the national ten-digit form (`1712345678`) so lookups are exact, and `Patient::appointments()` is a query rather than a relation because appointments keep the number exactly as it was typed and `Rules::BD_MOBILE` allows three spellings of it. `PhoneNumber::variants()` enumerates them; widen the regex and widen that.
 
 Sign-in is a password, chosen over a one-time code. The gap that leaves is that email is optional here, so **recovery is a six-digit code by SMS** (`PasswordResetCodes`) — hashed at rest, single use, ten minutes, five wrong guesses and it burns. Asking for a code answers identically whether or not the number has an account.
+
+#### Changing a booking from the portal
+
+A patient may move or cancel an upcoming booking themselves, behind
+`behaviour_portal_changes`. Off, the portal goes back to showing records and
+pointing at the desk — and the routes close with the buttons, so a bookmarked
+reschedule page is not a way round the decision.
+
+- **The same rules as the public form.** The published grid, the 30-day window,
+  the 60-minute lead, the availability re-check at submit time and the unique
+  index behind it. A slot reachable from here is one they could have booked in
+  the first place, so nothing about a consultant's day arrives through a door
+  the booking rules do not watch.
+- **A move goes back to `pending`.** The desk agreed to a time, and this is not
+  that time; somebody there has to look at the new one.
+- **Same doctor only.** Moving to a different consultant is a new booking, not
+  a reschedule, and the desk should hear about it as one.
+- **The desk is told; the patient is not.** They are the one who just did it,
+  and the portal has already said so on the screen in front of them — the
+  mirror image of the desk getting no alert for a booking it took itself.
+- **`cancelled_by` and `rescheduled_at` say who did what**, and the panel shows
+  it on the booking. `status` alone says a booking was cancelled and not by
+  whom, and the desk's next move differs: a slot the patient gave up is one to
+  offer somebody else, a slot the desk cancelled is a patient somebody may
+  still need to ring.
+- **Somebody else's booking answers 404, not 403.** A reference is short enough
+  to guess at, and "wrong but real" is worth more to somebody guessing than
+  "not found". Ownership is the phone number in every spelling it is accepted
+  in, the same rule `Patient::appointments()` reads by.
+- The reschedule page renders the consultant's chamber days server-side and
+  fetches only one day's times, so a patient with no JavaScript still sees
+  which days exist.
 
 #### Patient documents
 
@@ -543,7 +576,6 @@ Motion is part of the design system, not decoration bolted onto pages. Tokens li
 Nothing the site claims. What is missing is what it has never promised:
 
 - **No lab results system upstream.** Reports reach the portal because a staff member uploads a file, not because an analyser wrote one. That is the honest version of "download reports online", but it is a manual step somebody has to remember.
-- **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
 - **No delivery receipts.** The notification log records what was dispatched and what the gateway accepted; what it cannot record is what arrived. No Bangladeshi gateway in `config/sms.php` reports back, and adding one means a callback route per provider — the log has a `status` column with room for it.
 
 ## The one thing to do before launch
@@ -559,7 +591,9 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 434 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 452 tests. What follows is the state a new session should know rather than rediscover.
+
+**Patients can move and cancel their own bookings from the portal (2026-08-25)** — see *Changing a booking from the portal* above. `behaviour_portal_changes` turns it off.
 
 **The home page's layouts and the slider landed on 2026-08-25** — the user asked for both, chose whole-page templates over band reordering, and chose the slider as the hero rather than a band lower down. See *The home page has three layouts* above. The live setting is still `classic`, so their home page has not changed until they pick another.
 

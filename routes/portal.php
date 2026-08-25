@@ -45,6 +45,21 @@ Route::prefix('portal')->name('portal.')->middleware('feature:area_portal')->gro
 
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::get('appointments', [AppointmentController::class, 'index'])->name('appointments');
+
+        /* Moving and cancelling a booking, behind their own switch: a hospital
+           that would rather patients rang the desk turns this off and the
+           portal goes back to showing records. The routes close with it, so a
+           bookmarked reschedule page is not a way round the decision. */
+        Route::middleware('feature:behaviour_portal_changes')->group(function () {
+            Route::get('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])
+                ->name('appointments.reschedule');
+            Route::get('appointments/{appointment}/slots', [AppointmentController::class, 'slots'])
+                ->name('appointments.slots');
+            Route::patch('appointments/{appointment}/reschedule', [AppointmentController::class, 'move'])
+                ->middleware('throttle:10,1')->name('appointments.move');
+            Route::patch('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
+                ->middleware('throttle:10,1')->name('appointments.cancel');
+        });
         Route::get('documents', [DocumentController::class, 'index'])->name('documents');
         Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
         Route::post('documents/{document}/pay', [PaymentController::class, 'initiate'])

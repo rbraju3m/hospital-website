@@ -87,6 +87,7 @@ class SiteFeatures
                 'behaviour_contact_form' => true,
                 'behaviour_test_request' => true,
                 'behaviour_portal_registration' => true,
+                'behaviour_portal_changes' => true,
                 'behaviour_online_payment' => true,
                 'behaviour_demo_images' => true,
                 'behaviour_animations' => true,

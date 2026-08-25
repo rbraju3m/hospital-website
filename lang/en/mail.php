@@ -73,4 +73,15 @@ return [
         'notes' => 'Patient notes',
         'booked_at' => 'Booked',
     ],
+    'patient_change' => [
+        'subject_cancelled' => ':patient cancelled booking :reference',
+        'subject_moved' => ':patient moved booking :reference',
+        'heading_cancelled' => 'A patient cancelled their appointment',
+        'heading_moved' => 'A patient moved their appointment',
+        'preheader_cancelled' => ':patient will not be coming on :date at :time.',
+        'preheader_moved' => ':patient is now booked for :date at :time.',
+        'intro_cancelled' => ':patient cancelled this from the patient portal. The slot is free again.',
+        'intro_moved' => ':patient moved this from the patient portal. The details below are the new booking.',
+        'moved_from' => 'It was previously :previous.',
+    ],
 ];

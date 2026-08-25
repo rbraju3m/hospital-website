@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendSms;
 use App\Mail\AppointmentBooked;
+use App\Mail\AppointmentChangedAlert;
 use App\Mail\AppointmentReminder;
 use App\Mail\AppointmentStatusChanged;
 use App\Mail\NewAppointmentAlert;
@@ -81,6 +82,34 @@ class AppointmentNotifier
 
         $this->dispatch($appointment->email, new AppointmentReminder($appointment), $locale, 'reminder', $appointment);
         $this->text($appointment->phone, $appointment, $locale, 'reminder');
+    }
+
+    /**
+     * A patient moved or cancelled their own booking from the portal.
+     *
+     * The desk is told and the patient is not: they are the one who just did
+     * it, and the portal has already said so on the screen in front of them.
+     * Mirror image of the rule that the desk gets no alert for a booking it
+     * took itself.
+     */
+    public function changedByPatient(Appointment $appointment, string $change, ?string $previous = null): void
+    {
+        $locale = config('app.fallback_locale');
+
+        $this->dispatch(
+            $this->deskAddress(),
+            new AppointmentChangedAlert($appointment, $change, $previous),
+            $locale,
+            "patient_{$change}",
+            $appointment,
+        );
+
+        $this->text(
+            setting('desk_sms_number'),
+            $appointment,
+            $locale,
+            $change === 'cancelled' ? 'desk_patient_cancelled' : 'desk_patient_moved',
+        );
     }
 
     /**

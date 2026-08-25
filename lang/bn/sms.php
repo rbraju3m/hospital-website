@@ -21,5 +21,7 @@ return [
     'cancelled' => ':hospital: :date তারিখের বুকিং :reference বাতিল। নতুন সময়ের জন্য :phone।',
     'password_reset' => ':hospital পোর্টাল কোড: :code। :minutes মিনিট পর মেয়াদ শেষ। আপনি না চাইলে বার্তাটি উপেক্ষা করুন।',
     'desk_alert' => 'নতুন বুকিং :reference। :patient, :contact। :doctor, :date :time।',
+    'desk_patient_cancelled' => 'রোগী :reference বাতিল করেছেন। :patient, :contact। :doctor, :date :time এখন খালি।',
+    'desk_patient_moved' => 'রোগী :reference সরিয়েছেন। :patient, :contact। এখন :doctor, :date :time।',
     'payment_received' => ':hospital: :title এর টাকা :amount পরিশোধিত। ধন্যবাদ।',
 ];

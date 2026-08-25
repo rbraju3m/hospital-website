@@ -23,10 +23,12 @@
         @endforelse
     </section>
 
-    {{-- Changing a booking still goes through the desk: the portal shows
-         records, it does not move them. --}}
+    {{-- What a patient may do about a booking, which depends on a switch:
+         with changes off the portal shows records and points at the desk. --}}
     <p class="mt-4 text-xs text-navy-900/45">
-        {{ __('portal.appointments.change_note', ['phone' => setting('appointment_number', setting('hotline'))]) }}
+        {{ feature('behaviour_portal_changes')
+            ? __('portal.appointments.change_note_on', ['phone' => setting('appointment_number', setting('hotline'))])
+            : __('portal.appointments.change_note_off', ['phone' => setting('appointment_number', setting('hotline'))]) }}
     </p>
 
     <section class="card mt-8 overflow-hidden">

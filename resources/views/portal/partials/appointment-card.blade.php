@@ -30,4 +30,27 @@
     <span class="{{ $style }} inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold">
         {{ __("portal.status.{$appointment->status}") }}
     </span>
+
+    {{-- Only on a booking the patient can still act on: past visits and
+         cancelled ones are a record, and a button that refuses is worse than
+         no button. --}}
+    @if ($appointment->isChangeableByPatient())
+        <div class="flex shrink-0 items-center gap-2">
+            <a href="{{ route('portal.appointments.reschedule', $appointment) }}"
+               class="btn-outline btn-sm">
+                <x-icon name="calendar" size="14" />
+                {{ __('portal.appointments.change') }}
+            </a>
+
+            <form method="POST" action="{{ route('portal.appointments.cancel', $appointment) }}"
+                  onsubmit="return confirm(@js(__('portal.appointments.cancel_confirm')))">
+                @csrf
+                @method('PATCH')
+                <button type="submit"
+                        class="btn btn-sm text-navy-900/50 transition duration-200 hover:text-urgent-700">
+                    {{ __('portal.appointments.cancel') }}
+                </button>
+            </form>
+        </div>
+    @endif
 </div>

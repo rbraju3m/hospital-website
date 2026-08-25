@@ -26,5 +26,7 @@ return [
     'cancelled' => ':hospital: booking :reference on :date is cancelled. Call :phone to book another time.',
     'password_reset' => ':hospital portal code: :code. It expires in :minutes minutes. If you did not ask for it, ignore this message.',
     'desk_alert' => 'New booking :reference. :patient, :contact. :doctor, :date :time.',
+    'desk_patient_cancelled' => 'Patient cancelled :reference. :patient, :contact. :doctor, :date :time is now free.',
+    'desk_patient_moved' => 'Patient moved :reference. :patient, :contact. Now :doctor, :date :time.',
     'payment_received' => ':hospital: payment of Tk :amount received for :title. Thank you.',
 ];

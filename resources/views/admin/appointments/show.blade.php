@@ -69,6 +69,24 @@
             <x-admin.section :title="__('admin.fields.status')">
                 <div class="mb-4"><x-admin.status-badge :status="$appointment->status" /></div>
 
+                {{-- What the patient did to this themselves. The desk's next
+                     move differs: a slot given up is one to offer somebody
+                     else, a slot the desk cancelled is a patient somebody may
+                     still need to ring. --}}
+                @if ($appointment->cancelled_by === 'patient')
+                    <p class="mb-4 flex items-start gap-2 rounded-lg bg-mist-50 px-3 py-2 text-xs text-navy-900/60">
+                        <x-icon name="info" size="14" class="mt-0.5 shrink-0" />
+                        {{ __('admin.appointments.cancelled_by_patient') }}
+                    </p>
+                @elseif ($appointment->rescheduled_at)
+                    <p class="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                        <x-icon name="info" size="14" class="mt-0.5 shrink-0" />
+                        {{ __('admin.appointments.moved_by_patient', [
+                            'when' => $appointment->rescheduled_at->translatedFormat('j M, H:i'),
+                        ]) }}
+                    </p>
+                @endif
+
                 <div class="grid gap-2">
                     @foreach (['confirmed', 'completed', 'pending', 'cancelled'] as $status)
                         @continue($status === $appointment->status)
