@@ -62,7 +62,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (356 feature tests)
+# Tests (365 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -81,6 +81,7 @@ vendor/bin/phpunit --filter PublicPages            # every public page, and the 
 vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit screen renders
 vendor/bin/phpunit --filter PanelNavigation        # the panel's menu registry, its icon rail and the Ctrl+K palette
 vendor/bin/phpunit --filter TranslationGaps        # the menu's count of untranslated content
+vendor/bin/phpunit --filter PanelSearch            # finding a record from the palette
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -172,6 +173,15 @@ Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder 
 
 **The account block sits at the foot of the menu**, and is the only copy: it replaced the topbar dropdown rather than joining it, because the same two links twice on one screen is a second thing to keep in step rather than a convenience. It opens upwards, is wider than the collapsed rail (nothing in the sidebar clips it), and collapsed it is an avatar — so the person is named by the button's `aria-label` and the rail tooltip, where the name itself is off the screen.
 - **Matching is words, not fuzz.** Every word typed has to appear in the row, ranked by whether the label starts with the first word or merely contains it. Staff type the name of the thing they want, and a fuzzy matcher's second guess arriving first is worse than no second guess.
+
+**Past two characters it also searches the records.** `App\Support\PanelSearch` behind `admin.search` answers a doctor by name, a booking by reference, a patient by mobile — twelve sections, four rows each, ~35ms against the dev data.
+
+- **A whitelist, like `ManagedLists`, not a lookup.** The term arrives from the browser; the model, the columns it may match and the screen it opens are declared in the class. "Search anything" is otherwise a way to read a column nobody meant to publish.
+- **The menu never waits for the network.** Local matches render first and records arrive underneath, so typing `doct` and pressing Enter reaches the doctors screen at the same speed whether or not the endpoint is having a slow afternoon.
+- **Stale answers are dropped twice** — the in-flight request is aborted, and a response whose term no longer matches the box is discarded. Without the second check a fast typist who backspaces can be shown results for a word they already deleted.
+- **`%` and `_` are escaped.** They are LIKE wildcards, so a term containing one would quietly match far more than was asked for — `%%` would return the four most recent rows of every table.
+- **Records match the base column or the active locale's translation**, the same rule as `Doctor::search()` and for the same reason. The source text lives in the ordinary columns, so English keeps working in the Bangla panel.
+- Capped at four rows per section: a palette is a way to reach one record, not a report. Somebody who wants all of them wants the listing and its filters.
 
 Chamber hours are edited on the doctor's page as their own little forms (`DoctorScheduleController`), because HTML forbids nesting a form inside another. Overlapping windows on the same weekday are rejected: two windows over the same minutes would generate a slot twice, and the unique index would then bounce the second booking with nothing a patient could act on.
 
@@ -477,7 +487,6 @@ Nothing the site claims. What is missing is what it has never promised:
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
 - **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
 - **One staff role.** Everyone who can sign in to the panel can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
-- **No panel search beyond the menu.** Ctrl+K finds a section or an "add one" screen; it does not find a doctor by name or a booking by reference. The palette reads a registry, and reaching content would mean an endpoint behind it.
 
 ## The one thing to do before launch
 
@@ -492,9 +501,9 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 356 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 365 tests. What follows is the state a new session should know rather than rediscover.
 
-**The panel menu redesign is done** — the registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette, the account block and the untranslated-content badges. See *The menu is a registry, and it collapses* above.
+**The panel menu redesign is done** — the registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette, the account block and the untranslated-content badges. Ctrl+K then grew a second half: `App\Support\PanelSearch` finds the records themselves. See *The menu is a registry, and it collapses* above.
 
 **Two things waiting on the user, not on code:**
 

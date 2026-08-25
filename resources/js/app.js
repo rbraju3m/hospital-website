@@ -819,15 +819,34 @@ Alpine.data('richText', () => ({
    that merely contains it. Deliberately not fuzzy — staff type the name of the
    thing they want, and a fuzzy matcher's second guess arriving first is worse
    than no second guess.
+
+   Records — a doctor by name, a booking by reference — come from admin.search
+   and arrive underneath. The menu is matched here and never waits for them.
    --------------------------------------------------------------------------- */
-Alpine.data('panelPalette', (entries = []) => ({
+const PALETTE_MIN_TERM = 2;
+const PALETTE_DEBOUNCE = 220;
+
+Alpine.data('panelPalette', (entries = [], endpoint = null) => ({
     open: false,
     query: '',
     index: 0,
     entries,
+    endpoint,
+    records: [],
+    loading: false,
+    timer: null,
+    request: null,
     trigger: null,
 
+    /* The menu, matched here and instantly, then whatever the server found.
+       That order is deliberate: the pages never wait for the network, so
+       typing "doct" and pressing Enter reaches the doctors screen at the same
+       speed whether or not the search endpoint is having a slow afternoon. */
     get results() {
+        return [...this.pages, ...this.records];
+    },
+
+    get pages() {
         const terms = this.query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 
         if (! terms.length) return this.entries;
@@ -849,6 +868,57 @@ Alpine.data('panelPalette', (entries = []) => ({
             .map((match) => match.entry);
     },
 
+    onType() {
+        this.index = 0;
+        clearTimeout(this.timer);
+
+        const term = this.query.trim();
+
+        if (! this.endpoint || term.length < PALETTE_MIN_TERM) {
+            this.abort();
+            this.records = [];
+            this.loading = false;
+            return;
+        }
+
+        // Marked as loading now rather than when the request goes, so the
+        // footer does not sit still through the whole debounce.
+        this.loading = true;
+        this.timer = setTimeout(() => this.lookup(term), PALETTE_DEBOUNCE);
+    },
+
+    async lookup(term) {
+        this.abort();
+        this.request = new AbortController();
+
+        try {
+            const response = await fetch(`${this.endpoint}?q=${encodeURIComponent(term)}`, {
+                headers: { Accept: 'application/json' },
+                signal: this.request.signal,
+            });
+
+            if (! response.ok) throw new Error(response.status);
+
+            const data = await response.json();
+
+            // An answer to a question nobody is asking any more. Aborting
+            // covers the usual case; this covers the one that was already in
+            // flight when the term changed back and forth.
+            if (term !== this.query.trim()) return;
+
+            this.records = data.results ?? [];
+        } catch (error) {
+            if (error.name !== 'AbortError') this.records = [];
+        } finally {
+            if (term === this.query.trim()) this.loading = false;
+        }
+    },
+
+    abort() {
+        this.request?.abort();
+        this.request = null;
+    },
+
     show() {
         if (this.open) return;
 
@@ -856,6 +926,8 @@ Alpine.data('panelPalette', (entries = []) => ({
         this.open = true;
         this.query = '';
         this.index = 0;
+        this.records = [];
+        this.loading = false;
         document.body.classList.add('overflow-hidden');
         this.$nextTick(() => this.$refs.input?.focus());
     },
@@ -864,6 +936,9 @@ Alpine.data('panelPalette', (entries = []) => ({
         if (! this.open) return;
 
         this.open = false;
+        clearTimeout(this.timer);
+        this.abort();
+        this.loading = false;
         document.body.classList.remove('overflow-hidden');
 
         // Back where they were, or a keyboard user is dropped at the top of

@@ -55,6 +55,12 @@ trait HasTranslations
         return blank($translated) ? $value : $translated;
     }
 
+    /** Which attributes this model stores per locale. @return list<string> */
+    public function translatableAttributes(): array
+    {
+        return $this->translatable ?? [];
+    }
+
     /** The raw stored value, ignoring the active locale. */
     public function untranslated(string $key): mixed
     {

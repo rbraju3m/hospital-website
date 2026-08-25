@@ -4,7 +4,7 @@
 
      The whole thing is `x-cloak` because it starts closed: cloaking something
      that should be visible on load is what makes a page blink. --}}
-<div x-data="panelPalette(@js($panelPalette))"
+<div x-data="panelPalette(@js($panelPalette), @js(route('admin.search')))"
      @keydown.window="hotkey($event)"
      @panel-palette.window="show()">
 
@@ -24,7 +24,7 @@
             <div class="flex items-center gap-3 border-b border-mist-200 px-4">
                 <x-icon name="search" size="18" class="text-navy-900/35" />
 
-                <input type="search" x-ref="input" x-model="query" @input="index = 0"
+                <input type="search" x-ref="input" x-model="query" @input="onType()"
                        role="combobox" aria-expanded="true" aria-controls="panel-palette-list"
                        :aria-activedescendant="results.length ? `panel-palette-${index}` : null"
                        autocomplete="off" spellcheck="false"
@@ -52,7 +52,14 @@
                                 <span x-show="entry.kind !== 'create'"><x-icon name="arrow-right" size="16" /></span>
                             </span>
 
-                            <span class="flex-1 truncate font-medium" x-text="entry.label"></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate font-medium" x-text="entry.label"></span>
+                                {{-- What tells two similar records apart: the
+                                     booking reference and its date, a mobile
+                                     number, a speciality. --}}
+                                <span x-show="entry.meta" class="block truncate text-xs text-navy-900/45"
+                                      x-text="entry.meta"></span>
+                            </span>
 
                             <span x-show="entry.badge" class="badge badge-teal" x-text="entry.badge"></span>
 
@@ -66,11 +73,19 @@
                 </template>
 
                 <li x-show="! results.length" class="px-3 py-6 text-center text-sm text-navy-900/50">
-                    {{ __('admin.palette.empty') }}
+                    <span x-show="loading">{{ __('admin.palette.searching') }}</span>
+                    <span x-show="! loading">{{ __('admin.palette.empty') }}</span>
                 </li>
             </ul>
 
             <div class="hidden items-center gap-4 border-t border-mist-200 px-4 py-2.5 text-[11px] text-navy-900/45 sm:flex">
+                {{-- Records are still arriving. The rows already on the screen
+                     are the menu's, which never wait for anything. --}}
+                <span x-show="loading" x-cloak class="flex items-center gap-1.5">
+                    <span class="pulse-dot text-teal-500" aria-hidden="true"></span>
+                    {{ __('admin.palette.searching') }}
+                </span>
+
                 <span class="flex items-center gap-1.5"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> {{ __('admin.palette.hint_move') }}</span>
                 <span class="flex items-center gap-1.5"><kbd class="kbd">↵</kbd> {{ __('admin.palette.hint_open') }}</span>
                 <span class="flex items-center gap-1.5"><kbd class="kbd">esc</kbd> {{ __('admin.palette.hint_close') }}</span>

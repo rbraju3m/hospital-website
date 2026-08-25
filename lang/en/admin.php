@@ -695,6 +695,7 @@ return [
         'open' => 'Quick search',
         'placeholder' => 'Search the panel',
         'empty' => 'Nothing here matches that.',
+        'searching' => 'Searching…',
         'kind_page' => 'Go to',
         'kind_create' => 'Create',
         'hint_move' => 'to move',

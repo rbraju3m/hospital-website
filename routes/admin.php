@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ListController;
 use App\Http\Controllers\Admin\PatientController;
 use App\Http\Controllers\Admin\PatientDocumentController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiteControlController;
@@ -100,6 +101,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('patients', [PatientController::class, 'index'])->name('patients.index');
         Route::get('patients/{patient}/documents', [PatientController::class, 'documents'])->name('patients.documents');
         Route::patch('patients/{patient}/toggle', [PatientController::class, 'toggle'])->name('patients.toggle');
+
+        // What the Ctrl+K palette asks once the menu has no answer. Throttled
+        // because it is typed into: the palette debounces, but a held key
+        // should not be able to walk twelve tables per keystroke.
+        Route::get('search', SearchController::class)
+            ->middleware('throttle:60,1')
+            ->name('search');
 
         // Every listing can be dragged into order and switched on or off from
         // the table itself. The whitelist lives in App\Support\ManagedLists —
