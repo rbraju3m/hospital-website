@@ -16,6 +16,20 @@
             @endif
         </div>
 
+        {{-- The palette's handle. It is a keyboard feature first, so the
+             shortcut is on the button rather than in a help page nobody opens;
+             the modifier is corrected to ⌘ on a Mac by app.js. --}}
+        <button type="button" @click="$dispatch('panel-palette')"
+                class="flex items-center gap-2 rounded-xl border border-mist-200 px-3 py-2 text-xs font-semibold
+                       text-navy-900/60 transition duration-200 hover:border-teal-300 hover:bg-teal-50/60 hover:text-teal-800"
+                title="{{ __('admin.palette.open') }}">
+            <x-icon name="search" size="15" />
+            <span class="hidden lg:inline">{{ __('admin.palette.open') }}</span>
+            <span class="hidden items-center gap-1 sm:flex">
+                <kbd class="kbd" data-shortcut-mod>Ctrl</kbd><kbd class="kbd">K</kbd>
+            </span>
+        </button>
+
         <a href="{{ route('home') }}" target="_blank" rel="noopener"
            class="hidden items-center gap-2 rounded-xl border border-mist-200 px-3 py-2 text-xs font-semibold
                   text-navy-900/70 transition duration-200 hover:border-teal-300 hover:bg-teal-50/60 hover:text-teal-800 md:inline-flex"

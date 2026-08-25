@@ -40,7 +40,12 @@ class AppServiceProvider extends ServiceProvider
         // its data — so the sidebar and anything else that renders the menu
         // share one copy, and the badge counts are queried once.
         View::composer('admin.layouts.app', function ($view) {
-            $view->with('panelGroups', PanelNavigation::groups());
+            $groups = PanelNavigation::groups();
+
+            $view->with([
+                'panelGroups' => $groups,
+                'panelPalette' => PanelNavigation::palette($groups),
+            ]);
         });
     }
 }

@@ -806,6 +806,117 @@ Alpine.data('richText', () => ({
     },
 }));
 
+/* ---------------------------------------------------------------------------
+   The staff panel's quick-search palette.
+
+   The list is App\Support\PanelNavigation::palette(), rendered into the page
+   by the server — the same registry the sidebar draws from, so a section
+   cannot exist in one and not the other. Every entry is a real link, so a row
+   can be middle-clicked into a tab like anything else on the page.
+
+   Matching is every word of the query appearing somewhere in the row, ranked
+   by where it hit: a label that starts with what was typed comes before one
+   that merely contains it. Deliberately not fuzzy — staff type the name of the
+   thing they want, and a fuzzy matcher's second guess arriving first is worse
+   than no second guess.
+   --------------------------------------------------------------------------- */
+Alpine.data('panelPalette', (entries = []) => ({
+    open: false,
+    query: '',
+    index: 0,
+    entries,
+    trigger: null,
+
+    get results() {
+        const terms = this.query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+
+        if (! terms.length) return this.entries;
+
+        return this.entries
+            .map((entry) => {
+                const label = entry.label.toLowerCase();
+                const haystack = `${label} ${(entry.group ?? '').toLowerCase()}`;
+
+                if (! terms.every((term) => haystack.includes(term))) return null;
+
+                const first = terms[0];
+                const rank = label.startsWith(first) ? 0 : (label.includes(first) ? 1 : 2);
+
+                return { entry, rank };
+            })
+            .filter(Boolean)
+            .sort((a, b) => a.rank - b.rank)
+            .map((match) => match.entry);
+    },
+
+    show() {
+        if (this.open) return;
+
+        this.trigger = document.activeElement;
+        this.open = true;
+        this.query = '';
+        this.index = 0;
+        document.body.classList.add('overflow-hidden');
+        this.$nextTick(() => this.$refs.input?.focus());
+    },
+
+    hide() {
+        if (! this.open) return;
+
+        this.open = false;
+        document.body.classList.remove('overflow-hidden');
+
+        // Back where they were, or a keyboard user is dropped at the top of
+        // the document with no idea where they came from.
+        this.trigger?.focus?.();
+        this.trigger = null;
+    },
+
+    hotkey(event) {
+        /* The markup editor binds Ctrl/Cmd+K to "insert link" and calls
+           preventDefault. Its handler is on the textarea, so it has already
+           run by the time this one does on the window — which is the whole
+           reason to check rather than to special-case the editor here. */
+        if (event.defaultPrevented) return;
+
+        if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            this.open ? this.hide() : this.show();
+            return;
+        }
+
+        if (! this.open) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            this.hide();
+        } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            this.move(1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            this.move(-1);
+        } else if (event.key === 'Enter') {
+            event.preventDefault();
+            this.choose();
+        }
+    },
+
+    move(step) {
+        const count = this.results.length;
+        if (! count) return;
+
+        this.index = ((this.index + step) % count + count) % count;
+        this.$refs.list?.querySelector(`#panel-palette-${this.index}`)
+            ?.scrollIntoView({ block: 'nearest' });
+    },
+
+    choose() {
+        const entry = this.results[this.index];
+        if (entry) window.location.href = entry.url;
+    },
+}));
+
 Alpine.start();
 
 /* ---------------------------------------------------------------------------
@@ -1297,6 +1408,17 @@ const initPanelTips = () => {
     window.addEventListener('scroll', hideTip, true);
 };
 
+/* The palette's shortcut, spelled the way this keyboard spells it. Rendered as
+   Ctrl because that is what most of these machines are, and corrected here
+   rather than guessed at on the server, which cannot know. */
+const initShortcutLabels = () => {
+    if (! /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) return;
+
+    document.querySelectorAll('[data-shortcut-mod]').forEach((key) => {
+        key.textContent = '⌘';
+    });
+};
+
 const enhance = (root = document) => {
     observeReveals(root);
     observeCounters(root);
@@ -1315,6 +1437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initParallax();
     initPanelRail();
     initPanelTips();
+    initShortcutLabels();
 
     /* Content that appears after boot — an Alpine collapse, a swapped tab —
        gets the same treatment without every component having to ask. Alpine can

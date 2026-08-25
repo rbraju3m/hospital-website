@@ -76,6 +76,8 @@
     </div>
 </div>
 
+@include('admin.partials.palette')
+
 {{-- The collapsed rail's tooltip. One node, moved and filled by app.js: the
      sidebar's nav scrolls, and anything drawn inside it would be clipped by
      that overflow the moment it reached past 4.5rem. --}}

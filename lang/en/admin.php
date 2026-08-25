@@ -685,6 +685,18 @@ return [
         'maintenance' => 'Website is in maintenance mode',
     ],
 
+    // The Ctrl+K quick-search palette.
+    'palette' => [
+        'open' => 'Quick search',
+        'placeholder' => 'Search the panel',
+        'empty' => 'Nothing here matches that.',
+        'kind_page' => 'Go to',
+        'kind_create' => 'Create',
+        'hint_move' => 'to move',
+        'hint_open' => 'to open',
+        'hint_close' => 'to close',
+    ],
+
     // The sidebar's collapsed icon rail.
     'rail' => [
         'collapse' => 'Collapse menu',

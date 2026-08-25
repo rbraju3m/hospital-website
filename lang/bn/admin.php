@@ -686,6 +686,18 @@ return [
         'maintenance' => 'ওয়েবসাইট রক্ষণাবেক্ষণ মোডে',
     ],
 
+    // The Ctrl+K quick-search palette.
+    'palette' => [
+        'open' => 'দ্রুত খোঁজ',
+        'placeholder' => 'প্যানেলে খুঁজুন',
+        'empty' => 'এর সঙ্গে মেলে এমন কিছু নেই।',
+        'kind_page' => 'যেখানে যাবেন',
+        'kind_create' => 'নতুন যোগ',
+        'hint_move' => 'সরাতে',
+        'hint_open' => 'খুলতে',
+        'hint_close' => 'বন্ধ করতে',
+    ],
+
     // The sidebar's collapsed icon rail.
     'rail' => [
         'collapse' => 'মেনু ছোট করুন',

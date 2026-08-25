@@ -155,6 +155,73 @@ class PanelNavigationTest extends TestCase
         $this->assertStringNotContainsString('rail-badge', $html);
     }
 
+    public function test_every_add_screen_the_palette_offers_exists_and_is_named(): void
+    {
+        $creates = array_filter(array_column($this->declaredItems(), 'create'));
+
+        // Every section that can be added to, and nothing that cannot.
+        $this->assertCount(11, $creates);
+
+        foreach ($creates as $route) {
+            $this->assertTrue(Route::has($route), "The palette points at {$route}, which is not a route.");
+
+            // The route name is also the label key. Asserted rather than
+            // trusted: the palette would otherwise offer a row reading
+            // "admin.doctors.create" and nobody would notice until it shipped.
+            foreach (config('app.available_locales') as $locale => $name) {
+                $this->assertTrue(Lang::has($route, $locale), "{$route} is missing from {$locale}.");
+            }
+        }
+    }
+
+    public function test_the_palette_lists_every_section_and_every_add_screen(): void
+    {
+        $entries = PanelNavigation::palette();
+        $labels = array_column($entries, 'label');
+
+        $this->assertCount(count($this->declaredItems()) + 11, $entries);
+
+        $this->assertContains(__('admin.nav.doctors'), $labels);
+        $this->assertContains(__('admin.doctors.create'), $labels);
+        // Nothing to add to the dashboard, the inbox or the switches.
+        $this->assertNotContains(__('admin.nav.dashboard'), array_column(
+            array_filter($entries, fn ($entry) => $entry['kind'] === 'create'),
+            'group',
+        ));
+
+        foreach ($entries as $entry) {
+            $this->assertNotEmpty($entry['label']);
+            $this->assertStringStartsWith('http', $entry['url']);
+        }
+    }
+
+    public function test_the_palette_counts_the_badges_once_with_the_sidebar(): void
+    {
+        // palette() takes the resolved groups, so the counts behind the two
+        // are the same two queries rather than four.
+        $groups = PanelNavigation::groups();
+        $entries = collect(PanelNavigation::palette($groups))->keyBy('label');
+
+        $this->assertArrayHasKey('badge', $entries[__('admin.nav.appointments')]);
+        $this->assertSame(
+            collect($groups)->flatMap->items->firstWhere('key', 'appointments')['badge'],
+            $entries[__('admin.nav.appointments')]['badge'],
+        );
+    }
+
+    public function test_the_palette_is_on_the_page_with_a_handle_and_a_shortcut(): void
+    {
+        $html = $this->get(route('admin.dashboard'))->getContent();
+
+        $this->assertStringContainsString('panelPalette(', $html);
+        $this->assertStringContainsString(__('admin.palette.placeholder'), $html);
+        $this->assertStringContainsString('$dispatch(\'panel-palette\')', $html);
+        $this->assertStringContainsString('data-shortcut-mod', $html);
+
+        // The list is rendered into the page, not fetched.
+        $this->assertStringContainsString(e(__('admin.doctors.create'), false), $html);
+    }
+
     public function test_the_menu_collapses_and_remembers_the_choice(): void
     {
         $html = $this->get(route('admin.dashboard'))->getContent();

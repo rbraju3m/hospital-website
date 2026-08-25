@@ -898,6 +898,13 @@ html.no-motion {
     }
 }
 
+/* A key on a keyboard, in the palette and on the button that opens it. */
+@utility kbd {
+    @apply inline-grid min-w-5 place-items-center rounded-md border border-mist-200 bg-mist-50 dark:bg-navy-200
+           px-1.5 py-0.5 font-sans text-[10px] font-semibold text-navy-900/55;
+    line-height: 1.4;
+}
+
 /* The rail's tooltip: one fixed node in the layout, positioned by app.js.
    Fixed rather than drawn inside the link because the nav scrolls, and an
    overflow container clips anything reaching past its own 4.5rem. */

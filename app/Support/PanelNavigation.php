@@ -17,6 +17,12 @@ use App\Models\ContactMessage;
  * heading as `admin.nav.group_<heading>`, so a section cannot be added with a
  * label in one locale and a raw key in the other — the localisation tests read
  * this registry and fail on a missing string.
+ *
+ * `create` is the same trick twice: the route name is also the label key, so
+ * `admin.doctors.create` names both the screen and the words already on the
+ * button that opens it ("Add doctor", "Write article", "Book for a patient").
+ * That is a coincidence worth using and not worth trusting silently, so
+ * PanelNavigationTest asserts both halves of it for every entry.
  */
 class PanelNavigation
 {
@@ -29,27 +35,27 @@ class PanelNavigation
             'heading' => null,
             'items' => [
                 ['key' => 'dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'icon' => 'layout-dashboard'],
-                ['key' => 'appointments', 'route' => 'admin.appointments.index', 'match' => 'admin.appointments.*', 'icon' => 'calendar-check', 'badge' => 'pending_appointments'],
+                ['key' => 'appointments', 'route' => 'admin.appointments.index', 'match' => 'admin.appointments.*', 'icon' => 'calendar-check', 'badge' => 'pending_appointments', 'create' => 'admin.appointments.create'],
                 ['key' => 'messages', 'route' => 'admin.messages.index', 'match' => 'admin.messages.*', 'icon' => 'inbox', 'badge' => 'unread_messages'],
             ],
         ],
         [
             'heading' => 'content',
             'items' => [
-                ['key' => 'departments', 'route' => 'admin.departments.index', 'match' => 'admin.departments.*', 'icon' => 'building'],
-                ['key' => 'doctors', 'route' => 'admin.doctors.index', 'match' => 'admin.doctors.*', 'icon' => 'stethoscope'],
-                ['key' => 'services', 'route' => 'admin.services.index', 'match' => 'admin.services.*', 'icon' => 'activity'],
-                ['key' => 'packages', 'route' => 'admin.packages.index', 'match' => 'admin.packages.*', 'icon' => 'package'],
-                ['key' => 'diagnostics', 'route' => 'admin.diagnostics.index', 'match' => 'admin.diagnostics.*', 'icon' => 'microscope'],
-                ['key' => 'posts', 'route' => 'admin.posts.index', 'match' => 'admin.posts.*', 'icon' => 'newspaper'],
-                ['key' => 'gallery', 'route' => 'admin.gallery.index', 'match' => 'admin.gallery.*', 'icon' => 'image'],
-                ['key' => 'testimonials', 'route' => 'admin.testimonials.index', 'match' => 'admin.testimonials.*', 'icon' => 'quote'],
+                ['key' => 'departments', 'route' => 'admin.departments.index', 'match' => 'admin.departments.*', 'icon' => 'building', 'create' => 'admin.departments.create'],
+                ['key' => 'doctors', 'route' => 'admin.doctors.index', 'match' => 'admin.doctors.*', 'icon' => 'stethoscope', 'create' => 'admin.doctors.create'],
+                ['key' => 'services', 'route' => 'admin.services.index', 'match' => 'admin.services.*', 'icon' => 'activity', 'create' => 'admin.services.create'],
+                ['key' => 'packages', 'route' => 'admin.packages.index', 'match' => 'admin.packages.*', 'icon' => 'package', 'create' => 'admin.packages.create'],
+                ['key' => 'diagnostics', 'route' => 'admin.diagnostics.index', 'match' => 'admin.diagnostics.*', 'icon' => 'microscope', 'create' => 'admin.diagnostics.create'],
+                ['key' => 'posts', 'route' => 'admin.posts.index', 'match' => 'admin.posts.*', 'icon' => 'newspaper', 'create' => 'admin.posts.create'],
+                ['key' => 'gallery', 'route' => 'admin.gallery.index', 'match' => 'admin.gallery.*', 'icon' => 'image', 'create' => 'admin.gallery.create'],
+                ['key' => 'testimonials', 'route' => 'admin.testimonials.index', 'match' => 'admin.testimonials.*', 'icon' => 'quote', 'create' => 'admin.testimonials.create'],
             ],
         ],
         [
             'heading' => 'portal',
             'items' => [
-                ['key' => 'documents', 'route' => 'admin.documents.index', 'match' => 'admin.documents.*', 'icon' => 'file-text'],
+                ['key' => 'documents', 'route' => 'admin.documents.index', 'match' => 'admin.documents.*', 'icon' => 'file-text', 'create' => 'admin.documents.create'],
                 ['key' => 'patients', 'route' => 'admin.patients.index', 'match' => 'admin.patients.*', 'icon' => 'user-round'],
             ],
         ],
@@ -58,7 +64,7 @@ class PanelNavigation
             'items' => [
                 ['key' => 'site_controls', 'route' => 'admin.site.edit', 'match' => 'admin.site.*', 'icon' => 'power'],
                 ['key' => 'settings', 'route' => 'admin.settings.edit', 'match' => 'admin.settings.*', 'icon' => 'sliders'],
-                ['key' => 'users', 'route' => 'admin.users.index', 'match' => 'admin.users.*', 'icon' => 'users'],
+                ['key' => 'users', 'route' => 'admin.users.index', 'match' => 'admin.users.*', 'icon' => 'users', 'create' => 'admin.users.create'],
             ],
         ],
     ];
@@ -93,6 +99,42 @@ class PanelNavigation
         return array_merge(...array_column(self::groups(), 'items'));
     }
 
+    /**
+     * The searchable list behind the Ctrl+K palette: every section, plus the
+     * "add one" screen for the sections that have one.
+     *
+     * Takes the resolved groups rather than resolving them again — the badge
+     * counts are two queries, and the sidebar has already paid for them.
+     */
+    public static function palette(?array $groups = null): array
+    {
+        $entries = [];
+
+        foreach ($groups ?? self::groups() as $group) {
+            foreach ($group['items'] as $item) {
+                $entries[] = [
+                    'kind' => 'page',
+                    'label' => $item['label'],
+                    'group' => $group['label'],
+                    'url' => $item['url'],
+                    'badge' => $item['badge'],
+                ];
+
+                if ($item['create']) {
+                    $entries[] = [
+                        'kind' => 'create',
+                        'label' => __($item['create']),
+                        'group' => $item['label'],
+                        'url' => route($item['create']),
+                        'badge' => null,
+                    ];
+                }
+            }
+        }
+
+        return $entries;
+    }
+
     private static function resolve(array $item, array $badges): array
     {
         return [
@@ -102,6 +144,7 @@ class PanelNavigation
             'icon' => $item['icon'],
             'active' => request()->routeIs($item['match']),
             'badge' => $badges[$item['badge'] ?? ''] ?? null,
+            'create' => $item['create'] ?? null,
         ];
     }
 
