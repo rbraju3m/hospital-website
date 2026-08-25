@@ -599,21 +599,25 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 459 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built, tested and pushed — tip `cf6dd9c`, 459 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
 
-**Patients can move and cancel their own bookings from the portal (2026-08-25)** — see *Changing a booking from the portal* above. `behaviour_portal_changes` turns it off.
+**Nine features shipped on 2026-08-25**, each its own commit, each described in its own section above: the panel menu redesign in four parts (the `PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the account block, untranslated-content badges), then `PanelSearch` behind the palette, three staff roles, the notification log, the home slider with three layouts, patients changing their own bookings, and the desk being able to move one too.
 
-**The home page's layouts and the slider landed on 2026-08-25** — the user asked for both, chose whole-page templates over band reordering, and chose the slider as the hero rather than a band lower down. See *The home page has three layouts* above. The live setting is still `classic`, so their home page has not changed until they pick another.
+**The feature list is empty.** What remains in *Not built yet* needs systems this machine does not have: delivery receipts want a gateway that posts back, and lab results want an analyser to talk to. Nothing the site claims is missing.
 
-**The notification log landed on 2026-08-25** — `/admin/notifications`, which is also where a missing queue worker stops being invisible. See *The notification log* above.
+**The live dev database now has** the home layout set to `slider`, three seeded slides, `users.role` on every account (all `administrator`), and the `notification_logs`, `slides`, `cancelled_by`/`rescheduled_at` migrations applied.
 
-**Staff roles landed on 2026-08-25** — three of them, cut along the menu's own groups. See *Three roles, cut along the lines the menu already draws* above.
+**Launch readiness is what is left, and three things in it have never been named:**
 
-**The panel menu redesign is done** — the registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette, the account block and the untranslated-content badges. Ctrl+K then grew a second half: `App\Support\PanelSearch` finds the records themselves. See *The menu is a registry, and it collapses* above.
+- **There is no backup story at all.** A MySQL database of medical records and a private disk of patient documents, on a box with no dump schedule and no off-site copy. For a hospital that is the largest remaining risk in this project, and it is smaller work than most of what shipped today. Scripts would go in `deploy/` beside the others.
+- **HTTPS is assumed but nowhere enforced** — no https `APP_URL`, no HSTS, no forced redirect. The vhost is where that goes, and patients sign in to the portal over it.
+- **The seeded admin is still the only account**, with the password it was created with, so the three roles are not being exercised by anybody. Real staff accounts want creating with `admin:create --role=…`.
 
 **Two things waiting on the user, not on code:**
 
-- The Apache vhost, queue worker and scheduler cron are still not installed (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top.
+- The Apache vhost, queue worker and scheduler cron are still not installed (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top. The notification log now makes the worker's silence visible, but it does not fix it.
 - One album is missing its cover image. I deleted the file (`gallery/92-v81zkdp9.png`) on 2026-08-24 while exercising the cover endpoint against the live dev database; the behaviour that allowed it is fixed and tested, but the file is gone and has to be re-uploaded. Do not run write endpoints against their data without saying so first.
+
+**Also outstanding:** all the Bangla still needs a native speaker, and there is more of it than there was — the slides, the roles, the notification log, the portal's change screens, the moved-booking email and two new SMS templates.
 
 **Start the dev server with the upload limits raised** — `php8.3 -d upload_max_filesize=32M -d post_max_size=64M artisan serve …`. The CLI runtime caps at 2M/8M while Apache is at 5G, and the failure mode is a batch of photographs uploading as nothing at all.
