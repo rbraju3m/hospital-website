@@ -56,6 +56,9 @@
 
                             <span x-show="entry.badge" class="badge badge-teal" x-text="entry.badge"></span>
 
+                            <span x-show="entry.gaps" class="badge badge-amber"
+                                  :title="entry.gaps_label" x-text="entry.gaps"></span>
+
                             <span x-show="entry.group" class="hidden truncate text-xs text-navy-900/40 sm:block"
                                   x-text="entry.group"></span>
                         </a>

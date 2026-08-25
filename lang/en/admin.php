@@ -685,6 +685,11 @@ return [
         'maintenance' => 'Website is in maintenance mode',
     ],
 
+    // The menu's count of content nobody has translated yet.
+    'translation' => [
+        'gap' => '{1} :count item still needs translating|[2,*] :count items still need translating',
+    ],
+
     // The Ctrl+K quick-search palette.
     'palette' => [
         'open' => 'Quick search',

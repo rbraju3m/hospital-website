@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\TranslationGaps;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -19,6 +20,20 @@ trait HasTranslations
     public function initializeHasTranslations(): void
     {
         $this->mergeCasts(['translations' => 'array']);
+    }
+
+    /**
+     * The panel's menu carries a count of content still waiting to be
+     * translated. It is counted in PHP over every row and cached forever, so
+     * the cache has to go whenever any translatable row changes — here rather
+     * than in the controllers, because a seeder, a console command and an
+     * import are all just as able to leave that number wrong. Only this
+     * model's own section is dropped; a model with no section is a no-op.
+     */
+    public static function bootHasTranslations(): void
+    {
+        static::saved(fn () => TranslationGaps::flushFor(static::class));
+        static::deleted(fn () => TranslationGaps::flushFor(static::class));
     }
 
     /**

@@ -44,6 +44,20 @@
                                  shadow-[0_0_0_3px_rgb(23_166_152/0.18)]">
                         {{ $item['badge'] }}
                     </span>
+                @elseif (! empty($item['gaps']))
+                    {{-- Content nobody has translated yet. Amber rather than
+                         teal because it is a different kind of news — nothing
+                         is broken and no patient is waiting; a page is simply
+                         answering in the wrong language. `elseif` because the
+                         two never land on the same row, and collapsed there is
+                         only room for one dot. Amber's own dark shade for the
+                         figure: the navy ramp inverts, and a light number on a
+                         light chip is a badge that only reads in one theme. --}}
+                    <span class="rail-badge rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-bold text-amber-950
+                                 shadow-[0_0_0_3px_rgb(251_191_36/0.18)]"
+                          title="{{ trans_choice('admin.translation.gap', $item['gaps']) }}">
+                        {{ $item['gaps'] }}
+                    </span>
                 @endif
             </a>
         @endforeach

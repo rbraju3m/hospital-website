@@ -85,11 +85,12 @@ class PanelNavigation
     public static function groups(): array
     {
         $badges = self::badges();
+        $gaps = TranslationGaps::counts();
 
         return array_map(fn (array $group) => [
             'heading' => $group['heading'],
             'label' => $group['heading'] ? __("admin.nav.group_{$group['heading']}") : null,
-            'items' => array_map(fn (array $item) => self::resolve($item, $badges), $group['items']),
+            'items' => array_map(fn (array $item) => self::resolve($item, $badges, $gaps), $group['items']),
         ], self::GROUPS);
     }
 
@@ -118,6 +119,12 @@ class PanelNavigation
                     'group' => $group['label'],
                     'url' => $item['url'],
                     'badge' => $item['badge'],
+                    'gaps' => $item['gaps'],
+                    // Resolved here, not in the browser: the plural form of a
+                    // count is the translator's business, not JavaScript's.
+                    'gaps_label' => $item['gaps']
+                        ? trans_choice('admin.translation.gap', $item['gaps'])
+                        : null,
                 ];
 
                 if ($item['create']) {
@@ -127,6 +134,8 @@ class PanelNavigation
                         'group' => $item['label'],
                         'url' => route($item['create']),
                         'badge' => null,
+                        'gaps' => null,
+                        'gaps_label' => null,
                     ];
                 }
             }
@@ -135,7 +144,7 @@ class PanelNavigation
         return $entries;
     }
 
-    private static function resolve(array $item, array $badges): array
+    private static function resolve(array $item, array $badges, array $gaps): array
     {
         return [
             'key' => $item['key'],
@@ -144,6 +153,11 @@ class PanelNavigation
             'icon' => $item['icon'],
             'active' => request()->routeIs($item['match']),
             'badge' => $badges[$item['badge'] ?? ''] ?? null,
+            // Content still waiting on a translator. A different colour from
+            // the badge above and never on the same row as one: work waiting
+            // on the desk today and a sentence nobody has written yet are not
+            // the same kind of news.
+            'gaps' => $gaps[$item['key']] ?? null,
             'create' => $item['create'] ?? null,
         ];
     }

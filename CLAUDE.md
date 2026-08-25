@@ -62,7 +62,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (348 feature tests)
+# Tests (356 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -80,6 +80,7 @@ vendor/bin/phpunit --filter AdminListControl       # drag-to-reorder and the liv
 vendor/bin/phpunit --filter PublicPages            # every public page, and the editorial markup language
 vendor/bin/phpunit --filter AdminFormPageTest      # every panel create/edit screen renders
 vendor/bin/phpunit --filter PanelNavigation        # the panel's menu registry, its icon rail and the Ctrl+K palette
+vendor/bin/phpunit --filter TranslationGaps        # the menu's count of untranslated content
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -162,6 +163,12 @@ Uploads go through `App\Services\MediaLibrary` to the `public` disk, one folder 
 - **A `create` route's name is also its label key.** `admin.doctors.create` names the screen *and* the words already on the button that opens it — "Add doctor", "Write article", "Book for a patient". No second set of strings to write or translate, and `PanelNavigationTest` asserts both halves so a row cannot ship reading `admin.doctors.create`.
 - **The hotkey yields to the markup editor.** Ctrl/Cmd+K is already "insert link" in the prose editor, which `preventDefault`s from a handler on the textarea — so it has run by the time the palette's window handler does, and the palette checks `event.defaultPrevented` rather than special-casing the editor. Widen one and the other still holds.
 - **Rows are real links.** Middle-click opens a section in a tab, like anything else on the page; Enter follows the highlighted one.
+
+**Untranslated content is counted on the menu.** `App\Support\TranslationGaps` badges a section in amber when it holds rows nobody has translated. The tests prove the locale *files* are complete; nothing proves the same of the content, and a missing translation falls back rather than breaking, so the only way anybody finds one is by being told.
+
+- **It cannot be a query, so it is cached.** `missingTranslations()` skips a field blank in the source too, and `JSON_EXTRACT` cannot tell that apart from a real gap — the same reason `?untranslated=` runs in PHP. Counting it means walking whole tables, so it is cached forever and dropped by `HasTranslations` on save and delete: in the model, not the controllers, because a seeder or a console command can leave the number just as wrong.
+- **Cached per section, read in one call.** Saving a doctor invalidates the doctors count and nothing else — one key for all eight would charge the next page load with a full recount after every save in the panel, and the recount cannot go to the queue because this box has no worker running (the badge would never come back). `Cache::many()` fetches the eight in one round trip, because the cache store here is the database and the menu renders on every page.
+- **Amber, and never on the same row as the teal one.** Work waiting on the desk and a sentence nobody has written yet are different news; collapsed to the rail there is only room for one dot, so the sidebar renders the second with an `elseif` — and a test asserts no item can declare both. The figure is `text-amber-950` rather than `text-navy-950`: the navy ramp inverts in dark mode, and a light number on a light chip reads in one theme only.
 
 **The account block sits at the foot of the menu**, and is the only copy: it replaced the topbar dropdown rather than joining it, because the same two links twice on one screen is a second thing to keep in step rather than a convenience. It opens upwards, is wider than the collapsed rail (nothing in the sidebar clips it), and collapsed it is an avatar — so the person is named by the button's `aria-label` and the rail tooltip, where the name itself is off the screen.
 - **Matching is words, not fuzz.** Every word typed has to appear in the row, ranked by whether the label starts with the first word or merely contains it. Staff type the name of the thing they want, and a fuzzy matcher's second guess arriving first is worse than no second guess.
@@ -470,7 +477,7 @@ Nothing the site claims. What is missing is what it has never promised:
 - **No appointment changes from the portal.** It shows records, it does not move them — cancelling still goes through the desk, which is also why nothing there needs to notify anyone.
 - **No delivery receipts.** A queued SMS the gateway accepted is as far as the system knows. Beyond `reminded_at` and `downloaded_at` there is no record of what was sent to whom; a notification log is where to start if anyone ever needs to prove a patient was told.
 - **One staff role.** Everyone who can sign in to the panel can do everything. `UserController` and `AdminFormRequest::authorize()` are where a `role` column and a Gate would go.
-- **No badges for untranslated content.** The menu collapses, reads from `PanelNavigation`, is searchable with Ctrl+K and carries the account block; what is left of the redesign is badges on more items than the two that have them. Agreed but not built.
+- **No panel search beyond the menu.** Ctrl+K finds a section or an "add one" screen; it does not find a doctor by name or a booking by reference. The palette reads a registry, and reaching content would mean an endpoint behind it.
 
 ## The one thing to do before launch
 
@@ -485,11 +492,9 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built and tested — 348 tests. What follows is the state a new session should know rather than rediscover.
+Everything described above is built and tested — 356 tests. What follows is the state a new session should know rather than rediscover.
 
-**The panel menu redesign, all but one piece.** The registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette and the account block are built — see *The menu is a registry, and it collapses* above. One piece the user asked for is still outstanding:
-
-- **Badges on more items than the two that have them.** Untranslated content is the obvious one; `missingTranslations()` already answers it per model, but it runs in PHP rather than SQL, so counting it for every listing on every page load is the thing to watch.
+**The panel menu redesign is done** — the registry (`App\Support\PanelNavigation`), the collapsible icon rail, the Ctrl+K palette, the account block and the untranslated-content badges. See *The menu is a registry, and it collapses* above.
 
 **Two things waiting on the user, not on code:**
 

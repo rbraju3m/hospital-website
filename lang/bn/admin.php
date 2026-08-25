@@ -686,6 +686,11 @@ return [
         'maintenance' => 'ওয়েবসাইট রক্ষণাবেক্ষণ মোডে',
     ],
 
+    // The menu's count of content nobody has translated yet.
+    'translation' => [
+        'gap' => '{1} :count টি এখনও অনুবাদ বাকি|[2,*] :count টি এখনও অনুবাদ বাকি',
+    ],
+
     // The Ctrl+K quick-search palette.
     'palette' => [
         'open' => 'দ্রুত খোঁজ',
