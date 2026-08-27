@@ -10,7 +10,7 @@
 
     {{-- Settle the theme before the first paint. Anything later and the page
          flashes the other one on every navigation. --}}
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         (function () {
             // Reveals are hidden until this class says the animation can run.
             // It is set here so nothing flashes visible before being hidden —

@@ -236,3 +236,22 @@ if (! function_exists('doctor_photo')) {
         return App\Support\DemoImages::portrait($doctor->gender, $doctor->id);
     }
 }
+
+if (! function_exists('csp_nonce')) {
+    /**
+     * The per-request nonce that lets an inline <script> run.
+     *
+     * The Content-Security-Policy does not allow inline script wholesale, so
+     * every inline block in the views carries this. The same nonce goes into
+     * the header by App\Http\Middleware\SecurityHeaders, and into the tags
+     * @vite renders, so the three cannot disagree.
+     *
+     * A block that forgets it does not throw — it silently stops running,
+     * which for the head script means no theme before first paint. That is why
+     * SecurityHeadersTest counts the inline blocks against the nonced ones.
+     */
+    function csp_nonce(): string
+    {
+        return Illuminate\Support\Facades\Vite::cspNonce() ?? '';
+    }
+}

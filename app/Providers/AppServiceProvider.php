@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         // signed as http and checked as https.
         Https::enforce();
 
+        // One nonce per request, shared by the tags @vite renders, the inline
+        // blocks in the views (csp_nonce()) and the CSP header itself.
+        Vite::useCspNonce();
+
         Vite::prefetch(concurrency: 3);
 
         // The header mega-menu and footer both need the department list on

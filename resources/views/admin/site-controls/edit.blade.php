@@ -146,7 +146,7 @@
 </form>
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
     function siteControls() {
         return {
             query: '',

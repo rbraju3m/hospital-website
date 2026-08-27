@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureFeatureEnabled;
 use App\Http\Middleware\EnsureStaffSection;
 use App\Http\Middleware\MaintenanceGate;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Services\MediaLibrary;
 use Illuminate\Foundation\Application;
@@ -27,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Every response, not just the web group: the payment callbacks and
+        // the health check are served by this application too.
+        $middleware->append(SecurityHeaders::class);
+
         // Runs after the session is started, so a stored locale choice is visible.
         $middleware->appendToGroup('web', SetLocale::class);
 

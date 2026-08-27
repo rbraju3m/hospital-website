@@ -370,7 +370,7 @@
 </section>
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
     document.addEventListener('alpine:init', () => {
         Alpine.data('appointmentBooking', (initial) => ({
             department: initial.department || '',

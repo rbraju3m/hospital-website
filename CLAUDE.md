@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (466 feature tests)
+# Tests (476 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -89,6 +89,7 @@ vendor/bin/phpunit --filter NotificationLog        # the record of what was sent
 vendor/bin/phpunit --filter HomeLayout             # the three home layouts and the slider
 vendor/bin/phpunit --filter AdminSlide             # managing slides in the panel
 vendor/bin/phpunit --filter HttpsTest               # the one HTTPS switch, and the signed-link fork
+vendor/bin/phpunit --filter SecurityHeaders         # the response headers, the CSP and its nonce
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -482,7 +483,21 @@ One switch: the scheme of **`APP_URL`**. `App\Support\Https::enforce()` runs fir
 - **No proxy is trusted by default** (`config/trustedproxy.php`, read by the framework's `TrustProxies` at request time, so config caching is fine). Apache terminates TLS in-process here, so there is nothing in front and `X-Forwarded-Proto` is a header any client can send. Put nginx or Cloudflare in front without setting `TRUSTED_PROXIES` and the symptom is not a missing padlock — it is that same 403, because every request now arrives looking like http.
 - **The dev vhost deliberately does not send HSTS.** It uses a self-signed certificate, and HSTS removes the browser's "proceed anyway" — set it there and `hospital.local` is unreachable in that browser until the entry is cleared by hand. `deploy/hospital-production.conf` sends it, starting at `max-age=300`: HSTS cannot be taken back, so an expired certificate under a year-long header is a site nobody can reach rather than one showing a warning. Raise it once `certbot renew --dry-run` passes.
 - **Port 80 keeps `/.well-known/acme-challenge/` open** in the production vhost. Redirect that too and renewal fails silently ninety days before the certificate expires — with HSTS in force, which is the combination to avoid.
-- Other security headers (`X-Frame-Options`, `Referrer-Policy`, CSP) are a separate pass and are deliberately not in here.
+- The response headers that are not about transport — CSP included — are `App\Http\Middleware\SecurityHeaders`, not the vhost. See *Security headers* below.
+
+### Security headers
+
+`App\Http\Middleware\SecurityHeaders`, appended globally so the panel, the portal, the public site and the payment callbacks all get them. **Not in the vhost**, deliberately: split between Apache and PHP they would be two lists that drift, and a directive that only exists in the vhost is invisible under `artisan serve` — where the site is actually developed, so a policy that breaks a page would first be met in production.
+
+Four headers are sent always and none of them can break a page: `X-Content-Type-Options: nosniff` (patient documents are streamed from the private disk, and an upload the browser decides is HTML would run on this origin), `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` that refuses camera, microphone and location.
+
+- **`fullscreen=(self)` in that policy is load-bearing.** The gallery lightbox's `F` key is the Fullscreen API; a tidier-looking `fullscreen=()` switches it off, and only `SecurityHeadersTest` would say so.
+- **The CSP ships report-only** (`CSP_ENFORCE`, default false). It is the one header here that can take a site down — a directive too tight anywhere breaks that page for every visitor, and nothing in this suite would catch it, because the suite never runs a browser. Report-only sends the same policy and prints violations to the console. Walk the site — home, booking, the gallery lightbox, the contact map, the panel, the portal — then set `CSP_ENFORCE=true`. Same ratchet as the HSTS `max-age`, for the same reason.
+- **`'unsafe-eval'` is Alpine, and cannot be removed by editing a header.** The standard build evaluates every `x-data` and `x-show` through the AsyncFunction constructor, which the browser counts as eval. Alpine's CSP build cannot evaluate expressions at all — every one becomes a method on a registered component. That is a rewrite of the interaction layer.
+- **Scripts do not get `'unsafe-inline'`; they get a nonce.** `csp_nonce()` (from `Vite::useCspNonce()`, called in `AppServiceProvider::boot()`) is on the five inline blocks in the views and on the tags `@vite` renders, so an injected `<script>` is still refused. A block that forgets it does not throw — it silently stops running, which for the head script means no theme before first paint on a page that otherwise looks fine, so a test scans every view for an inline `<script>` without one and another asserts the nonce on the page is the nonce in the header.
+- **`'unsafe-inline'` stays on style-src.** It is the design system's inline `style` attributes — the meter's width, the reveal stagger's delay, the card spotlight's pointer position — and a nonce cannot cover an attribute.
+- **`frame-src` names OpenStreetMap** because the contact page frames its embed. It is the only third-party origin this site loads anything from; a CDN behind `media_url()` would need naming in `img-src` too.
+- **The header is not sent while Vite is running hot.** `npm run dev` serves the bundle from its own origin over a websocket, and naming a development server in the application's security policy is worse than not sending the header to the one person running it.
 
 ### Backups
 
@@ -637,7 +652,7 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built, tested and pushed — 466 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
+Everything described above is built, tested and pushed — 476 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
 
 **Nine features shipped on 2026-08-25**, each its own commit, each described in its own section above: the panel menu redesign in four parts (the `PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the account block, untranslated-content badges), then `PanelSearch` behind the palette, three staff roles, the notification log, the home slider with three layouts, patients changing their own bookings, and the desk being able to move one too.
 
