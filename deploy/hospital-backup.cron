@@ -1,0 +1,49 @@
+# RBR Hospital — nightly backup.
+#
+# One entry, calling deploy/hospital-backup.sh. Everything it does and every
+# setting it takes is documented in the header of that script; read it before
+# changing anything here.
+#
+# Without this there is no backup schedule at all — which is not a silent
+# failure like the queue worker or the scheduler, it is no failure at all until
+# the day the disk goes, and then it is the only one that matters. A MySQL
+# schema of appointments and patients, and a private disk of reports and
+# prescriptions, both of which exist in exactly one place until this runs.
+#
+# Install:
+#   sudo install -m 750 deploy/hospital-backup.sh /usr/local/sbin/hospital-backup
+#   sudo install -d -m 700 /var/backups/hospital
+#   sudo cp deploy/hospital-backup.cron /etc/cron.d/hospital-backup
+#   sudo chmod 644 /etc/cron.d/hospital-backup
+#   sudo systemctl restart cron
+#
+# Check it:
+#   sudo /usr/local/sbin/hospital-backup          # take one now, by hand
+#   ls -l /var/backups/hospital                   # a directory per run
+#   tail /var/log/hospital-backup.log
+#   grep hospital-backup /var/log/syslog          # that cron is firing at all
+#
+# And twice a year, restore one — into a scratch database, not the live one:
+#   deploy/hospital-restore.sh --db-only --database hospital_restore_check \
+#       /var/backups/hospital/hospital-YYYYmmdd-HHMMSS
+#   mysql -e 'DROP DATABASE hospital_restore_check'
+# A backup nobody has restored is a hope. The script counts the rows back and
+# compares them with the manifest, so the rehearsal is a minute's work.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=rashedul@rightbrainsolution.com
+
+# Off-site. Until this is set, every backup sits on the same disk as the
+# database it is protecting, and protects against precisely one thing:
+# somebody deleting rows. Not the disk failing, which is the likelier of the
+# two. Any rsync destination — another host, a mounted volume, a NAS.
+#HOSPITAL_BACKUP_REMOTE=backups@10.0.0.9:/srv/backups/hospital/
+
+# 02:30. After the evening's bookings and the 18:00 reminder run, and before
+# the 03:00 prune in routes/console.php — so a backup taken tonight still holds
+# the notification log rows that prune is about to age out.
+#
+# The box runs on Asia/Dhaka, the same clock the application stores its
+# timestamps in, so this is 02:30 local with nothing to convert.
+30 2 * * * root /usr/local/sbin/hospital-backup >> /var/log/hospital-backup.log 2>&1

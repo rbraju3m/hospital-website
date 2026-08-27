@@ -93,6 +93,13 @@ vendor/bin/phpunit --filter AdminSlide             # managing slides in the pane
 php8.3 /usr/bin/composer require some/package
 php8.3 /usr/bin/composer dump-autoload
 
+# Backups — see deploy/hospital-backup.sh's header for every setting it takes
+deploy/hospital-backup.sh                          # take one now, wherever HOSPITAL_BACKUP_DIR points
+HOSPITAL_BACKUP_DIR=/tmp/try deploy/hospital-backup.sh   # somewhere harmless, to try it
+deploy/hospital-restore.sh --db-only --database hospital_restore_check \
+    /var/backups/hospital/hospital-YYYYmmdd-HHMMSS # rehearse a restore, off to one side
+deploy/hospital-restore.sh /var/backups/…          # the real thing; asks before it writes
+
 php8.3 artisan route:list --except-vendor
 php8.3 artisan view:clear && php8.3 artisan config:clear
 ```
@@ -108,6 +115,7 @@ The application is complete; the machine it runs on is not set up. Everything be
 | Scheduler cron | `deploy/hospital-scheduler.cron` | **Silent.** The day-before reminder never runs at all. |
 | SMTP credentials | `.env` `MAIL_*` | **Silent-ish.** `MAIL_MAILER=log` writes mail to `storage/logs/laravel.log` instead of sending it. |
 | SMS gateway | `.env` `SMS_*` | **Silent-ish.** `SMS_DRIVER=log` does the same for text messages. |
+| Backup cron | `deploy/hospital-backup.cron` | **Silent, and the expensive one.** Nothing is backed up at all. The database is appointments and patients; the private disk is reports and prescriptions. Both exist in one place until this runs. |
 
 The queue worker is the one that used to be invisible. It is not any more: `/admin/notifications` records every message when it is dispatched and marks it sent when the transport takes it, so a machine with no worker shows a growing list of messages stuck at **queued** and a band at the top of the page saying so.
 
@@ -464,6 +472,24 @@ Models use `$guarded = []` with a `casts()` method. Slug is the route key on eve
 
 Content lives in seeders, not migrations, and every seeder uses `updateOrCreate` keyed on slug, so re-running is safe and non-destructive.
 
+### Backups
+
+`deploy/hospital-backup.sh` takes the database, `storage/app/private` (patient documents) and `storage/app/public` (uploads), plus a copy of `.env`. `deploy/hospital-restore.sh` puts them back. Everything else — code, seeded content, the stand-in photography — is in git and comes back with a checkout.
+
+Both scripts read `.env` themselves rather than going through artisan, because the moment a backup matters is often the moment the application does not boot.
+
+- **The dump carries no database name.** No `--databases`, so there is no `USE` line, and a restore can load it into a scratch schema with `--database`. That is what makes rehearsing a restore a minute's work instead of a decision about the live one — and a restore nobody has rehearsed is not a restore.
+- **`--default-character-set=utf8mb4` is not optional.** Half the content is Bangla; a latin1 dump loses all of it and loses it quietly, which is the worst way to find out in six months.
+- **A dump is checked for its completion marker, not its exit code.** `mysqldump` can exit 0 on a dump that stopped halfway when the connection dropped. `-- Dump completed` at the end is the only thing that says the whole of it arrived, and a run that fails deletes its own directory rather than leaving something that looks like a backup.
+- **Row counts are exact, and the restore compares them.** `information_schema.TABLE_ROWS` is an estimate on InnoDB, and an estimate cannot tell a good restore from a bad one. `counts.txt` is `SELECT COUNT(*)` per table; the restore counts them back afterwards and says so. A dump that loads without erroring is not the same as a database that came back.
+- **The password goes in a `--defaults-extra-file`, never in argv.** A command line is visible in `ps` to every user on the box for as long as the dump runs.
+- **Retention holds the newest few whatever their date.** Age alone would delete the last good backup on the morning it is needed, if backups have been quietly failing for a fortnight. `HOSPITAL_BACKUP_KEEP_MIN` is the floor.
+- **The restore dumps the current database before overwriting it.** A restore is itself destructive, performed at speed by somebody having a bad day; "we restored last night's backup over today's bookings" needs a way back.
+- **It never deletes the files it replaces**, and it puts them back if it is interrupted mid-swap. The old disks are moved to `<dir>.replaced-<stamp>`; an orphaned file on the private disk is a medical record, and tidying one away after a restore is not a mistake that can be walked back. The window between moving the old disk aside and the new one in is milliseconds wide and closed by a trap, `SIGPIPE` included — `… | head` is how somebody reads this.
+- **It never writes `.env`.** The backup holds a copy at `<backup>/env` and the script points at it; applying it is a decision about `APP_KEY`, and a different key invalidates every signed confirmation link and every live session.
+- **A copy on the same disk is not a backup.** `HOSPITAL_BACKUP_REMOTE` is an rsync destination and is currently unset, so today this protects against somebody running `DELETE` and against nothing else. The sync deliberately runs without `--delete`: a mirror would faithfully erase the off-site copies the day this box lost its backup directory.
+- The archive contains `.env` and medical records, so everything is written `0600` inside a `0700` directory. Wherever it is copied has to be as private as this machine.
+
 ## Localisation
 
 **No user-facing string belongs in a template.** Everything renders through `__()` / `trans_choice()` against `lang/<locale>/<domain>.php`. Domains: `common`, `nav`, `home`, `departments`, `doctors`, `services`, `packages`, `posts`, `gallery` (the photo gallery), `appointment`, `pages` (about/emergency/international/contact), `forms` (validation messages and attribute names, referenced from `app/Http/Requests/`), `mail` (notification emails — field labels are reused from `appointment.confirmed.*`, only email-specific copy lives here), `sms` (six one-line templates; see the segment note above before lengthening one), `diagnostics` (the price list), `portal` (the patient portal — patient-facing wording, so it has its own appointment status labels rather than reusing the panel's), `admin` (the staff panel — `admin.fields.*` doubles as the validation attribute names via `AdminFormRequest::attributes()`, so a label added there improves the error messages too).
@@ -609,7 +635,7 @@ Everything described above is built, tested and pushed — tip `cf6dd9c`, 459 te
 
 **Launch readiness is what is left, and three things in it have never been named:**
 
-- **There is no backup story at all.** A MySQL database of medical records and a private disk of patient documents, on a box with no dump schedule and no off-site copy. For a hospital that is the largest remaining risk in this project, and it is smaller work than most of what shipped today. Scripts would go in `deploy/` beside the others.
+- **The backup scripts are written; nothing is scheduled.** `deploy/hospital-backup.sh`, `deploy/hospital-restore.sh` and `deploy/hospital-backup.cron` are in the repository and both scripts have been run for real — see *Backups* below. Installing the cron needs sudo, so until the user does that there is still no backup. And `HOSPITAL_BACKUP_REMOTE` is unset, which means the copy lives on the disk it is protecting.
 - **HTTPS is assumed but nowhere enforced** — no https `APP_URL`, no HSTS, no forced redirect. The vhost is where that goes, and patients sign in to the portal over it.
 - **The seeded admin is still the only account**, with the password it was created with, so the three roles are not being exercised by anybody. Real staff accounts want creating with `admin:create --role=…`.
 
