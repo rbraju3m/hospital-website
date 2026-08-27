@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Payments\SslcommerzGateway;
 use App\Sms\Contracts\SmsGateway;
 use App\Sms\SmsManager;
+use App\Support\Https;
 use App\Support\PanelNavigation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -26,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Before anything generates a URL. An https APP_URL means https links
+        // everywhere, including from the console, where there is no request to
+        // infer a scheme from and a signed reminder link would otherwise be
+        // signed as http and checked as https.
+        Https::enforce();
+
         Vite::prefetch(concurrency: 3);
 
         // The header mega-menu and footer both need the department list on

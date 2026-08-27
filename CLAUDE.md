@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (459 feature tests)
+# Tests (466 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -88,6 +88,7 @@ vendor/bin/phpunit --filter StaffRole              # the three roles, and what e
 vendor/bin/phpunit --filter NotificationLog        # the record of what was sent to whom
 vendor/bin/phpunit --filter HomeLayout             # the three home layouts and the slider
 vendor/bin/phpunit --filter AdminSlide             # managing slides in the panel
+vendor/bin/phpunit --filter HttpsTest               # the one HTTPS switch, and the signed-link fork
 
 # Composer — invoke through php8.3 so post-autoload scripts use the right runtime
 php8.3 /usr/bin/composer require some/package
@@ -110,7 +111,7 @@ The application is complete; the machine it runs on is not set up. Everything be
 
 | What | Where | If it is missing |
 |---|---|---|
-| Apache vhost | `deploy/hospital.local.conf` | Site served by `artisan serve` only. DocumentRoot **must** be `public/` — pointing Apache at the project root produces a directory listing that exposes `.env`. |
+| Apache vhost | `deploy/hospital.local.conf` (dev) · `deploy/hospital-production.conf` | Site served by `artisan serve` only, over plain http. DocumentRoot **must** be `public/` — pointing Apache at the project root produces a directory listing that exposes `.env`. Both files need `a2enmod ssl rewrite headers` and a certificate; the production one carries the HSTS header. |
 | Queue worker | `deploy/hospital-queue.service` | **Silent.** Every email and SMS queues into `jobs` and never sends. Bookings still succeed and nothing errors. |
 | Scheduler cron | `deploy/hospital-scheduler.cron` | **Silent.** The day-before reminder never runs at all. |
 | SMTP credentials | `.env` `MAIL_*` | **Silent-ish.** `MAIL_MAILER=log` writes mail to `storage/logs/laravel.log` instead of sending it. |
@@ -472,6 +473,17 @@ Models use `$guarded = []` with a `casts()` method. Slug is the route key on eve
 
 Content lives in seeders, not migrations, and every seeder uses `updateOrCreate` keyed on slug, so re-running is safe and non-destructive.
 
+### HTTPS
+
+One switch: the scheme of **`APP_URL`**. `App\Support\Https::enforce()` runs first in `AppServiceProvider::boot()` and calls `URL::forceScheme('https')` when that scheme is https; `config/session.php` reads the same thing to mark the session cookie Secure. Nothing else has to be remembered, and there is no second setting to disagree with the first.
+
+- **A signed link is signed over the scheme too, and that is the whole reason this is not left to the request.** The confirmation link is built with `URL::signedRoute()`, and `appointments:remind` builds it under cron — where there is no request to infer a scheme from, so the generator falls back to `APP_URL`. Leave that on http while the server redirects to https and the signature is checked against a URL that was never signed: **403 on the confirmation link in every appointment email**, for a booking that is perfectly fine, with nothing in the log mentioning the scheme. `HttpsTest` asserts both directions of that fork.
+- **The application does not redirect; the web server does.** Sending http to https belongs in the vhost. An application that also redirects is one that loops forever the first day it sits behind a proxy nobody declared.
+- **No proxy is trusted by default** (`config/trustedproxy.php`, read by the framework's `TrustProxies` at request time, so config caching is fine). Apache terminates TLS in-process here, so there is nothing in front and `X-Forwarded-Proto` is a header any client can send. Put nginx or Cloudflare in front without setting `TRUSTED_PROXIES` and the symptom is not a missing padlock — it is that same 403, because every request now arrives looking like http.
+- **The dev vhost deliberately does not send HSTS.** It uses a self-signed certificate, and HSTS removes the browser's "proceed anyway" — set it there and `hospital.local` is unreachable in that browser until the entry is cleared by hand. `deploy/hospital-production.conf` sends it, starting at `max-age=300`: HSTS cannot be taken back, so an expired certificate under a year-long header is a site nobody can reach rather than one showing a warning. Raise it once `certbot renew --dry-run` passes.
+- **Port 80 keeps `/.well-known/acme-challenge/` open** in the production vhost. Redirect that too and renewal fails silently ninety days before the certificate expires — with HSTS in force, which is the combination to avoid.
+- Other security headers (`X-Frame-Options`, `Referrer-Policy`, CSP) are a separate pass and are deliberately not in here.
+
 ### Backups
 
 `deploy/hospital-backup.sh` takes the database, `storage/app/private` (patient documents) and `storage/app/public` (uploads), plus a copy of `.env`. `deploy/hospital-restore.sh` puts them back. Everything else — code, seeded content, the stand-in photography — is in git and comes back with a checkout.
@@ -625,7 +637,7 @@ Everything else in Bangla is worth reviewing; those two are worth reviewing firs
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built, tested and pushed — tip `cf6dd9c`, 459 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
+Everything described above is built, tested and pushed — 466 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
 
 **Nine features shipped on 2026-08-25**, each its own commit, each described in its own section above: the panel menu redesign in four parts (the `PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the account block, untranslated-content badges), then `PanelSearch` behind the palette, three staff roles, the notification log, the home slider with three layouts, patients changing their own bookings, and the desk being able to move one too.
 
@@ -636,7 +648,7 @@ Everything described above is built, tested and pushed — tip `cf6dd9c`, 459 te
 **Launch readiness is what is left, and three things in it have never been named:**
 
 - **The backup scripts are written; nothing is scheduled.** `deploy/hospital-backup.sh`, `deploy/hospital-restore.sh` and `deploy/hospital-backup.cron` are in the repository and both scripts have been run for real — see *Backups* below. Installing the cron needs sudo, so until the user does that there is still no backup. And `HOSPITAL_BACKUP_REMOTE` is unset, which means the copy lives on the disk it is protecting.
-- **HTTPS is assumed but nowhere enforced** — no https `APP_URL`, no HSTS, no forced redirect. The vhost is where that goes, and patients sign in to the portal over it.
+- **HTTPS is written and not yet installed.** Both vhosts terminate TLS, redirect port 80 and (in production) send HSTS; the application follows `APP_URL` for the scheme of every link it generates and for the Secure flag on the session cookie — see *HTTPS* below. What is left needs sudo and a certificate: install a vhost, run certbot or the self-signed openssl line in the dev file's header, and set `APP_URL=https://…`. Until then `.env` still says `http://hospital.local`, deliberately — an https `APP_URL` with no certificate in place is a site that redirects to nothing.
 - **The seeded admin is still the only account**, with the password it was created with, so the three roles are not being exercised by anybody. Real staff accounts want creating with `admin:create --role=…`.
 
 **Two things waiting on the user, not on code:**

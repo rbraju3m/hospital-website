@@ -169,7 +169,12 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Follows APP_URL rather than needing to be remembered separately: a
+    // patient's portal session cookie must never travel over plain http, and
+    // the one thing that already knows whether this site is https is APP_URL.
+    // SESSION_SECURE_COOKIE still overrides, for a deployment that is odder
+    // than this one.
+    'secure' => env('SESSION_SECURE_COOKIE', \App\Support\Https::wanted(env('APP_URL'))),
 
     /*
     |--------------------------------------------------------------------------
