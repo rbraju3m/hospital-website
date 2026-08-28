@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (479 feature tests)
+# Tests (480 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -697,7 +697,7 @@ no panel form page ships a `<x-` tag Blade never compiled.
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built, tested and pushed — 479 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
+Everything described above is built, tested and pushed — 480 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
 
 **Nine features shipped on 2026-08-25**, each its own commit, each described in its own section above: the panel menu redesign in four parts (the `PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the account block, untranslated-content badges), then `PanelSearch` behind the palette, three staff roles, the notification log, the home slider with three layouts, patients changing their own bookings, and the desk being able to move one too.
 
@@ -709,13 +709,18 @@ Everything described above is built, tested and pushed — 479 tests, working tr
 asks for has been done and `CSP_ENFORCE=true` is set here — see *Security
 headers*. It is per-environment, so it has to be set again wherever this
 deploys. The walk itself is `deploy/csp-walk.js` with `csp-walk.plan.json`
-(20 public pages) and `csp-walk.panel.json` (39 signed-in ones) — see *Common
+(20 public pages) and `csp-walk.panel.json` (40 signed-in ones) — see *Common
 commands*. It drives headless Chrome and listens for `securitypolicyviolation`
 rather than scraping the console, so a finding names the directive and the
 blocked URI. Its header carries the four traps, of which two are worth knowing
 before you run anything: the policy is **not sent while Vite is hot**, and the
 panel half should be walked against the **test** schema on a second port, so
 the accounts it needs are not created in somebody's real data.
+
+The 40th signed-in page, `/portal/reset-password`, was added to that plan on
+2026-08-28 and **has not been walked yet** — it was the one page neither the
+suite nor the walk had ever rendered. The suite renders it now
+(`PortalAuthTest::test_every_signed_out_screen_renders`); the browser has not.
 
 **Launch readiness is what is left, and three things in it have never been named:**
 

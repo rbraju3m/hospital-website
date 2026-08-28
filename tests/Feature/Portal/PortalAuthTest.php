@@ -290,4 +290,33 @@ class PortalAuthTest extends TestCase
 
         return $matches[1];
     }
+
+    /**
+     * The four screens a signed-out patient can reach, rendered. Every other
+     * test in here posts to them, which never renders the form it is posting
+     * to — and a component tag Blade cannot parse is left in the output
+     * verbatim, so a required field simply is not on the page while the page
+     * still answers 200. That shipped once already, on the panel's document
+     * form. `reset-password` is the one to care about: it is how a patient who
+     * has lost their password reaches their own reports, and until now neither
+     * this suite nor the browser walk had ever rendered it.
+     */
+    public function test_every_signed_out_screen_renders(): void
+    {
+        $urls = [
+            route('portal.login'),
+            route('portal.register'),
+            route('portal.password.request'),
+            route('portal.password.reset'),
+            route('portal.password.reset', ['phone' => '01712345678']),
+        ];
+
+        foreach ($urls as $url) {
+            $content = $this->get($url)->assertOk()->getContent();
+
+            $this->assertStringNotContainsString(
+                '<x-', $content, $url.' shipped a component tag Blade never compiled.',
+            );
+        }
+    }
 }

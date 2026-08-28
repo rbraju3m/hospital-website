@@ -210,6 +210,11 @@
     "settle": 2000
   },
   {
+    "label": "portal reset password",
+    "url": "{BASE}/portal/reset-password?phone=01712345678",
+    "settle": 2000
+  },
+  {
     "label": "home dark + reduced motion",
     "url": "{BASE}/",
     "settle": 3000,

@@ -10,6 +10,7 @@ use App\Models\HealthPackage;
 use App\Models\PatientDocument;
 use App\Models\Post;
 use App\Models\Service;
+use App\Models\Slide;
 use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -49,6 +50,7 @@ class AdminFormPageTest extends TestCase
             'diagnostics' => DiagnosticTest::create(['name' => 'CBC', 'slug' => 'cbc', 'category' => 'pathology', 'price' => 400]),
             'posts' => Post::create(['title' => 'Five signs', 'slug' => 'five-signs', 'category' => 'health-tips', 'body' => 'Body.']),
             'gallery' => GalleryAlbum::create(['title' => 'Cardiac theatres', 'slug' => 'cardiac-theatres']),
+            'slides' => Slide::create(['title' => 'Care that is close by', 'eyebrow' => 'RBR Hospital']),
             'testimonials' => Testimonial::create(['patient_name' => 'A Patient', 'quote' => 'Good care.', 'rating' => 5]),
             'documents' => PatientDocument::create([
                 'phone' => '1712345678', 'title' => 'Blood report', 'category' => 'report',
@@ -63,7 +65,7 @@ class AdminFormPageTest extends TestCase
         $this->records();
 
         foreach (['departments', 'doctors', 'services', 'packages', 'diagnostics', 'posts',
-                  'gallery', 'testimonials', 'documents', 'users', 'appointments'] as $area) {
+                  'gallery', 'slides', 'testimonials', 'documents', 'users', 'appointments'] as $area) {
             $this->get(route("admin.{$area}.create"))->assertOk();
         }
     }
