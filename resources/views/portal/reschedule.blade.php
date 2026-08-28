@@ -46,8 +46,8 @@
                     class="input @error('appointment_date') input-error @enderror">
                 <option value="">{{ __('portal.appointments.reschedule_pick_date') }}</option>
                 @foreach ($dates as $available)
-                    <option value="{{ $available }}" @selected(old('appointment_date') === $available)>
-                        {{ \Illuminate\Support\Carbon::parse($available)->translatedFormat('l, j F') }}
+                    <option value="{{ $available['date'] }}" @selected(old('appointment_date') === $available['date'])>
+                        {{ \Illuminate\Support\Carbon::parse($available['date'])->translatedFormat('l, j F') }}
                     </option>
                 @endforeach
             </select>

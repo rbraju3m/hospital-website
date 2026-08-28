@@ -652,6 +652,22 @@ Two places carry a consequence beyond the editorial:
 
 Everything else in Bangla is worth reviewing; those two are worth reviewing first.
 
+## A bug the browser walk found (2026-08-28)
+
+It was shipped, it answered 200 to nothing at all, and no test in the suite
+reached it. Worth keeping as a pattern: **a page the suite never renders
+successfully is a page nobody has looked at.**
+
+- **The portal reschedule page was a 500 for every patient who clicked Change.**
+  `AppointmentSlotService::availableDates()` returns a row per day
+  (`['date' =>, 'label' =>, 'weekday' =>, 'slots' =>]`), the shape
+  `doctors/show.blade.php` already reads; `portal/reschedule.blade.php` echoed
+  the row itself, and `htmlspecialchars()` given an array is a TypeError. The
+  only test that GET that route asserted a **404** — the case where the feature
+  switch is off — so the successful render had never happened anywhere.
+
+It has a test now: the page rendered, with a real date in the option.
+
 ## Where this stopped (2026-08-25)
 
 Everything described above is built, tested and pushed — 476 tests, working tree clean. What follows is the state a new session should know rather than rediscover.

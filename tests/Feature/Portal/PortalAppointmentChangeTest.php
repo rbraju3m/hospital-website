@@ -84,6 +84,25 @@ class PortalAppointmentChangeTest extends TestCase
         ], $overrides));
     }
 
+    /**
+     * The page itself, rendered. Every other test here GETs this route only to
+     * be refused it, so nothing rendered it with dates on it — and
+     * availableDates() yields a row per day (`date`, `label`, `slots`), not a
+     * string. Echoing the row was a 500 on the one screen the Change button
+     * opens: htmlspecialchars() given an array.
+     */
+    public function test_the_reschedule_page_lists_the_consultants_days(): void
+    {
+        $booking = $this->booking();
+
+        $this->actingAs($this->patient, 'patient')
+            ->get(route('portal.appointments.reschedule', $booking))
+            ->assertOk()
+            // A real date in the option, not "Array".
+            ->assertSee('value="'.$this->monday.'"', escape: false)
+            ->assertDontSee('Array');
+    }
+
     public function test_a_patient_cancels_their_own_booking(): void
     {
         $booking = $this->booking();
