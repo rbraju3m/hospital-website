@@ -130,7 +130,7 @@ The application is complete; the machine it runs on is not set up. Everything be
 
 | What | Where | If it is missing |
 |---|---|---|
-| Apache vhost | `deploy/hospital.local.conf` (dev) · `deploy/hospital-production.conf` | Site served by `artisan serve` only, over plain http. DocumentRoot **must** be `public/` — pointing Apache at the project root produces a directory listing that exposes `.env`. Both files need `a2enmod ssl rewrite headers` and a certificate; the production one carries the HSTS header. |
+| Apache vhost | `deploy/hospital.local.conf` (dev) · `deploy/hospital-production.conf` | **Installed here, but stale.** `/etc/apache2/sites-enabled/hospital.local.conf` is an earlier pre-TLS copy serving `hospital.local` over plain http, and `mod_ssl` is not enabled — so the site works and none of the TLS reasoning below is actually in force. Diff it against the repo before believing it. Without any vhost the site is `artisan serve` only. DocumentRoot **must** be `public/` — pointing Apache at the project root produces a directory listing that exposes `.env`. Both files need `a2enmod ssl rewrite headers` and a certificate; the production one carries the HSTS header. |
 | Queue worker | `deploy/hospital-queue.service` | **Silent.** Every email and SMS queues into `jobs` and never sends. Bookings still succeed and nothing errors. |
 | Scheduler cron | `deploy/hospital-scheduler.cron` | **Silent.** The day-before reminder never runs at all. |
 | SMTP credentials | `.env` `MAIL_*` | **Silent-ish.** `MAIL_MAILER=log` writes mail to `storage/logs/laravel.log` instead of sending it. |
@@ -723,7 +723,7 @@ the accounts it needs are not created in somebody's real data.
 - **HTTPS is written and not yet installed.** Both vhosts terminate TLS, redirect port 80 and (in production) send HSTS; the application follows `APP_URL` for the scheme of every link it generates and for the Secure flag on the session cookie — see *HTTPS* below. What is left needs sudo and a certificate: install a vhost, run certbot or the self-signed openssl line in the dev file's header, and set `APP_URL=https://…`. Until then `.env` still says `http://hospital.local`, deliberately — an https `APP_URL` with no certificate in place is a site that redirects to nothing.
 - **The seeded admin is still the only account**, with the password it was created with, so the three roles are not being exercised by anybody. Real staff accounts want creating with `admin:create --role=…`.
 
-**One thing waiting on the user, not on code:** the Apache vhost, queue worker and scheduler cron are still not installed (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top. The notification log now makes the worker's silence visible, but it does not fix it.
+**One thing waiting on the user, not on code:** the queue worker and scheduler cron are not installed, and the Apache vhost that *is* installed is a stale pre-TLS copy (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top. The notification log now makes the worker's silence visible, but it does not fix it.
 
 The album that was missing its cover is no longer an outstanding item: it was a test album, and it went with the rest of the testing residue on 2026-08-28. The lesson it left stands — **do not run write endpoints against the live dev database without saying so first.**
 
