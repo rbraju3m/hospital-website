@@ -717,10 +717,16 @@ before you run anything: the policy is **not sent while Vite is hot**, and the
 panel half should be walked against the **test** schema on a second port, so
 the accounts it needs are not created in somebody's real data.
 
-The 40th signed-in page, `/portal/reset-password`, was added to that plan on
-2026-08-28 and **has not been walked yet** — it was the one page neither the
-suite nor the walk had ever rendered. The suite renders it now
-(`PortalAuthTest::test_every_signed_out_screen_renders`); the browser has not.
+**The walk was re-run on 2026-08-28 after that** — 20 public and 40 signed-in
+visits, both clean, both exit 0, against built assets and the test schema on a
+second port. It found one thing, and not in the application: the three portal
+screens for a signed-out patient were listed *after* the step that signs into
+the portal, so a guest-only route bounced the walk to the dashboard and all
+three reported clean **without ever being drawn**. That is the landing-on-a-
+login trap in the other direction, and it had hidden `/portal/register` and
+`/portal/forgot-password` for the whole of the first walk. They are ordered
+before the portal login now, and the script's header carries it as the fifth
+trap. Read the landing column — it is the only thing that says what was drawn.
 
 **Launch readiness is what is left, and three things in it have never been named:**
 

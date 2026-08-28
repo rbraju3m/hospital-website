@@ -83,6 +83,21 @@
     "settle": 2500
   },
   {
+    "label": "portal register",
+    "url": "{BASE}/portal/register",
+    "settle": 2000
+  },
+  {
+    "label": "portal forgot password",
+    "url": "{BASE}/portal/forgot-password",
+    "settle": 2000
+  },
+  {
+    "label": "portal reset password",
+    "url": "{BASE}/portal/reset-password?phone=01712345678",
+    "settle": 2000
+  },
+  {
     "label": "admin logout -> portal login",
     "url": "{BASE}/portal/login",
     "settle": 2000,
@@ -198,21 +213,6 @@
     "settle": 2500,
     "action": "const b=[...document.querySelectorAll('button,a')].find(x=>/request/i.test(x.textContent||''));if(b)b.click();",
     "after": 1500
-  },
-  {
-    "label": "portal register",
-    "url": "{BASE}/portal/register",
-    "settle": 2000
-  },
-  {
-    "label": "portal forgot password",
-    "url": "{BASE}/portal/forgot-password",
-    "settle": 2000
-  },
-  {
-    "label": "portal reset password",
-    "url": "{BASE}/portal/reset-password?phone=01712345678",
-    "settle": 2000
   },
   {
     "label": "home dark + reduced motion",

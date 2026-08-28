@@ -23,7 +23,7 @@
 // Exits 0 when the walk is clean and 1 when anything was reported, so it can
 // gate a deployment. `--json` prints the raw findings instead of the report.
 //
-// Four things that will waste an afternoon if you do not know them:
+// Five things that will waste an afternoon if you do not know them:
 //
 //   * `npm run dev` serves the bundle from Vite's own origin, and the header is
 //     deliberately not sent while Vite is hot. A walk against a hot dev server
@@ -39,6 +39,14 @@
 //         DB_DATABASE=hospital_site_test php8.3 artisan serve --port=8322
 //     That way the accounts a walk needs are created in somewhere disposable
 //     rather than in real data. See deploy/csp-walk.panel.json.
+//
+//   * A guest-only screen has to be walked BEFORE the walk signs in. The three
+//     portal screens for somebody who is signed out -- register, forgot
+//     password, reset password -- redirect a signed-in patient to the
+//     dashboard, so listed after the portal login they report clean while
+//     never being drawn at all. This is the same failure as landing on a
+//     login, in the other direction, and it hid all three for a whole walk.
+//     Read the landing column: it is the only thing that says what was drawn.
 //
 //   * Do not run PHPUnit while a walk is in flight. RefreshDatabase truncates
 //     the test schema, the session goes with it, and every page quietly starts
