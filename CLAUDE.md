@@ -95,6 +95,11 @@ vendor/bin/phpunit --filter SecurityHeaders         # the response headers, the 
 php8.3 /usr/bin/composer require some/package
 php8.3 /usr/bin/composer dump-autoload
 
+# What this machine is actually running, as opposed to what deploy/ contains.
+# Read-only, exits non-zero while anything is OPEN, so it can gate a deploy.
+deploy/launch-check.sh
+deploy/launch-check.sh --quiet                     # only what is not done
+
 # Backups — see deploy/hospital-backup.sh's header for every setting it takes
 deploy/hospital-backup.sh                          # take one now, wherever HOSPITAL_BACKUP_DIR points
 HOSPITAL_BACKUP_DIR=/tmp/try deploy/hospital-backup.sh   # somewhere harmless, to try it
@@ -140,6 +145,8 @@ The application is complete; the machine it runs on is not set up. Everything be
 The queue worker is the one that used to be invisible. It is not any more: `/admin/notifications` records every message when it is dispatched and marks it sent when the transport takes it, so a machine with no worker shows a growing list of messages stuck at **queued** and a band at the top of the page saying so.
 
 Each deploy file carries its install commands in a header comment. They need `sudo`, which this environment does not have without a password, so the user runs them.
+
+**`deploy/launch-check.sh` answers this table for the machine you are on**, rather than for the repository — run it before believing any of the above. It was written after the enabled vhost here turned out to be an earlier copy of the one in `deploy/`, serving plain http while this document described the TLS it was not doing: a correct file in `deploy/` says nothing about what is installed. It reads `.env` directly, changes nothing, and exits non-zero while anything is OPEN. Two of its checks exist because the naive version of them is wrong on this box — `sites-enabled` holds symlinks, so the vhost lookup needs `grep -R`; and other Laravel projects here run their own queues, so a `queue:work` only counts if its command line or working directory is this application's.
 
 Also outstanding on the box, not in the repo: the seeded admin account still has the password it was created with. The testing residue is gone — the dev database was cleaned on 2026-08-28 and now holds seeded content only, with no appointments, patients, documents or enquiries.
 
