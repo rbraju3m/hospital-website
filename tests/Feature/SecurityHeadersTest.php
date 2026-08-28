@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class SecurityHeadersTest extends TestCase
@@ -47,8 +48,32 @@ class SecurityHeadersTest extends TestCase
         );
     }
 
+    /**
+     * The policy itself, off whichever header is carrying it.
+     *
+     * Three assertions below are about what the policy *says* — the nonce, the
+     * map origin, no wholesale inline — and not about which way CSP_ENFORCE is
+     * set. Reading the report-only header by name made them a trap: the moment
+     * somebody followed the instructions in config/security.php and switched
+     * enforcement on, they failed, on a policy that had not changed a word.
+     */
+    private function policyOf(TestResponse $response): string
+    {
+        return $response->headers->get('Content-Security-Policy')
+            ?? $response->headers->get('Content-Security-Policy-Report-Only')
+            ?? '';
+    }
+
+    private function policy(): string
+    {
+        return $this->policyOf($this->get(route('home')));
+    }
+
     public function test_the_policy_is_report_only_until_it_is_switched_on(): void
     {
+        // Stated rather than inherited from whatever .env says today.
+        config(['security.csp.enforce' => false]);
+
         $response = $this->get(route('home'));
 
         $this->assertNotNull($response->headers->get('Content-Security-Policy-Report-Only'));
@@ -83,9 +108,7 @@ class SecurityHeadersTest extends TestCase
      */
     public function test_scripts_are_not_allowed_inline_wholesale(): void
     {
-        $policy = $this->get(route('home'))->headers->get('Content-Security-Policy-Report-Only');
-
-        preg_match('/script-src ([^;]+)/', $policy, $matches);
+        preg_match('/script-src ([^;]+)/', $this->policy(), $matches);
 
         $this->assertStringNotContainsString("'unsafe-inline'", $matches[1]);
         $this->assertStringContainsString("'nonce-", $matches[1]);
@@ -95,7 +118,7 @@ class SecurityHeadersTest extends TestCase
     {
         $response = $this->get(route('home'));
 
-        preg_match("/'nonce-([^']+)'/", $response->headers->get('Content-Security-Policy-Report-Only'), $matches);
+        preg_match("/'nonce-([^']+)'/", $this->policyOf($response), $matches);
         $this->assertNotEmpty($matches[1] ?? null, 'The policy named no nonce.');
 
         $this->assertStringContainsString('<script nonce="'.$matches[1].'"', $response->getContent());
@@ -135,12 +158,38 @@ class SecurityHeadersTest extends TestCase
         $this->assertSame([], $offenders);
     }
 
+    /**
+     * The sibling of the rule above, and the quieter half of it. Scripts get a
+     * nonce, but a nonce cannot cover an attribute, so `onclick=` and
+     * `onsubmit=` are refused outright under this policy — and refused without
+     * a sound. A confirm() on a delete form that stops running does not block
+     * the delete; it removes the question and submits, which looks exactly
+     * like a delete that worked. Ask from app.js instead: `data-confirm`.
+     */
+    public function test_no_view_has_an_inline_event_handler(): void
+    {
+        $offenders = [];
+
+        foreach (File::allFiles(resource_path('views')) as $file) {
+            // Whitespace first, so Alpine's `x-on:click` and `@click` — which
+            // the policy does allow, by way of 'unsafe-eval' — are not swept
+            // up with it, nor is `<option`.
+            preg_match_all('/\son[a-z]+\s*=\s*["\']/i', $file->getContents(), $matches);
+
+            foreach ($matches[0] as $attribute) {
+                $offenders[] = $file->getRelativePathname().' '.trim($attribute);
+            }
+        }
+
+        $this->assertSame([], $offenders);
+    }
+
     /** The contact page frames OpenStreetMap; a policy without it renders an empty box. */
     public function test_the_contact_map_origin_is_allowed(): void
     {
         $this->assertStringContainsString(
             'frame-src https://www.openstreetmap.org',
-            $this->get(route('home'))->headers->get('Content-Security-Policy-Report-Only'),
+            $this->policy(),
         );
     }
 }

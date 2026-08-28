@@ -1460,6 +1460,31 @@ const uploadStatusNode = (input) => {
     return node;
 };
 
+/* Deleting a record and cancelling a booking used to ask with an inline
+   `onsubmit` attribute. A nonce cannot cover an attribute, so the Content
+   Security Policy refuses to run one — and a refused handler does not fail
+   loudly: the form simply submits, and the question is never asked. A delete
+   that stopped asking would look exactly like a delete that always worked.
+
+   So the question is asked from here, the one script the policy allows. It is
+   registered before the upload hold below and stops propagation outright on a
+   refusal — otherwise the hold would queue the submit the patient just
+   declined, and release it the moment the last picture was ready. */
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    const question = form instanceof HTMLFormElement ? form.dataset.confirm : null;
+
+    if (! question || window.confirm(question)) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+}, true);
+
+/* Same reason: `onclick="window.print()"` is an inline handler. */
+document.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('[data-print]')) window.print();
+});
+
 /* A form submitted while pictures are still being prepared would send the
    originals — the very thing this exists to avoid. Hold the submit, and let it
    go the moment the last one is ready. */

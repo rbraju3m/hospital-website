@@ -1,7 +1,7 @@
 @props(['action', 'confirm' => null, 'label' => null, 'compact' => false])
 
 <form method="POST" action="{{ $action }}"
-      onsubmit="return confirm(@js($confirm ?? __('admin.actions.confirm_delete')))"
+      data-confirm="{{ $confirm ?? __('admin.actions.confirm_delete') }}"
       {{ $attributes->merge(['class' => 'inline']) }}>
     @csrf
     @method('DELETE')

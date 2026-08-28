@@ -57,7 +57,7 @@
             </dl>
 
             <div class="flex flex-wrap gap-3 border-t border-mist-200 px-8 py-7">
-                <button type="button" onclick="window.print()" class="btn-outline">
+                <button type="button" data-print class="btn-outline">
                     <x-icon name="file-text" size="16" /> {{ __('appointment.confirmed.print') }}
                 </button>
                 <a href="{{ route('doctors.show', $appointment->doctor) }}" class="btn-outline">{{ __('appointment.confirmed.view_consultant') }}</a>

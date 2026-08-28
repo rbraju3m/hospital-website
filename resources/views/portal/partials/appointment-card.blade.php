@@ -43,7 +43,7 @@
             </a>
 
             <form method="POST" action="{{ route('portal.appointments.cancel', $appointment) }}"
-                  onsubmit="return confirm(@js(__('portal.appointments.cancel_confirm')))">
+                  data-confirm="{{ __('portal.appointments.cancel_confirm') }}">
                 @csrf
                 @method('PATCH')
                 <button type="submit"

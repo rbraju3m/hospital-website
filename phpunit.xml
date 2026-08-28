@@ -30,6 +30,10 @@
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="SMS_DRIVER" value="discard"/>
+        <!-- The shipped default, stated rather than inherited: the suite
+             must not change behaviour because a developer ratcheted
+             CSP_ENFORCE on in their own .env. -->
+        <env name="CSP_ENFORCE" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
