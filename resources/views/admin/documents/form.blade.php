@@ -30,7 +30,7 @@
 
                 <x-admin.select name="category" :label="__('admin.fields.category')" required :value="$document->category"
                                 :options="collect(\App\Models\PatientDocument::CATEGORIES)
-                                    ->mapWithKeys(fn ($c) => [$c => __(\"portal.categories.{$c}\")])->all()" />
+                                    ->mapWithKeys(fn ($c) => [$c => __('portal.categories.'.$c)])->all()" />
 
                 <x-admin.input name="issued_at" type="date" :label="__('admin.fields.issued_at')"
                                :value="$document->issued_at?->toDateString()" />

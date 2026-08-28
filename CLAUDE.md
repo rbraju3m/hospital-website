@@ -652,11 +652,11 @@ Two places carry a consequence beyond the editorial:
 
 Everything else in Bangla is worth reviewing; those two are worth reviewing first.
 
-## A bug the browser walk found (2026-08-28)
+## Two bugs the browser walk found (2026-08-28)
 
-It was shipped, it answered 200 to nothing at all, and no test in the suite
-reached it. Worth keeping as a pattern: **a page the suite never renders
-successfully is a page nobody has looked at.**
+Both were shipped, both answered 200 to the test suite, and neither was
+reachable by any test in it. They are worth knowing as a pattern: **a page the
+suite never renders successfully is a page nobody has looked at.**
 
 - **The portal reschedule page was a 500 for every patient who clicked Change.**
   `AppointmentSlotService::availableDates()` returns a row per day
@@ -665,8 +665,17 @@ successfully is a page nobody has looked at.**
   the row itself, and `htmlspecialchars()` given an array is a TypeError. The
   only test that GET that route asserted a **404** — the case where the feature
   switch is off — so the successful render had never happened anywhere.
+- **"Publish a document" had no category field.** The `:options` attribute
+  carried `__(\"portal.categories.{$c}\")`: a double quote inside a
+  double-quoted component attribute, which ends the attribute early. Blade
+  cannot parse the tag and leaves it in the output **verbatim**, the browser
+  renders an unknown element as nothing, and the page still answers 200 —
+  while `category` is `required`, so no report or prescription could be
+  published at all. `AdminFormPageTest` rendered the page and asserted `assertOk`,
+  which is exactly what a broken component tag returns.
 
-It has a test now: the page rendered, with a real date in the option.
+Both now have tests: the reschedule page's real render, and an assertion that
+no panel form page ships a `<x-` tag Blade never compiled.
 
 ## Where this stopped (2026-08-25)
 

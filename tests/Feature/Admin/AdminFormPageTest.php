@@ -77,6 +77,34 @@ class AdminFormPageTest extends TestCase
         $this->get(route('admin.users.edit', auth()->user()))->assertOk();
     }
 
+    /**
+     * A component tag Blade cannot parse is left in the output verbatim, and a
+     * browser renders an unknown element as nothing at all: a required field
+     * is simply not on the form, on a page that still answers 200. A double
+     * quote inside a double-quoted attribute did that to the document category
+     * select, and a report cannot be published without one.
+     */
+    public function test_no_form_page_ships_an_uncompiled_component_tag(): void
+    {
+        $urls = [
+            route('admin.users.create'),
+            route('admin.appointments.create'),
+            route('admin.users.edit', auth()->user()),
+        ];
+
+        foreach ($this->records() as $area => $record) {
+            $urls[] = route("admin.{$area}.create");
+            $urls[] = route("admin.{$area}.edit", $record);
+        }
+
+        foreach ($urls as $url) {
+            $this->assertStringNotContainsString(
+                '<x-', $this->get($url)->assertOk()->getContent(),
+                $url.' shipped a component tag Blade never compiled.',
+            );
+        }
+    }
+
     public function test_the_aside_column_reaches_the_page(): void
     {
         // A mistyped slot name drops the whole column silently — the page still
