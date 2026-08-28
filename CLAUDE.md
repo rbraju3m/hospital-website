@@ -141,7 +141,7 @@ The queue worker is the one that used to be invisible. It is not any more: `/adm
 
 Each deploy file carries its install commands in a header comment. They need `sudo`, which this environment does not have without a password, so the user runs them.
 
-Also outstanding on the box, not in the repo: the seeded admin account still has the password it was created with, and the dev database holds a handful of fake bookings, patients and documents from testing.
+Also outstanding on the box, not in the repo: the seeded admin account still has the password it was created with. The testing residue is gone — the dev database was cleaned on 2026-08-28 and now holds seeded content only, with no appointments, patients, documents or enquiries.
 
 If someone reports that "notifications stopped arriving", check the worker and the cron before anything in the code.
 
@@ -723,10 +723,9 @@ the accounts it needs are not created in somebody's real data.
 - **HTTPS is written and not yet installed.** Both vhosts terminate TLS, redirect port 80 and (in production) send HSTS; the application follows `APP_URL` for the scheme of every link it generates and for the Secure flag on the session cookie — see *HTTPS* below. What is left needs sudo and a certificate: install a vhost, run certbot or the self-signed openssl line in the dev file's header, and set `APP_URL=https://…`. Until then `.env` still says `http://hospital.local`, deliberately — an https `APP_URL` with no certificate in place is a site that redirects to nothing.
 - **The seeded admin is still the only account**, with the password it was created with, so the three roles are not being exercised by anybody. Real staff accounts want creating with `admin:create --role=…`.
 
-**Two things waiting on the user, not on code:**
+**One thing waiting on the user, not on code:** the Apache vhost, queue worker and scheduler cron are still not installed (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top. The notification log now makes the worker's silence visible, but it does not fix it.
 
-- The Apache vhost, queue worker and scheduler cron are still not installed (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top. The notification log now makes the worker's silence visible, but it does not fix it.
-- One album is missing its cover image. I deleted the file (`gallery/92-v81zkdp9.png`) on 2026-08-24 while exercising the cover endpoint against the live dev database; the behaviour that allowed it is fixed and tested, but the file is gone and has to be re-uploaded. Do not run write endpoints against their data without saying so first.
+The album that was missing its cover is no longer an outstanding item: it was a test album, and it went with the rest of the testing residue on 2026-08-28. The lesson it left stands — **do not run write endpoints against the live dev database without saying so first.**
 
 **Also outstanding:** all the Bangla still needs a native speaker, and there is more of it than there was — the slides, the roles, the notification log, the portal's change screens, the moved-booking email and two new SMS templates.
 
