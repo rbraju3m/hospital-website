@@ -63,7 +63,7 @@ php8.3 artisan queue:work --stop-when-empty        # drain and exit
 php8.3 artisan queue:failed                        # anything that gave up after 3 tries
 php8.3 artisan queue:restart                       # after deploying code
 
-# Tests (476 feature tests)
+# Tests (479 feature tests)
 vendor/bin/phpunit
 vendor/bin/phpunit --filter test_the_same_slot_cannot_be_booked_twice
 vendor/bin/phpunit tests/Feature/AppointmentBookingTest.php
@@ -697,7 +697,7 @@ no panel form page ships a `<x-` tag Blade never compiled.
 
 ## Where this stopped (2026-08-25)
 
-Everything described above is built, tested and pushed — 476 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
+Everything described above is built, tested and pushed — 479 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
 
 **Nine features shipped on 2026-08-25**, each its own commit, each described in its own section above: the panel menu redesign in four parts (the `PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the account block, untranslated-content badges), then `PanelSearch` behind the palette, three staff roles, the notification log, the home slider with three layouts, patients changing their own bookings, and the desk being able to move one too.
 
