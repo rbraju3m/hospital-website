@@ -517,7 +517,7 @@ One switch: the scheme of **`APP_URL`**. `App\Support\Https::enforce()` runs fir
 Four headers are sent always and none of them can break a page: `X-Content-Type-Options: nosniff` (patient documents are streamed from the private disk, and an upload the browser decides is HTML would run on this origin), `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` that refuses camera, microphone and location.
 
 - **`fullscreen=(self)` in that policy is load-bearing.** The gallery lightbox's `F` key is the Fullscreen API; a tidier-looking `fullscreen=()` switches it off, and only `SecurityHeadersTest` would say so.
-- **The CSP shipped report-only and is now enforced.** It is the one header here that can take a site down — a directive too tight anywhere breaks that page for every visitor, and nothing in this suite would catch it, because the suite never runs a browser. The walk was done on 2026-08-28 in headless Chrome, listening for `securitypolicyviolation`: 60 page visits across the public site, the panel and the portal — home in both locales, booking with a live slot fetch, the gallery lightbox, the contact map, the media manager, every listing and form, a 404 and the 503 — clean under the enforced header. `CSP_ENFORCE=true` is in `.env` and `.env.example`; it is **per-environment**, so a new deployment starts report-only again until somebody sets it. The walk is committed — `deploy/csp-walk.js` and its two plans — so it is repeatable rather than something to reconstruct, and it exits non-zero, so it can gate a deploy.
+- **The CSP shipped report-only and is now enforced.** It is the one header here that can take a site down — a directive too tight anywhere breaks that page for every visitor, and nothing in this suite would catch it, because the suite never runs a browser. The walk was done on 2026-08-28 in headless Chrome, listening for `securitypolicyviolation`: 60 page visits across the public site, the panel and the portal — home in both locales, booking with a live slot fetch, the gallery lightbox, the contact map, the media manager, every listing and form, a 404 and the 503 — clean under the enforced header. `CSP_ENFORCE=true` is in `.env` and `.env.example`; it is **per-environment**, so a new deployment starts report-only again until somebody sets it. The walk is committed — `deploy/csp-walk.js` and its two plans — so it is repeatable rather than something to reconstruct, and it exits non-zero, so it can gate a deploy. It has been re-run since, and reading the report's **landing column** is not optional: a page that redirected somewhere else reports clean, because wherever it landed was clean. See the five traps in the script's header.
 - **`CSP_ENFORCE` is pinned to `false` in `phpunit.xml`**, and the tests that read the policy take it off whichever header is carrying it. Three of them named `Content-Security-Policy-Report-Only` literally, so following the instruction in `config/security.php` broke four tests on a policy that had not changed a word. The suite states its premise instead of inheriting whichever way a developer's `.env` is ratcheted — the same reason `DB_DATABASE` is pinned there.
 - **Inline event handlers are refused, and refused silently.** A nonce covers a `<script>` block; it cannot cover an `onclick=` or `onsubmit=` attribute, so the browser declines to run one. That is not a visible break: `onsubmit="return confirm(…)"` on a delete form does not block the delete when it is refused — it removes the question and submits, which looks exactly like a delete that worked. The three that existed (every panel delete, a patient cancelling their own booking, the print button on the confirmation page) now carry `data-confirm` / `data-print` and are answered by delegated handlers in `app.js`. The trade is that the confirmation now needs the bundle, where an inline attribute did not; the `has-js` watchdog is what says the bundle never arrived. `SecurityHeadersTest` scans every view for the attribute, as it already did for un-nonced `<script>`.
 - **`'unsafe-eval'` is Alpine, and cannot be removed by editing a header.** The standard build evaluates every `x-data` and `x-show` through the AsyncFunction constructor, which the browser counts as eval. Alpine's CSP build cannot evaluate expressions at all — every one becomes a method on a registered component. That is a rewrite of the interaction layer.
@@ -532,7 +532,7 @@ Four headers are sent always and none of them can break a page: `X-Content-Type-
 
 Both scripts read `.env` themselves rather than going through artisan, because the moment a backup matters is often the moment the application does not boot.
 
-- **The dump carries no database name.** No `--databases`, so there is no `USE` line, and a restore can load it into a scratch schema with `--database`. That is what makes rehearsing a restore a minute's work instead of a decision about the live one — and a restore nobody has rehearsed is not a restore.
+- **The dump carries no database name.** No `--databases`, so there is no `USE` line, and a restore can load it into a scratch schema with `--database`. That is what makes rehearsing a restore a minute's work instead of a decision about the live one — and a restore nobody has rehearsed is not a restore. This one has been: on 2026-08-28 a backup was loaded into a scratch schema and the checksums, the completion marker, the exact row counts and the Bangla all came back, with the live database untouched throughout.
 - **`--default-character-set=utf8mb4` is not optional.** Half the content is Bangla; a latin1 dump loses all of it and loses it quietly, which is the worst way to find out in six months.
 - **A dump is checked for its completion marker, not its exit code.** `mysqldump` can exit 0 on a dump that stopped halfway when the connection dropped. `-- Dump completed` at the end is the only thing that says the whole of it arrived, and a run that fails deletes its own directory rather than leaving something that looks like a backup.
 - **Row counts are exact, and the restore compares them.** `information_schema.TABLE_ROWS` is an estimate on InnoDB, and an estimate cannot tell a good restore from a bad one. `counts.txt` is `SELECT COUNT(*)` per table; the restore counts them back afterwards and says so. A dump that loads without erroring is not the same as a database that came back.
@@ -702,49 +702,113 @@ suite never renders successfully is a page nobody has looked at.**
 Both now have tests: the reschedule page's real render, and an assertion that
 no panel form page ships a `<x-` tag Blade never compiled.
 
-## Where this stopped (2026-08-25)
+## Where this stopped (2026-08-28)
 
-Everything described above is built, tested and pushed — 480 tests, working tree clean. What follows is the state a new session should know rather than rediscover.
+Tip `6993363`, 480 tests, working tree clean, everything pushed. What follows is
+the state a new session should know rather than rediscover.
 
-**Nine features shipped on 2026-08-25**, each its own commit, each described in its own section above: the panel menu redesign in four parts (the `PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the account block, untranslated-content badges), then `PanelSearch` behind the palette, three staff roles, the notification log, the home slider with three layouts, patients changing their own bookings, and the desk being able to move one too.
+**Run `deploy/launch-check.sh` before anything else.** It reports what this
+machine is actually running — vhost, TLS, worker, crons, backups, mail, SMS,
+staff accounts — as opposed to what `deploy/` contains, which is a different
+question and the one this document kept answering by mistake. Ten items were
+OPEN at the break. Do not re-derive that list by hand; it takes a dozen
+commands and this session already spent them.
 
-**The feature list is empty.** What remains in *Not built yet* needs systems this machine does not have: delivery receipts want a gateway that posts back, and lab results want an analyser to talk to. Nothing the site claims is missing.
+**There is no code work left to find.** The feature list has been empty since
+2026-08-25 — what remains in *Not built yet* needs systems this machine does
+not have, a gateway that posts back and an analyser to talk to. On 2026-08-28
+the obvious audits were run to exhaustion as well, and every one came back
+zero: no locale key where the Bangla is a copy of the English (of 1,511), no
+untranslated content field (across 119 rows and nine models), no write route
+untested (of 70), no GET page nothing renders, no page never drawn in a
+browser. Everything still outstanding needs the user's `sudo` or a native
+Bangla speaker.
 
-**The live dev database now has** the home layout set to `slider`, three seeded slides, `users.role` on every account (all `administrator`), and the `notification_logs`, `slides`, `cancelled_by`/`rescheduled_at` migrations applied.
+**What shipped, by session.** 2026-08-24: two-column panel forms, the photo
+gallery, dark mode, the lightbox, list controls, the album media manager, the
+rich-text toolbar. 2026-08-25, nine features each in its own commit and each
+described in its own section above: the panel menu redesign in four parts (the
+`PanelNavigation` registry and collapsible rail, the Ctrl+K palette, the
+account block, untranslated-content badges), `PanelSearch` behind the palette,
+three staff roles, the notification log, the home slider with three layouts,
+patients changing their own bookings, and the desk being able to move one too.
+2026-08-28: backups, HTTPS, the security headers and the CSP walk; then the
+launch-readiness pass that produced `deploy/launch-check.sh`.
 
-**The CSP ratchet is closed** (2026-08-28). The walk `config/security.php`
-asks for has been done and `CSP_ENFORCE=true` is set here — see *Security
-headers*. It is per-environment, so it has to be set again wherever this
-deploys. The walk itself is `deploy/csp-walk.js` with `csp-walk.plan.json`
-(20 public pages) and `csp-walk.panel.json` (40 signed-in ones) — see *Common
-commands*. It drives headless Chrome and listens for `securitypolicyviolation`
-rather than scraping the console, so a finding names the directive and the
-blocked URI. Its header carries the four traps, of which two are worth knowing
-before you run anything: the policy is **not sent while Vite is hot**, and the
-panel half should be walked against the **test** schema on a second port, so
-the accounts it needs are not created in somebody's real data.
+**The CSP ratchet is closed.** The walk `config/security.php` asks for has been
+done and `CSP_ENFORCE=true` is set here — see *Security headers*. It is
+per-environment, so it has to be set again wherever this deploys. The walk is
+`deploy/csp-walk.js` with `csp-walk.plan.json` (20 public pages) and
+`csp-walk.panel.json` (40 signed-in), both re-run clean at the break, exit 0,
+against built assets and the test schema on a second port. It drives headless
+Chrome and listens for `securitypolicyviolation` rather than scraping the
+console, so a finding names the directive and the blocked URI.
 
-**The walk was re-run on 2026-08-28 after that** — 20 public and 40 signed-in
-visits, both clean, both exit 0, against built assets and the test schema on a
-second port. It found one thing, and not in the application: the three portal
-screens for a signed-out patient were listed *after* the step that signs into
-the portal, so a guest-only route bounced the walk to the dashboard and all
-three reported clean **without ever being drawn**. That is the landing-on-a-
-login trap in the other direction, and it had hidden `/portal/register` and
-`/portal/forgot-password` for the whole of the first walk. They are ordered
-before the portal login now, and the script's header carries it as the fifth
-trap. Read the landing column — it is the only thing that says what was drawn.
+Its header carries five traps and they are all there because they cost an
+afternoon. Two to know before running anything: the policy is **not sent while
+Vite is hot**, and the panel half should be walked against the **test** schema
+on a second port so the accounts it needs are not created in real data. The
+fifth is the newest and the least obvious — **a guest-only screen has to be
+walked before the walk signs in.** The three signed-out portal screens were
+listed after the portal login, so a guest-only route bounced them to the
+dashboard and all three reported clean *without ever being drawn*. That is the
+landing-on-a-login trap in the other direction, and it hid `/portal/register`
+and `/portal/forgot-password` for the whole of the first walk. Read the landing
+column: it is the only thing that says what was drawn.
 
-**Launch readiness is what is left, and three things in it have never been named:**
+**Launch readiness is what is left.** `launch-check.sh` enumerates it; these
+are the parts with a consequence worth writing down.
 
-- **The backup scripts are written; nothing is scheduled.** `deploy/hospital-backup.sh`, `deploy/hospital-restore.sh` and `deploy/hospital-backup.cron` are in the repository and both scripts have been run for real — see *Backups* below. Installing the cron needs sudo, so until the user does that there is still no backup. And `HOSPITAL_BACKUP_REMOTE` is unset, which means the copy lives on the disk it is protecting.
-- **HTTPS is written and not yet installed.** Both vhosts terminate TLS, redirect port 80 and (in production) send HSTS; the application follows `APP_URL` for the scheme of every link it generates and for the Secure flag on the session cookie — see *HTTPS* below. What is left needs sudo and a certificate: install a vhost, run certbot or the self-signed openssl line in the dev file's header, and set `APP_URL=https://…`. Until then `.env` still says `http://hospital.local`, deliberately — an https `APP_URL` with no certificate in place is a site that redirects to nothing.
-- **The seeded admin is still the only account**, with the password it was created with, so the three roles are not being exercised by anybody. Real staff accounts want creating with `admin:create --role=…`.
+- **HTTPS, and the order matters.** The vhost enabled here is an earlier
+  pre-TLS copy serving plain http, and `mod_ssl` is off — so nothing in
+  *HTTPS* below is actually in force, however carefully it is written. The
+  repository's TLS vhost is **staged** at
+  `/etc/apache2/sites-available/hospital.local-tls.conf`, deliberately under a
+  name that is not enabled: `sites-enabled/hospital.local.conf` is a symlink,
+  so writing the TLS file under *that* name would arm a redirect to a port
+  nothing listens on, and the site would die at the next unrelated reload.
+  What is left needs sudo: `a2enmod ssl`, a certificate (certbot, or the
+  self-signed openssl line in the staged file's header), `a2dissite
+  hospital.local && a2ensite hospital.local-tls`, reload — **and only then**
+  `APP_URL=https://…`. Flip `APP_URL` first and every signed confirmation link
+  403s, for bookings that are perfectly fine, with nothing in the log
+  mentioning the scheme.
+- **The backup mechanism is proven; nothing is scheduled.** Both scripts have
+  been run for real, and the restore was rehearsed on 2026-08-28 into a scratch
+  schema: checksums, the dump's completion marker, exact row counts and the
+  Bangla all came back, and the schema was dropped afterwards. So this is not a
+  restore nobody has tried. It is a backup nobody has scheduled —
+  `deploy/hospital-backup.cron` needs sudo — and `HOSPITAL_BACKUP_REMOTE` is
+  unset, so every copy would live on the disk it protects.
+- **The queue worker and the scheduler cron are not installed**, and both fail
+  silently — see the table near the top. The notification log makes the
+  worker's silence visible; it does not fix it.
+- **Mail and SMS are still on the log drivers.** `MAIL_FROM_ADDRESS` is
+  correct now (`appointment@rbrhospital.com.bd`, where a patient's reply
+  reaches the desk) but nothing is sent until `MAIL_*` and `SMS_*` are real.
+- **The seeded admin is the only account**, with the password it was created
+  with, so the three roles are exercised by nobody. `admin:create --role=…`.
+- **All the Bangla still needs a native speaker**, and there is more of it than
+  there was: the slides, the roles, the notification log, the portal's change
+  screens, the moved-booking email and two new SMS templates. Diagnostics
+  preparation instructions and the emergency symptom list first — those two
+  carry a consequence beyond the editorial.
 
-**One thing waiting on the user, not on code:** the queue worker and scheduler cron are not installed, and the Apache vhost that *is* installed is a stale pre-TLS copy (`deploy/`, all need sudo). Three of the five deployment gaps fail *silently* — see the table near the top. The notification log now makes the worker's silence visible, but it does not fix it.
+**The live dev database holds seeded content only.** It was cleaned on
+2026-08-28: three test bookings, two patients, a patient document, two
+enquiries and a test gallery album, all deleted with their files. Both storage
+disks are now **completely empty**, which is worth knowing as a diagnostic —
+every image on the site is stand-in photography, so a file appearing under
+`storage/app/public` is a real upload and one under `storage/app/private` is a
+real medical record. The database also has the home layout set to `slider`,
+three seeded slides, `users.role` on every account, and the
+`notification_logs`, `slides`, `cancelled_by`/`rescheduled_at` migrations
+applied.
 
-The album that was missing its cover is no longer an outstanding item: it was a test album, and it went with the rest of the testing residue on 2026-08-28. The lesson it left stands — **do not run write endpoints against the live dev database without saying so first.**
-
-**Also outstanding:** all the Bangla still needs a native speaker, and there is more of it than there was — the slides, the roles, the notification log, the portal's change screens, the moved-booking email and two new SMS templates.
+**Do not run write endpoints against the live dev database without saying so
+first.** That rule was bought on 2026-08-24 by destroying one of their files
+while exercising the cover endpoint. The album in question was a test album and
+has since gone with the rest of the residue, so nothing is outstanding from it
+— but the rule is not about that album.
 
 **Start the dev server with the upload limits raised** — `php8.3 -d upload_max_filesize=32M -d post_max_size=64M artisan serve …`. The CLI runtime caps at 2M/8M while Apache is at 5G, and the failure mode is a batch of photographs uploading as nothing at all.
