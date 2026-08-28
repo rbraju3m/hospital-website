@@ -1,0 +1,108 @@
+[
+  {
+    "label": "home (slider layout)",
+    "url": "{BASE}/",
+    "settle": 4000
+  },
+  {
+    "label": "home bn",
+    "url": "{BASE}/locale/bn",
+    "settle": 3500
+  },
+  {
+    "label": "home bn (after switch)",
+    "url": "{BASE}/",
+    "settle": 3500
+  },
+  {
+    "label": "back to en",
+    "url": "{BASE}/locale/en",
+    "settle": 2000
+  },
+  {
+    "label": "booking form + slot fetch",
+    "url": "{BASE}/appointment",
+    "settle": 2500,
+    "action": "(async()=>{const d=document.getElementById('department');if(d&&d.options.length>1){d.value=d.options[1].value;d.dispatchEvent(new Event('change'));}await new Promise(r=>setTimeout(r,1800));const x=document.getElementById('doctor');if(x&&x.options.length>1){x.value=x.options[1].value;x.dispatchEvent(new Event('change'));}await new Promise(r=>setTimeout(r,1800));})()",
+    "after": 2500
+  },
+  {
+    "label": "gallery index",
+    "url": "{BASE}/gallery",
+    "settle": 2500
+  },
+  {
+    "label": "gallery album + lightbox",
+    "url": "{BASE}/gallery/cardiac-catheterisation-and-theatres",
+    "settle": 2500,
+    "action": "(async()=>{const a=document.querySelector('[x-data^=\"galleryLightbox\"] a');if(a)a.click();await new Promise(r=>setTimeout(r,1200));document.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));})()",
+    "after": 2000
+  },
+  {
+    "label": "contact (OSM iframe)",
+    "url": "{BASE}/contact",
+    "settle": 4000
+  },
+  {
+    "label": "doctors index",
+    "url": "{BASE}/doctors",
+    "settle": 2500
+  },
+  {
+    "label": "doctor show",
+    "url": "{BASE}/doctors/prof-dr-ashraful-haque",
+    "settle": 2500
+  },
+  {
+    "label": "departments index",
+    "url": "{BASE}/departments",
+    "settle": 2000
+  },
+  {
+    "label": "department show",
+    "url": "{BASE}/departments/cardiac-sciences",
+    "settle": 2000
+  },
+  {
+    "label": "diagnostics index",
+    "url": "{BASE}/diagnostics",
+    "settle": 2500
+  },
+  {
+    "label": "health-hub post",
+    "url": "{BASE}/health-hub/chest-pain-at-night-when-to-wait-and-when-to-call-an-ambulance",
+    "settle": 2000
+  },
+  {
+    "label": "package show",
+    "url": "{BASE}/health-packages/executive-health-check-comprehensive",
+    "settle": 2000
+  },
+  {
+    "label": "about",
+    "url": "{BASE}/about",
+    "settle": 2000
+  },
+  {
+    "label": "emergency",
+    "url": "{BASE}/emergency",
+    "settle": 2000
+  },
+  {
+    "label": "confirmation (signed, print button)",
+    "url": "{BASE}/appointment/{REFERENCE}/confirmed?signature={SIGNATURE}",
+    "settle": 2200,
+    "action": "window.__printed=0;window.print=function(){window.__printed++};const b=document.querySelector('[data-print]');if(!b){window.__errs.push('NO [data-print] button found');}else{b.click();window.__errs.push('print called: '+window.__printed);}",
+    "after": 1200
+  },
+  {
+    "label": "portal login",
+    "url": "{BASE}/portal/login",
+    "settle": 2000
+  },
+  {
+    "label": "admin login",
+    "url": "{BASE}/admin/login",
+    "settle": 2000
+  }
+]

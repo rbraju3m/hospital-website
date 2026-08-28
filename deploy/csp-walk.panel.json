@@ -1,0 +1,219 @@
+[
+  {
+    "label": "admin login + submit",
+    "url": "{BASE}/admin/login",
+    "settle": 2000,
+    "action": "const f=document.querySelector('form');f.querySelector('[name=email]').value='{EMAIL}';f.querySelector('[name=password]').value='{PASSWORD}';f.requestSubmit();",
+    "after": 2500
+  },
+  {
+    "label": "panel dashboard",
+    "url": "{BASE}/admin",
+    "settle": 2500
+  },
+  {
+    "label": "panel dashboard + Ctrl+K palette",
+    "url": "{BASE}/admin",
+    "settle": 2500,
+    "action": "(async()=>{window.dispatchEvent(new KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true}));document.dispatchEvent(new KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true}));await new Promise(r=>setTimeout(r,900));const i=document.querySelector('input[type=search],[x-ref=palette] input,input[placeholder]');if(i){i.focus();i.value='doct';i.dispatchEvent(new Event('input',{bubbles:true}));}await new Promise(r=>setTimeout(r,2000));})()",
+    "after": 2000
+  },
+  {
+    "label": "doctors listing (drag/toggle/delete)",
+    "url": "{BASE}/admin/doctors",
+    "settle": 2500,
+    "action": "window.__confirmed=0;window.confirm=function(){window.__confirmed++;return false};const f=document.querySelector('form[data-confirm]');if(!f){window.__errs.push('NO form[data-confirm] found');}else{f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));window.__errs.push('confirm asked: '+window.__confirmed+' times');}",
+    "after": 1200
+  },
+  {
+    "label": "doctor create form",
+    "url": "{BASE}/admin/doctors/create",
+    "settle": 2500
+  },
+  {
+    "label": "appointments listing",
+    "url": "{BASE}/admin/appointments",
+    "settle": 2500
+  },
+  {
+    "label": "appointment create (front desk)",
+    "url": "{BASE}/admin/appointments/create",
+    "settle": 2500
+  },
+  {
+    "label": "gallery albums",
+    "url": "{BASE}/admin/gallery",
+    "settle": 2000
+  },
+  {
+    "label": "site controls (switches)",
+    "url": "{BASE}/admin/site-controls",
+    "settle": 2500
+  },
+  {
+    "label": "notifications log",
+    "url": "{BASE}/admin/notifications",
+    "settle": 2000
+  },
+  {
+    "label": "settings",
+    "url": "{BASE}/admin/settings",
+    "settle": 2500
+  },
+  {
+    "label": "posts create (markup editor)",
+    "url": "{BASE}/admin/posts/create",
+    "settle": 2500,
+    "action": "(async()=>{const t=document.querySelector('textarea');if(t){t.focus();t.value='## Heading\n- one\n**bold**';t.dispatchEvent(new Event('input',{bubbles:true}));}const b=[...document.querySelectorAll('button')].filter(x=>/preview/i.test(x.textContent||''));if(b[0])b[0].click();await new Promise(r=>setTimeout(r,1500));})()",
+    "after": 1500
+  },
+  {
+    "label": "slides",
+    "url": "{BASE}/admin/slides",
+    "settle": 2000
+  },
+  {
+    "label": "users",
+    "url": "{BASE}/admin/users",
+    "settle": 2000
+  },
+  {
+    "label": "documents create (upload field)",
+    "url": "{BASE}/admin/documents/create",
+    "settle": 2500
+  },
+  {
+    "label": "admin logout -> portal login",
+    "url": "{BASE}/portal/login",
+    "settle": 2000,
+    "action": "const f=document.querySelector('form');const p=f.querySelector('[name=phone]')||f.querySelector('input[type=tel]');const w=f.querySelector('[name=password]');if(p)p.value='{PHONE}';if(w)w.value='{PASSWORD}';f.requestSubmit();",
+    "after": 2500
+  },
+  {
+    "label": "portal appointments (cancel form)",
+    "url": "{BASE}/portal/appointments",
+    "settle": 2500,
+    "action": "window.__confirmed=0;window.confirm=function(){window.__confirmed++;return false};const f=document.querySelector('form[data-confirm]');if(!f){window.__errs.push('NO form[data-confirm] found');}else{f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));window.__errs.push('confirm asked: '+window.__confirmed+' times');}",
+    "after": 1200
+  },
+  {
+    "label": "portal reschedule",
+    "url": "{BASE}/portal/appointments/{REFERENCE}/reschedule",
+    "settle": 3000
+  },
+  {
+    "label": "portal documents",
+    "url": "{BASE}/portal/documents",
+    "settle": 2000
+  },
+  {
+    "label": "portal profile",
+    "url": "{BASE}/portal/profile",
+    "settle": 2000
+  },
+  {
+    "label": "gallery photo manager",
+    "url": "{BASE}/admin/gallery/1",
+    "settle": 3000,
+    "action": "const t=document.querySelector('input[data-caption],textarea,input[type=text]');if(t){t.focus();t.value='A caption';t.dispatchEvent(new Event('input',{bubbles:true}));}",
+    "after": 2000
+  },
+  {
+    "label": "album edit (image field)",
+    "url": "{BASE}/admin/gallery/1/edit",
+    "settle": 2500
+  },
+  {
+    "label": "appointment show (status buttons)",
+    "url": "{BASE}/admin/appointments/{REFERENCE}",
+    "settle": 2500
+  },
+  {
+    "label": "appointment edit (desk move)",
+    "url": "{BASE}/admin/appointments/{REFERENCE}/edit",
+    "settle": 2500
+  },
+  {
+    "label": "patients listing",
+    "url": "{BASE}/admin/patients",
+    "settle": 2000
+  },
+  {
+    "label": "messages inbox",
+    "url": "{BASE}/admin/messages",
+    "settle": 2000
+  },
+  {
+    "label": "diagnostics listing",
+    "url": "{BASE}/admin/diagnostics",
+    "settle": 2000
+  },
+  {
+    "label": "testimonials listing",
+    "url": "{BASE}/admin/testimonials",
+    "settle": 2000
+  },
+  {
+    "label": "services listing",
+    "url": "{BASE}/admin/services",
+    "settle": 2000
+  },
+  {
+    "label": "packages listing",
+    "url": "{BASE}/admin/packages",
+    "settle": 2000
+  },
+  {
+    "label": "posts listing",
+    "url": "{BASE}/admin/posts",
+    "settle": 2000
+  },
+  {
+    "label": "departments listing",
+    "url": "{BASE}/admin/departments",
+    "settle": 2000
+  },
+  {
+    "label": "site controls + toggle a switch",
+    "url": "{BASE}/admin/site-controls",
+    "settle": 2500,
+    "action": "const s=document.querySelector('input[type=checkbox]');if(s){s.click();s.click();}window.__errs.push('toggled a switch');",
+    "after": 1200
+  },
+  {
+    "label": "dark mode toggled",
+    "url": "{BASE}/admin",
+    "settle": 2000,
+    "action": "const b=document.querySelector('[x-data=themeToggle] button, button[aria-label*=theme i], [x-data=\"themeToggle\"] button');if(b){b.click();}else{document.documentElement.classList.add('dark');}window.__errs.push('theme now: '+document.documentElement.className);",
+    "after": 1500
+  },
+  {
+    "label": "public 404",
+    "url": "{BASE}/no-such-page-here",
+    "settle": 1500
+  },
+  {
+    "label": "diagnostics test + request form",
+    "url": "{BASE}/diagnostics/complete-blood-count",
+    "settle": 2500,
+    "action": "const b=[...document.querySelectorAll('button,a')].find(x=>/request/i.test(x.textContent||''));if(b)b.click();",
+    "after": 1500
+  },
+  {
+    "label": "portal register",
+    "url": "{BASE}/portal/register",
+    "settle": 2000
+  },
+  {
+    "label": "portal forgot password",
+    "url": "{BASE}/portal/forgot-password",
+    "settle": 2000
+  },
+  {
+    "label": "home dark + reduced motion",
+    "url": "{BASE}/",
+    "settle": 3000,
+    "action": "document.documentElement.classList.add('dark','no-motion');window.dispatchEvent(new Event('resize'));window.scrollTo(0,2000);",
+    "after": 1800
+  }
+]

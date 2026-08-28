@@ -104,6 +104,24 @@ deploy/hospital-restore.sh /var/backups/…          # the real thing; asks befo
 
 php8.3 artisan route:list --except-vendor
 php8.3 artisan view:clear && php8.3 artisan config:clear
+
+# The CSP walk. Needs BUILT assets -- the header is not sent while Vite is hot,
+# so a walk against `npm run dev` is clean and meaningless. Exits non-zero on a
+# violation, and on any page that quietly landed on a login.
+node deploy/csp-walk.js --base=http://127.0.0.1:8321 deploy/csp-walk.plan.json
+
+# The same, with the confirmation page's signed link intact (it is signed over
+# the host, so Chrome has to resolve the real hostname to the dev port).
+node deploy/csp-walk.js --base=http://hospital.local \
+    --map=hospital.local:80=127.0.0.1:8321 \
+    --set=REFERENCE=RBR… --set=SIGNATURE=… deploy/csp-walk.plan.json
+
+# The panel and portal, against the TEST schema rather than the dev database:
+#   DB_DATABASE=hospital_site_test php8.3 artisan migrate:fresh --seed
+#   DB_DATABASE=hospital_site_test php8.3 artisan admin:create --email=… --password=…
+#   DB_DATABASE=hospital_site_test php8.3 artisan serve --port=8322
+node deploy/csp-walk.js --base=http://127.0.0.1:8322 --set=EMAIL=… --set=PASSWORD=… \
+    --set=PHONE=01712345678 --set=REFERENCE=RBRCSPWALK01 deploy/csp-walk.panel.json
 ```
 
 ## Deployment state — nothing is installed yet
@@ -492,7 +510,7 @@ One switch: the scheme of **`APP_URL`**. `App\Support\Https::enforce()` runs fir
 Four headers are sent always and none of them can break a page: `X-Content-Type-Options: nosniff` (patient documents are streamed from the private disk, and an upload the browser decides is HTML would run on this origin), `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` that refuses camera, microphone and location.
 
 - **`fullscreen=(self)` in that policy is load-bearing.** The gallery lightbox's `F` key is the Fullscreen API; a tidier-looking `fullscreen=()` switches it off, and only `SecurityHeadersTest` would say so.
-- **The CSP shipped report-only and is now enforced.** It is the one header here that can take a site down — a directive too tight anywhere breaks that page for every visitor, and nothing in this suite would catch it, because the suite never runs a browser. The walk was done on 2026-08-28 in headless Chrome, listening for `securitypolicyviolation`: 60 page visits across the public site, the panel and the portal — home in both locales, booking with a live slot fetch, the gallery lightbox, the contact map, the media manager, every listing and form, a 404 and the 503 — clean under the enforced header. `CSP_ENFORCE=true` is in `.env` and `.env.example`; it is **per-environment**, so a new deployment starts report-only again until somebody sets it.
+- **The CSP shipped report-only and is now enforced.** It is the one header here that can take a site down — a directive too tight anywhere breaks that page for every visitor, and nothing in this suite would catch it, because the suite never runs a browser. The walk was done on 2026-08-28 in headless Chrome, listening for `securitypolicyviolation`: 60 page visits across the public site, the panel and the portal — home in both locales, booking with a live slot fetch, the gallery lightbox, the contact map, the media manager, every listing and form, a 404 and the 503 — clean under the enforced header. `CSP_ENFORCE=true` is in `.env` and `.env.example`; it is **per-environment**, so a new deployment starts report-only again until somebody sets it. The walk is committed — `deploy/csp-walk.js` and its two plans — so it is repeatable rather than something to reconstruct, and it exits non-zero, so it can gate a deploy.
 - **`CSP_ENFORCE` is pinned to `false` in `phpunit.xml`**, and the tests that read the policy take it off whichever header is carrying it. Three of them named `Content-Security-Policy-Report-Only` literally, so following the instruction in `config/security.php` broke four tests on a policy that had not changed a word. The suite states its premise instead of inheriting whichever way a developer's `.env` is ratcheted — the same reason `DB_DATABASE` is pinned there.
 - **Inline event handlers are refused, and refused silently.** A nonce covers a `<script>` block; it cannot cover an `onclick=` or `onsubmit=` attribute, so the browser declines to run one. That is not a visible break: `onsubmit="return confirm(…)"` on a delete form does not block the delete when it is refused — it removes the question and submits, which looks exactly like a delete that worked. The three that existed (every panel delete, a patient cancelling their own booking, the print button on the confirmation page) now carry `data-confirm` / `data-print` and are answered by delegated handlers in `app.js`. The trade is that the confirmation now needs the bundle, where an inline attribute did not; the `has-js` watchdog is what says the bundle never arrived. `SecurityHeadersTest` scans every view for the attribute, as it already did for un-nonced `<script>`.
 - **`'unsafe-eval'` is Alpine, and cannot be removed by editing a header.** The standard build evaluates every `x-data` and `x-show` through the AsyncFunction constructor, which the browser counts as eval. Alpine's CSP build cannot evaluate expressions at all — every one becomes a method on a registered component. That is a rewrite of the interaction layer.
@@ -690,12 +708,14 @@ Everything described above is built, tested and pushed — 476 tests, working tr
 **The CSP ratchet is closed** (2026-08-28). The walk `config/security.php`
 asks for has been done and `CSP_ENFORCE=true` is set here — see *Security
 headers*. It is per-environment, so it has to be set again wherever this
-deploys. The walk is repeatable: build the assets (the header is deliberately
-not sent while Vite is hot), serve, and drive headless Chrome listening for
-`securitypolicyviolation`. The panel and portal halves of it were walked
-against the **test** schema (`DB_DATABASE=hospital_site_test artisan serve`)
-rather than the dev database, which is the way to exercise signed-in screens
-without creating accounts in somebody's data.
+deploys. The walk itself is `deploy/csp-walk.js` with `csp-walk.plan.json`
+(20 public pages) and `csp-walk.panel.json` (39 signed-in ones) — see *Common
+commands*. It drives headless Chrome and listens for `securitypolicyviolation`
+rather than scraping the console, so a finding names the directive and the
+blocked URI. Its header carries the four traps, of which two are worth knowing
+before you run anything: the policy is **not sent while Vite is hot**, and the
+panel half should be walked against the **test** schema on a second port, so
+the accounts it needs are not created in somebody's real data.
 
 **Launch readiness is what is left, and three things in it have never been named:**
 
